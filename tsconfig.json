@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
-    "composite": true,
+    "composite": false,
     "declaration": true,
     "esModuleInterop": true,
     "incremental": true,
@@ -18,7 +18,9 @@
     //"strict": true,
     "strictNullChecks": false,
     "target": "es2017",
-    "types": []
+    "types": [],
+    "resolveJsonModule": true,
+    "esModuleInterop": true  
   },
   "include": ["src/*"]
 }

@@ -9,6 +9,8 @@ Test
 ## Requirements
 
 * JupyterLab >= 2.0
+* react-jsonschema-form
+* react-select
 
 ## Install
 
@@ -57,3 +59,11 @@ Now every change will be built locally and bundled into JupyterLab. Be sure to r
 
 jupyter labextension uninstall eigendata-formula-bar-v2
 ```
+
+## Changes to tsconfig from default
+
+* Commented out strict which was set to true
+* Changes to make JSON work
+  * resolveJsonModule -> true
+  * esModuleInterop -> true
+  * Composite -> false

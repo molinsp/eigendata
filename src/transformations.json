@@ -1,0 +1,126 @@
+{
+  "pivot_table" : {
+    "name" : "pivot_table",
+    "form" : {
+      "definitions" : {
+        "columns" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "index",
+        "aggfunc"
+      ],
+      "title" : "pivot_table",
+      "type" : "object",
+      "properties" : {
+        "index" : {
+          "$ref" : "#/definitions/columns"
+        },
+        "columns" : {
+          "$ref" : "#/definitions/columns"
+        },
+        "aggfunc" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "title" : "aggregation",
+            "properties" : {
+              "column" : {
+                "type" : "string",
+                "$ref" : "#/definitions/column"
+              },
+              "function" : {
+                "type" : "string",
+                "enum" : [
+                  "np.mean",
+                  "\"count\"",
+                  "np.sum"
+                ],
+                "enumNames" : [
+                  "Mean",
+                  "Count",
+                  "Sum"
+                ]
+              }
+            }
+          },
+          "default" : "numpy.mean",
+          "codegenstyle" : "aggregation"
+        },
+        "New table" : {
+          "type" : "string"
+        }
+      }
+    }
+  },
+  "merge" : {
+    "name" : "merge",
+    "form" : {
+      "properties" : {
+        "right" : {
+          "type" : "string",
+          "enum" : [
+            "data",
+            "df"
+          ],
+          "codegenstyle" : "variable"
+        },
+        "how" : {
+          "type" : "string",
+          "enum" : [
+            "left",
+            "right",
+            "outer",
+            "inner"
+          ],
+          "default" : "inner"
+        },
+        "left_on" : {
+          "$ref" : "#/definitions/left_columns"
+        },
+        "right_on" : {
+          "$ref" : "#/definitions/right_columns"
+        },
+        "New table" : {
+          "type" : "string"
+        }
+      },
+      "type" : "object",
+      "title" : "merge",
+      "required" : [
+        "right",
+        "how",
+        "left_on",
+        "right_on"
+      ],
+      "definitions" : {
+        "columns" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "right_columns" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      }
+    }
+  }
+}

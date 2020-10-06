@@ -18,6 +18,8 @@ import {ISessionContext} from "@jupyterlab/apputils";
 
 import { ISignal, Signal } from '@lumino/signaling';
 
+import transformations_config from './transformations.json';
+
 /*
  Description: This extension provides a GUI over pandas data transformations, with the goal of facilitating the use by non experts
  Components:
@@ -136,6 +138,10 @@ function UseSignalComponent(props: { signal: ISignal<FormWidget, void>, logic: F
 // -------------------------------------------------------------------------------------------------------------
 export class FormWidget extends ReactWidget {
 
+  /*---------------------------------
+    Keep track of notebooks
+  ----------------------------------*/
+
   // Object that holds the currently selected notebook
   private current_notebook: NotebookPanel;
 
@@ -145,16 +151,47 @@ export class FormWidget extends ReactWidget {
   // Enables to connect to the kernel
   private _connector: KernelConnector;
 
+
+  /*---------------------------------
+    Communicate with UI
+  ----------------------------------*/
   // Signal that triggers the update of the react component 
   private _signal = new Signal<this, void>(this);
+
+  // Keeps track of the UI table selection
+  public tableSelection: any;
+  // Keeps track of the UI transformation selection
+  public transformationSelection: string;
+
+  // JSON schema that defines the transformationform
+  public transformationForm: JSONSchema7;
+
+  // GUI screen state
+  public state_screen: string = 'load csv';
+
+  // Variable that controls if the formula field is shown
+  public show_formula_fields: boolean = false;
+
+  // Keeps track of dataframes that can be transformed through the UI
+  public dataframes_available: any = [];
+
+  /*---------------------------------
+    Communicate with Python Kernel
+  ----------------------------------*/
 
   // This variable is created so that we can avoid running the code to get the available dataframes when it is not 
   // needed, i.e. when we are executing code to get the form
   private _codeToRequestForm: string;
 
-  // -------------------------------------------------------------------------------------------------------------
-  // PUBLIC STATE VARIABLES
-  // -------------------------------------------------------------------------------------------------------------
+  /*---------------------------------
+    Configurations
+  ----------------------------------*/
+
+  // Data transformation functions
+  public dataframe_functions = [{'value': 'merge', 'label': 'merge'}, {'value': 'pivot_table', 'label': 'pivot_table'}];
+
+  // Custom data transformations defined in JSON file
+  private transformations_config: any;
 
   // Initial JSON form schema
   public form_read_csv: JSONSchema7 = {
@@ -168,23 +205,6 @@ export class FormWidget extends ReactWidget {
     "title": "read_csv", 
     "required": ["filepath_or_buffer", "sep", "delimiter", "decimal"]
   };
-
-  public transformationForm: JSONSchema7;
- 
-  public state_screen: string = 'load csv';
-  // Placeholder to determine if the GUI will start in a loaddata state
-
-  // Variable that controls if the formula field is shown
-  public show_formula_fields: boolean = false;
-
-  // Placeholder for available dataframes
-  public dataframes_available: any = [];
-
-  public tableSelection: any;
-  public transformationSelection: string;
-
-  // Data transformation functions
-  public dataframe_functions = [ {'value': 'merge', 'label': 'merge'}];
 
   // -------------------------------------------------------------------------------------------------------------
   // VARIABLE INSPECTOR
@@ -232,15 +252,38 @@ custom_config = {
     },
     'merge' : {
         'included_parameters' : ['right','how','left_on','right_on'],
-    }
-    
-    
+    },
+    'pivot_table' : {
+        'parameters' : {
+            'aggfunc':{
+                    'type' : 'array',
+                    'title' : 'Aggregations',
+                    'items': {
+                            'type' : 'object',
+                            'title': 'aggregation',
+                            'properties': {
+                                'function' : {
+                                    'type' : 'string',
+                                    'enum' : ['np.mean', 'count'],
+                                    'enumNames' : ['Mean', 'Count']
+                                    },
+                            'column' : {
+                                'type' : 'string',
+                                '$ref' : '#/definitions/column'
+                                }
+                                
+                            }
+                        
+                    }         
+                }
+        }
+    }    
 }
 
 from numpydoc.docscrape import NumpyDocString
 import re
 import json
-def get_multi_select_values(function, caller=None):
+def get_multi_select_values(function, caller=None, debug=False):
     """
     This function takes a pandas function an returns a parameter configuration that allows us to build a graphical
     user interface
@@ -249,20 +292,22 @@ def get_multi_select_values(function, caller=None):
     
     function_name = function.__name__
     
-    # Check if there is a cusom config
+    # Check if there is a custom function config
     has_custom_config = 0
     if(function_name in custom_config):
-        #print('Reading custom config for function ' + function_name)
+        if debug: print('Has custom config for function: ' + function_name)
         has_custom_config = 1
     
     # Check if there is a custom parameter config
     has_custom_parameters_config = 0
     if((has_custom_config == 1) and 'parameters' in custom_config[function_name]):
+        if debug: print('Has custom parameter config for function: '  + function_name)
         has_custom_parameters_config = 1
         
     # Check if there is a custom parameter list
     has_custom_parameters_list = 0
     if((has_custom_config == 1) and 'included_parameters' in custom_config[function_name]):
+        if debug: print('Has custom parameter list for function'  + function_name)
         has_custom_parameters_list = 1
         
     # Iterate over all parameters
@@ -271,9 +316,11 @@ def get_multi_select_values(function, caller=None):
     # ------------------------------------------------------------------------------------------
     
     parameter_configuration = {'properties': {}}
+    parameter_configuration['type'] = 'object'
     parameter_configuration['title'] = function_name
     parameter_configuration['required'] = []
     for i in doc['Parameters']:
+        if debug: print('---------------------------------------- ' + i.name )
         # CHECK FOR CUSTOM CONFIGS
         # ------------------------------------------------------------------------------------------
         # ------------------------------------------------------------------------------------------
@@ -281,19 +328,18 @@ def get_multi_select_values(function, caller=None):
         # Check if the parameter is excluded 
         if has_custom_parameters_list == 1:
             if((has_custom_config == 1) and i.name in custom_config[function_name]['included_parameters']):
+                if debug: print(i.name + '  is included in the custom parameter list')
                 pass
-                #print(i.name + '  is included in the custom parameter list')
             else:
                 # Skip the config
                 continue
         
         # Check if there is custom parameter config
         has_custom_config_parameter = 0
-        
         custom_parameter_config = {}
         if has_custom_parameters_config == 1:           
             if((has_custom_config == 1) and i.name in custom_config[function_name]['parameters']):
-                #print('reading custom parameter config')
+                if debug: print('Reading custom parameter config for parameter:', i.name)
                 has_custom_config_parameter = 1
                 custom_parameter_config = custom_config[function_name]['parameters'][i.name]
         
@@ -307,31 +353,28 @@ def get_multi_select_values(function, caller=None):
         # 1. PARAMETER TYPE
         # ------------------------------------------------------------------------------------------
         # Check for custom config
-        if 'parameter_type' in custom_parameter_config:
-            parameter_description[i.name]['type'] = custom_parameter_config['parameter_type'] 
+        if 'type' in custom_parameter_config:
+            if debug: print('Set parameter type for ' + i.name + ' as ' + custom_parameter_config['type'] )
+            parameter_description[i.name]['type'] = custom_parameter_config['type'] 
+            if custom_parameter_config['type'] == 'array':
+                parameter_description[i.name]['items'] = custom_parameter_config['items'] 
+            elif custom_parameter_config['type'] == 'object':
+                parameter_description[i.name] = custom_parameter_config
         # Automatic check
         elif 'column' in i.type:
             if 'list' in i.type:
-                parameter_description[i.name]['type'] = 'array'
-                parameter_description[i.name]['codegenstyle'] = 'array'
-                parameter_description[i.name]['uniqueItems'] = True
-                parameter_description[i.name]['items'] = {}
-                parameter_description[i.name]['items']['type'] = 'string'
-                parameter_description[i.name]['items']['enum'] = caller.columns.tolist()
+                if debug: print('Set parameter type for ' + i.name + ' as ' + 'column list' )
+                parameter_description[i.name]['$ref'] = '#/definitions/columns'
             else:
-                parameter_description[i.name]['enum'] = caller.columns.tolist()
-                parameter_description[i.name]['type'] = 'string'
+                if debug: print('Set parameter type for ' + i.name + ' as ' + 'column' )
+                parameter_description[i.name]['$ref'] = '#/definitions/column'
         elif 'label' in i.type:
             if 'list' in i.type:
-                parameter_description[i.name]['type'] = 'array'
-                parameter_description[i.name]['codegenstyle'] = 'array'
-                parameter_description[i.name]['uniqueItems'] = True
-                parameter_description[i.name]['items'] = {}
-                parameter_description[i.name]['items']['type'] = 'string'
-                parameter_description[i.name]['items']['enum'] = caller.columns.tolist()
+                if debug: print('Set parameter type for ' + i.name + ' as ' + 'label list' )
+                parameter_description[i.name]['$ref'] = '#/definitions/columns'
             else:
-                parameter_description[i.name]['enum'] = caller.columns.tolist()
-                parameter_description[i.name]['type'] = 'string'
+                if debug: print('Set parameter type for ' + i.name + ' as ' + 'label' )
+                parameter_description[i.name]['$ref'] = '#/definitions/column'
             # To-do add also row labels
         elif 'DataFrame' in i.type:
             parameter_description[i.name]['type'] = 'string'
@@ -404,8 +447,30 @@ def get_multi_select_values(function, caller=None):
         parameter_configuration['properties'].update(parameter_description) 
         
     parameter_configuration['properties']['New table'] = {'type': 'string'};
+    
+    parameter_configuration['definitions'] =  {
+        'columns' :     {
+            'type' : 'array',
+            'uniqueItems' : True,
+            'items' : {
+                'type' : 'string',
+                'enum' : []
+            }
+        },
+        'column' :     {
+            'type' : 'string',
+            'enum' : []
+        }
+    }    
+    parameter_configuration['definitions']['columns']['items']['enum'] = caller.columns.tolist()
+    parameter_configuration['definitions']['column']['enum'] = caller.columns.tolist()
+    
     res = json.dumps(parameter_configuration, ensure_ascii=False) 
     return json.dumps(parameter_configuration, ensure_ascii=False) 
+
+
+def get_json_column_values(caller):
+    return json.dumps(caller.columns.tolist(), ensure_ascii=False)
 `;
 
 private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
@@ -509,9 +574,8 @@ private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
   // CODE GENERATION FUNCTION
   // Takes the inputs of the form and creates a string that is sent to the notebook and executed
   public generateFormCode = ( formReponse: any) => {
+    console.log('------------------- Generating form code -------------------');
     console.log("Data submitted: ", formReponse);
-
-    console.log('------------------- Generating form -------------------');
 
     const formData = formReponse.formData;
     let callerObject: string;
@@ -579,7 +643,7 @@ private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
     
     formula = variable + ' = ' + formula;
 
-    console.log('------>Formula', formula);
+    console.log('----------->Formula', formula);
 
     const last_cell_index = this.current_notebook.content.widgets.length - 1;
     const last_cell = this.current_notebook.content.widgets[last_cell_index];
@@ -589,7 +653,10 @@ private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
     // The code here is to run the cell 
     this.runCellAtIndex(this.current_notebook, last_cell_index);
 
+    // Go back to transformation state
     this.state_screen = 'transformations';
+    //Reset the selection
+    this.transformationSelection = null;
   };
 
   public handleTableSelectionChange = (selection:any) => {
@@ -604,11 +671,13 @@ private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
     //console.log(this.transformationSelection);
   }
 
+
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
   constructor(notebooks: INotebookTracker) {
     super();
+    console.log('------------> Constructor');
     this.addClass('jp-ReactWidget');
     this.addClass('input');
 
@@ -617,7 +686,12 @@ private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
 
     // Subscribe to signal when notebooks change
     this._notebook_tracker.currentChanged.connect(this._update_current_notebook, this);
+
+    this.transformations_config = transformations_config;
+
+    console.log('------------> Finalized constructor');
   }
+
 
   // -------------------------------------------------------------------------------------------------------------
   // HANDLE CHANGE OF NOTEBOOK
@@ -694,25 +768,61 @@ private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
 
   private async requestTransformationForm(){
     // Check that there is a transformation selection and a table selection
+    console.log('--------------> Get transformation UI form');
     if(this.transformationSelection && this.tableSelection){
-      
-      let request_expression = 'form = get_multi_select_values(' + this.tableSelection + '.' + this.transformationSelection + ',caller=' + this.tableSelection + ')';      
-      // Save it so that we can avoid triggering the _codeRunningOnNotebook function
-      this._codeToRequestForm = request_expression;
-      console.log('Form request expression',request_expression);
-      const result = await FormWidget.sendKernelRequest(this.current_notebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
-      let content = result.form.data["text/plain"];
-      
-      // The resulting python JSON neets to be cleaned
-      if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
-        content = content.slice(1,-1);
-        content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+       
+      if(typeof(this.transformations_config[this.transformationSelection]) === 'undefined'){
+        /*-------------------------------------------
+          Generate form on the fly by running python
+        -------------------------------------------*/
+        console.log('----> No custom transformation');
+        let request_expression = 'form = get_multi_select_values(' + this.tableSelection + '.' + this.transformationSelection + ',caller=' + this.tableSelection + ')';      
+        // Save it so that we can avoid triggering the _codeRunningOnNotebook function
+        this._codeToRequestForm = request_expression;
+        console.log('Form request expression',request_expression);
+        const result = await FormWidget.sendKernelRequest(this.current_notebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
+        let content = result.form.data["text/plain"];
+        
+        // The resulting python JSON neets to be cleaned
+        if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+          content = content.slice(1,-1);
+          content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+        }
+
+        this.transformationForm = JSON.parse(content);
+      }else{
+        /*-------------------------------------------
+          Read form from custom configuration
+        -------------------------------------------*/
+        console.log('Custom transformation', this.transformations_config[this.transformationSelection]);
+        let request_expression = 'form = get_json_column_values(' + this.tableSelection + ')';      
+        // Save it so that we can avoid triggering the _codeRunningOnNotebook function
+        this._codeToRequestForm = request_expression;
+        console.log('Form request expression',request_expression);
+        const result = await FormWidget.sendKernelRequest(this.current_notebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
+        let content = result.form.data["text/plain"];
+        
+        // The resulting python JSON neets to be cleaned
+        if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+          content = content.slice(1,-1);
+          content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+        }
+
+        const columns = JSON.parse(content);
+        console.log('Retrieved columns:', columns);
+
+        // Fill columns in custom transformation json
+        let custom_transformation = this.transformations_config[this.transformationSelection].form;
+        custom_transformation['definitions']['columns']['items']['enum'] = columns;
+        custom_transformation['definitions']['column']['enum'] = columns;
+        this.transformationForm = custom_transformation;
+
       }
-      this.transformationForm = JSON.parse(content);
 
       // Update the state to indicate that we are now ready to show a formula field
       this.show_formula_fields = true;
       this._signal.emit();
+      console.log('<-------------- Transformation UI form generated');
     }
   }
 
