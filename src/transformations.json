@@ -24,7 +24,8 @@
       "type" : "object",
       "properties" : {
         "index" : {
-          "$ref" : "#/definitions/columns"
+          "$ref" : "#/definitions/columns",
+          "codegenstyle" : "array"
         },
         "columns" : {
           "$ref" : "#/definitions/columns"
@@ -69,11 +70,8 @@
       "properties" : {
         "right" : {
           "type" : "string",
-          "enum" : [
-            "data",
-            "df"
-          ],
-          "codegenstyle" : "variable"
+          "codegenstyle" : "variable",
+          "$ref" : "#/definitions/dataframes"
         },
         "how" : {
           "type" : "string",
@@ -86,7 +84,7 @@
           "default" : "inner"
         },
         "left_on" : {
-          "$ref" : "#/definitions/left_columns"
+          "$ref" : "#/definitions/columns"
         },
         "right_on" : {
           "$ref" : "#/definitions/right_columns"
@@ -112,6 +110,10 @@
             "enum" : []
           }
         },
+        "dataframes" : {
+          "type" : "string",
+          "enum" : []
+        },
         "right_columns" : {
           "type" : "array",
           "uniqueItems" : true,
@@ -119,6 +121,32 @@
             "type" : "string",
             "enum" : []
           }
+        }
+      }
+    }
+  },
+  "read_csv" : {
+    "name" : "read_csv",
+    "form" : {
+      "properties" : {
+        "filepath_or_buffer" : {
+          "type" : "string"
+        },
+        "sep" : {
+          "type" : "string",
+          "default" : ","
+        },
+        "delimiter" : {
+          "type" : "string",
+          "default" : "None",
+          "codegenstyle" : "checkNone"
+        },
+        "decimal" : {
+          "type" : "string",
+          "default" : "."
+        },
+        "New table" : {
+          "type" : "string"
         }
       }
     }
