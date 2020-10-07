@@ -67,3 +67,10 @@ jupyter labextension uninstall eigendata-formula-bar-v2
   * resolveJsonModule -> true
   * esModuleInterop -> true
   * Composite -> false
+
+
+
+## Architecture
+
+Arkit installed as a dev-dependency to create overview diagrams. More info [here](https://github.com/dyatko/arkit)
+

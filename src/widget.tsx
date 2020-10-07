@@ -58,6 +58,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   /*-----------------------------------
   CUSTOM SELECT
   -----------------------------------*/
+  // To-do: Remove in multi-select breaks
   const CustomSelect = function(props:any) {
     //console.log('Props custom select: ', props.value);
     
@@ -384,10 +385,11 @@ export class FormWidget extends ReactWidget {
         }
     }
 
+    console.log('Table selection', this.tableSelection);
     // If no variable defined, overwrite dataframe
     if((variable === '') && (typeof(this.tableSelection) !== 'undefined')){
       variable = this.tableSelection;
-    }else{
+    }else if ((variable === '') && (typeof(this.tableSelection) === 'undefined')){
       variable = 'data';
     }
 
