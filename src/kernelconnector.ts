@@ -1,3 +1,6 @@
+// SOURCE: https://github.com/lckr/jupyterlab-variableInspector
+
+
 import {
     ISessionContext
 } from "@jupyterlab/apputils";
