@@ -62,8 +62,8 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   -----------------------------------*/
   // To-do: Remove in multi-select breaks
   const CustomSelect = function(props:any) {
-    //console.log('Props custom select: ', props.value);
-    
+    console.log('Props custom select: ', props);
+
     const processSingleSelect = (selection: any) => {
       const {value} = selection;
       //console.log('Signle select change', selection);
@@ -71,11 +71,18 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
     };
 
     const processMultiSelect = (selection: any) => {
-      const values = selection.map((item: any) => item.value);
-      //console.log(values);
-      return values;
+      // Handle the case when the user removes selections
+      if (selection === null) {
+        //console.log('Return null');
+        return [];
+      }
+      console.log
+      const result = selection.map((item: any) => item.value);
+      //console.log('Result from selection',result);
+      return result;
     };
 
+    // If defined as array, use the multi-select
     if(props.schema.type === "array"){
        return (
         <Select options={props.options.enumOptions} 
@@ -88,7 +95,8 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
       return (
         <Select options={props.options.enumOptions} 
           onChange= {selection => props.onChange(processSingleSelect(selection))}
-          defaultInputValue={props.value}
+          //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
+          value={props.options.enumOptions.filter((option: any) => option.label === props.value)}
         />
       );
     }
