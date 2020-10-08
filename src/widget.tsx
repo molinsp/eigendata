@@ -18,7 +18,7 @@ import {ISessionContext} from "@jupyterlab/apputils";
 
 import { ISignal, Signal } from '@lumino/signaling';
 
-import transformations_config from './transformations.json';
+import _transformationsConfig from './transformations.json';
 
 import {python_initialization_script} from './initscript';
 
@@ -140,7 +140,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
       return (
         <div>
         <Select options={logic.dataframes_available} label="Select data" onChange={logic.handleTableSelectionChange} />
-        <Select options={logic.dataframe_functions} label="Select transformation" onChange={logic.handleTransformationSelectionChange} />
+        <Select options={logic.dataframeFunctions} label="Select transformation" onChange={logic.handleTransformationSelectionChange} />
         {logic.show_formula_fields &&
           <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm} onChange={handleChange.bind(this)} uiSchema={uiSchema} widgets={widgets}/>
         }
@@ -169,10 +169,10 @@ export class FormWidget extends ReactWidget {
   ----------------------------------*/
 
   // Object that holds the currently selected notebook
-  private current_notebook: NotebookPanel;
+  private _currentNotebook: NotebookPanel;
 
   // Tracker that enables us to listen to notebook change events
-  private _notebook_tracker: INotebookTracker;
+  private _notebookTracker: INotebookTracker;
 
   // Enables to connect to the kernel
   private _connector: KernelConnector;
@@ -186,6 +186,7 @@ export class FormWidget extends ReactWidget {
 
   // Keeps track of the UI table selection
   public tableSelection: any;
+  
   // Keeps track of the UI transformation selection
   public transformationSelection: string;
 
@@ -216,10 +217,10 @@ export class FormWidget extends ReactWidget {
   ----------------------------------*/
 
   // Data transformation functions
-  public dataframe_functions = [{'value': 'merge', 'label': 'merge'}, {'value': 'pivot_table', 'label': 'pivot_table'}];
+  public dataframeFunctions = [{'value': 'merge', 'label': 'merge'}, {'value': 'pivot_table', 'label': 'pivot_table'}];
 
   // Custom data transformations defined in JSON file
-  private transformations_config: any;
+  private _transformationsConfig: any;
 
   // -------------------------------------------------------------------------------------------------------------
   // VARIABLE INSPECTOR
@@ -228,10 +229,10 @@ export class FormWidget extends ReactWidget {
   // This script will run in the kernel every time code runs
   // It returns an object so that it can be expanded with more info in the future, for example number of rows
 
-  public _initScripts: string;
+  private _initScripts: string;
 
   // Returns a json object with all the dataframes
-  private inspector_script = `_jupyterlab_variableinspector_dict_list()`;
+  private _inspectorScript = `_jupyterlab_variableinspector_dict_list()`;
 
 // -------------------------------------------------------------------------------------------------------------
 // FORM GENERATOR
@@ -357,13 +358,22 @@ export class FormWidget extends ReactWidget {
         // Check if there is a codegenstyle
         console.log('Codegenstyle', formReponse.schema.properties[key]['codegenstyle']);
         if(typeof(formReponse.schema.properties[key]['codegenstyle']) !== 'undefined'){
-            // Codegenstyle defined -----------------------------------------------
+            // ------------------------------------ CODEGEN STYLE DEFINED ------------------------------------------
+            /*-------------------------------
+               CODEGEN: VARIABLE
+            -------------------------------*/
             if(formReponse.schema.properties[key]['codegenstyle'] === 'variable'){
               console.log('*** Codgenstyle variable')
               formula = formula + key + '=' + formData[key] + ', '; 
+            /*-------------------------------
+               CODEGEN: ARRAY
+            -------------------------------*/
             }else if(formReponse.schema.properties[key]['codegenstyle'] === 'array'){
               console.log('** Codegenstyle array')
               formula = formula + key + '=["' + formData[key].join('","') + '"], ';
+            /*-------------------------------
+               CODEGEN: AGGREGATION
+            -------------------------------*/
             }else if(formReponse.schema.properties[key]['codegenstyle'] === 'aggregation'){
               console.log('** Codegenstyle dict')
                 var input = '{'
@@ -375,7 +385,9 @@ export class FormWidget extends ReactWidget {
                 input = 'aggfunc=' + input;
                 formula = formula + input + ', ';
                 console.log('Input of dict parameter', input);
-                    
+            /*-------------------------------
+               CODEGEN: CHECK NONE
+            -------------------------------*/        
             }else if(formReponse.schema.properties[key]['codegenstyle'] === 'checkNone') {
               console.log('** Codegenstyle check none')
               if (formData[key].localeCompare('None') == 0){
@@ -387,6 +399,7 @@ export class FormWidget extends ReactWidget {
               console.log('** Undefined codegenstyle')
             }
         } else{
+          // ------------------------------------ CODEGEN NOT DEFINED ------------------------------------------
             // The form input is a Table name 
             if (key.localeCompare('New table') == 0){
               console.log('* New table');
@@ -420,10 +433,10 @@ export class FormWidget extends ReactWidget {
     }
 
     // Calculate index of last cell
-    const last_cell_index = this.current_notebook.content.widgets.length - 1;
+    const last_cell_index = this._currentNotebook.content.widgets.length - 1;
     
     // Run and insert using cell utilities
-    CellUtilities.insertRunShow(this.current_notebook, last_cell_index, formula, false);
+    CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, formula, false);
 
     // Go back to transformation state
     this.state_screen = 'transformations';
@@ -431,12 +444,7 @@ export class FormWidget extends ReactWidget {
     this.transformationSelection = null;
   };
 
-  public handleTableSelectionChange = (selection:any) => {
-    this.tableSelection = selection.value as string;
-    this.requestTransformationForm();
-    //console.log(this.tableSelection);
-  }
-
+  // Log internally that a transformation has been loaded
   public handleTransformationSelectionChange = (selection:any) => {
     this.transformationSelection = selection.value;
     this.requestTransformationForm();
@@ -454,16 +462,16 @@ export class FormWidget extends ReactWidget {
     this.addClass('input');
 
     // Add a notebook tracker
-    this._notebook_tracker = notebooks;
+    this._notebookTracker = notebooks;
 
     // Subscribe to signal when notebooks change
-    this._notebook_tracker.currentChanged.connect(this._updateCurrentNotebook, this);
+    this._notebookTracker.currentChanged.connect(this.updateCurrentNotebook, this);
 
     // Read the transformation config
-    this.transformations_config = transformations_config;
+    this._transformationsConfig = _transformationsConfig;
 
     // Default is to have the read csv form
-    this.transformationForm = this.transformations_config['read_csv']['form'];
+    this.transformationForm = this._transformationsConfig['read_csv']['form'];
 
     // Load initialization script
     this._initScripts = python_initialization_script;
@@ -476,13 +484,13 @@ export class FormWidget extends ReactWidget {
   // -------------------------------------------------------------------------------------------------------------
 
   // Updates the variable that holds the  
-  private async _updateCurrentNotebook(sender: any, nbPanel: NotebookPanel ){
+  private async updateCurrentNotebook(sender: any, nbPanel: NotebookPanel ){
     console.log('------> Notebook changed', nbPanel.content.title.label);
     // Update the current notebook
-    this.current_notebook = nbPanel;
+    this._currentNotebook = nbPanel;
 
     // Creates a new way to connect to the Kernel in this notebook
-    const session = this.current_notebook.sessionContext;
+    const session = this._currentNotebook.sessionContext;
     // Note: When an IOptions object is passed, need to look at the sourc code to see which variables this option has. If ther eis one, we can pass it with brackets and the same name
     // To-do: Ok at some point we cannot keep creating connections, these should be somehow dropped
     this._connector = new KernelConnector( { session } );
@@ -501,7 +509,7 @@ export class FormWidget extends ReactWidget {
     });
 
     // Connect to changes running in the code
-    this._connector.iopubMessage.connect( this._codeRunningOnNotebook );
+    this._connector.iopubMessage.connect( this.codeRunningOnNotebook );
 
 
     // To-do:Need to call render so that the output function in the button has the latest version of 
@@ -510,18 +518,18 @@ export class FormWidget extends ReactWidget {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // HANDLE CODE RUNNING IN NOTEBOOK
+  // HANDLE CODE RUNNING IN NOTEBOOK (GENERAL FOR ALL FUNCTIONS)
   // -------------------------------------------------------------------------------------------------------------
 
   // Run inspector every time code is running and the code is not from eigendata application
-  private _codeRunningOnNotebook = ( sess: ISessionContext, msg: KernelMessage.IExecuteInputMsg ) => {
+  private codeRunningOnNotebook = ( sess: ISessionContext, msg: KernelMessage.IExecuteInputMsg ) => {
     console.log('------> Code running in the notebook');
     let msgType = msg.header.msg_type;
     switch ( msgType ) {
         case 'execute_input':
             let code = msg.content.code;
             // Check this is not my code running
-            if(!(code == this.inspector_script) && !(code == this._initScripts) && !(code == this._codeToRequestForm)){
+            if(!(code == this._inspectorScript) && !(code == this._initScripts) && !(code == this._codeToRequestForm)){
               console.log('Code running');
               this.getDataframes();
             }
@@ -535,15 +543,15 @@ export class FormWidget extends ReactWidget {
   private getDataframes(): void {
     console.log('------> Get dataframe list');
     let content: KernelMessage.IExecuteRequestMsg['content'] = {
-        code: this.inspector_script,
+        code: this._inspectorScript,
         stop_on_error: false,
         store_history: false
     };
-    this._connector.fetch( content, this._handleGetDataframesResponse );
+    this._connector.fetch( content, this.handleGetDataframesResponse );
   };
 
   // This formats the dataframes that we are reading to show them in the UI
-  private _handleGetDataframesResponse = ( response: KernelMessage.IIOPubMessage ): void => {
+  private handleGetDataframesResponse = ( response: KernelMessage.IIOPubMessage ): void => {
     console.log('------> Handle inspector request');
     let message_type = response.header.msg_type;
     if (message_type === "execute_result"){
@@ -575,16 +583,16 @@ export class FormWidget extends ReactWidget {
     console.log('------> Get transformation UI form');
     if(this.transformationSelection && this.tableSelection){
        
-      if(typeof(this.transformations_config[this.transformationSelection]) === 'undefined'){
+      if(typeof(this._transformationsConfig[this.transformationSelection]) === 'undefined'){
         /*-------------------------------------------
           Generate form on the fly by running python
         -------------------------------------------*/
         console.log('----> No custom transformation');
         let request_expression = 'form = get_multi_select_values(' + this.tableSelection + '.' + this.transformationSelection + ',caller=' + this.tableSelection + ')';      
-        // Save it so that we can avoid triggering the _codeRunningOnNotebook function
+        // Save it so that we can avoid triggering the codeRunningOnNotebook function
         this._codeToRequestForm = request_expression;
         console.log('Form request expression',request_expression);
-        const result = await FormWidget.sendKernelRequest(this.current_notebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
+        const result = await FormWidget.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
         let content = result.form.data["text/plain"];
         
         // The resulting python JSON neets to be cleaned
@@ -598,12 +606,12 @@ export class FormWidget extends ReactWidget {
         /*-------------------------------------------
           Read form from custom configuration
         -------------------------------------------*/
-        console.log('Custom transformation', this.transformations_config[this.transformationSelection]);
+        console.log('Custom transformation', this._transformationsConfig[this.transformationSelection]);
         let request_expression = 'form = get_json_column_values(' + this.tableSelection + ')';      
-        // Save it so that we can avoid triggering the _codeRunningOnNotebook function
+        // Save it so that we can avoid triggering the codeRunningOnNotebook function
         this._codeToRequestForm = request_expression;
         console.log('Form request expression',request_expression);
-        const result = await FormWidget.sendKernelRequest(this.current_notebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
+        const result = await FormWidget.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
         let content = result.form.data["text/plain"];
         
         // The resulting python JSON neets to be cleaned
@@ -616,7 +624,7 @@ export class FormWidget extends ReactWidget {
         console.log('Retrieved columns:', columns);
 
         // Fill columns in custom transformation json
-        let custom_transformation = this.transformations_config[this.transformationSelection].form;
+        let custom_transformation = this._transformationsConfig[this.transformationSelection].form;
         
         // Check if multi-select columns defined
         if(typeof(custom_transformation['definitions']['columns']) !== 'undefined'){
@@ -665,15 +673,15 @@ export class FormWidget extends ReactWidget {
   };
 
   // -------------------------------------------------------------------------------------------------------------
-  // FUNCTION MERGE
+  // FUNCTION MERGE: Incomplete, custom code to handle this specific function
   // -------------------------------------------------------------------------------------------------------------
 
   public async updateMergeDataframesForm(rightParameter: string){
      let request_expression = 'form = get_json_column_values(' + rightParameter + ')';      
-      // Save it so that we can avoid triggering the _codeRunningOnNotebook function
+      // Save it so that we can avoid triggering the codeRunningOnNotebook function
       this._codeToRequestForm = request_expression;
       console.log('Form request expression',request_expression);
-      const result = await FormWidget.sendKernelRequest(this.current_notebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
+      const result = await FormWidget.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
       let content = result.form.data["text/plain"];
       
       // The resulting python JSON neets to be cleaned
@@ -685,7 +693,7 @@ export class FormWidget extends ReactWidget {
       const columns = JSON.parse(content);
       console.log('New columns', columns);
 
-      let custom_merge_transformation = this.transformations_config[this.transformationSelection].form;
+      let custom_merge_transformation = this._transformationsConfig[this.transformationSelection].form;
 
       custom_merge_transformation['definitions']['right_columns'] = {
         "type" : "array", 
@@ -704,6 +712,12 @@ export class FormWidget extends ReactWidget {
       this._signal.emit();
 
       console.log('New transformation form', this.transformationForm);
+  }
+
+  public handleTableSelectionChange = (selection:any) => {
+    this.tableSelection = selection.value as string;
+    this.requestTransformationForm();
+    //console.log(this.tableSelection);
   }
 
   // -------------------------------------------------------------------------------------------------------------
