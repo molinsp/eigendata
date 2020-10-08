@@ -1,5 +1,6 @@
 export const python_initialization_script = `
 import json
+import sys
 from IPython import get_ipython
 from IPython.core.magics.namespace import NamespaceMagics
 

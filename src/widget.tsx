@@ -22,6 +22,8 @@ import transformations_config from './transformations.json';
 
 import {python_initialization_script} from './initscript';
 
+import CellUtilities from './CellUtilities';
+
 /*
  Description: This extension provides a GUI over pandas data transformations, with the goal of facilitating the use by non experts
  Components:
@@ -198,6 +200,8 @@ export class FormWidget extends ReactWidget {
   // This variable is created so that we can avoid running the code to get the available dataframes when it is not 
   // needed, i.e. when we are executing code to get the form
   private _codeToRequestForm: string;
+
+  private _importedPandas: boolean = false;
 
   /*---------------------------------
     Configurations
@@ -386,7 +390,8 @@ export class FormWidget extends ReactWidget {
     }
 
     console.log('Table selection', this.tableSelection);
-    // If no variable defined, overwrite dataframe
+    // If no variable defined, and calling from a given table apply to this table
+    // else if table not defined, name it data
     if((variable === '') && (typeof(this.tableSelection) !== 'undefined')){
       variable = this.tableSelection;
     }else if ((variable === '') && (typeof(this.tableSelection) === 'undefined')){
@@ -400,13 +405,17 @@ export class FormWidget extends ReactWidget {
     // Compose formula
     formula = variable + ' = ' + formula;
 
-    const last_cell_index = this.current_notebook.content.widgets.length - 1;
-    const last_cell = this.current_notebook.content.widgets[last_cell_index];
-    console.log('Last cell inded: ', last_cell_index);
-    last_cell.model.value.text = formula;  
+    // Add pandas if not already added
+    if(this._importedPandas == false){
+      formula = 'import pandas as pd \n' + formula;
+      this._importedPandas = true;
+    }
 
-    // The code here is to run the cell 
-    this.runCellAtIndex(this.current_notebook, last_cell_index);
+    // Calculate index of last cell
+    const last_cell_index = this.current_notebook.content.widgets.length - 1;
+    
+    // Run and insert using cell utilities
+    CellUtilities.insertRunShow(this.current_notebook, last_cell_index, formula, false);
 
     // Go back to transformation state
     this.state_screen = 'transformations';
