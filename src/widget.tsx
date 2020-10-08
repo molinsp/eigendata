@@ -62,7 +62,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   -----------------------------------*/
   // To-do: Remove in multi-select breaks
   const CustomSelect = function(props:any) {
-    console.log('Props custom select: ', props);
+    //console.log('Props custom select: ', props);
 
     const processSingleSelect = (selection: any) => {
       const {value} = selection;
@@ -126,7 +126,8 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   /*-----------------------------------
   NO DATA LOADED: Show a load data form
   -----------------------------------*/
-  if(logic.state_screen === 'load csv' ){
+  if(logic.state_screen.localeCompare('load csv') == 0){
+    console.log('------------- DATA LOADING -------------');
     return(
       <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm}  uiSchema={uiSchema} />
       )
@@ -135,8 +136,8 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   SELECT TRANSFORMATION: When data loaded
   ---------------------------------------*/
   // To-do: Add button to load data even in this case
-  else if(logic.state_screen == 'transformations'){
-    console.log('Transformations state');
+  else if(logic.state_screen.localeCompare('transformations') == 0){
+    console.log('------------- DATA TRANSFORMATION -------------');
       return (
         <div>
         <Select options={logic.dataframes_available} label="Select data" onChange={logic.handleTableSelectionChange} />
@@ -146,6 +147,13 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
         }
         </div>
        );
+  }
+
+  else if(logic.state_screen.localeCompare('querybuilder') == 0){
+    console.log('------------- QUERYBUILDER -------------');
+    return(
+      <h2> Querybuilder </h2>
+    );
   }
 
 };
@@ -167,12 +175,11 @@ export class FormWidget extends ReactWidget {
   /*---------------------------------
     Keep track of notebooks
   ----------------------------------*/
+  // Tracker that enables us to listen to notebook change events
+  private _notebookTracker: INotebookTracker;
 
   // Object that holds the currently selected notebook
   private _currentNotebook: NotebookPanel;
-
-  // Tracker that enables us to listen to notebook change events
-  private _notebookTracker: INotebookTracker;
 
   // Enables to connect to the kernel
   private _connector: KernelConnector;
@@ -504,7 +511,7 @@ export class FormWidget extends ReactWidget {
         store_history: false
       };
       this._connector.fetch( content, ( () => { } ) ).then(() => {
-        this.getDataframes();
+        this.requestDataframes();
       });
     });
 
@@ -531,7 +538,7 @@ export class FormWidget extends ReactWidget {
             // Check this is not my code running
             if(!(code == this._inspectorScript) && !(code == this._initScripts) && !(code == this._codeToRequestForm)){
               console.log('Code running');
-              this.getDataframes();
+              this.requestDataframes();
             }
             break;
         default:
@@ -540,7 +547,7 @@ export class FormWidget extends ReactWidget {
   };
 
   // This sends a request to the Kernel to get a list of dataframes
-  private getDataframes(): void {
+  private requestDataframes(): void {
     console.log('------> Get dataframe list');
     let content: KernelMessage.IExecuteRequestMsg['content'] = {
         code: this._inspectorScript,
@@ -550,7 +557,7 @@ export class FormWidget extends ReactWidget {
     this._connector.fetch( content, this.handleGetDataframesResponse );
   };
 
-  // This formats the dataframes that we are reading to show them in the UI
+  // Triggered when the getDataframesrequest responds.
   private handleGetDataframesResponse = ( response: KernelMessage.IIOPubMessage ): void => {
     console.log('------> Handle inspector request');
     let message_type = response.header.msg_type;
@@ -571,7 +578,16 @@ export class FormWidget extends ReactWidget {
       }else{
         console.log('Refreshing dataframes');
         this.state_screen = 'transformations';
-        this.generateDataFrameSelectionForm(dataframes);
+        
+        let dataframe_list: Array<any> = [];
+        // Note: Just trying to make an array so that I can iterate here
+        (dataframes as Array<any>).forEach(function (item, index) {
+          //console.log(item, index);
+          const dataframe_item = {value: item['varName'], label: item['varName']};
+          dataframe_list.push(dataframe_item);
+        });
+
+        this.dataframes_available = dataframe_list;
       }
       // Emit signal to re-render the component
       this._signal.emit();
@@ -653,24 +669,7 @@ export class FormWidget extends ReactWidget {
     }
   }
 
-  // Test: Right now after code runs we are just creating a new JSON form schema
-  // and replacing the old one with the new one
-  // Probably not the best way of doing it
-  private generateDataFrameSelectionForm (dataframes: JSONSchema7): void {
-    let dataframe_list: Array<any> = [];
-    
-    // Note: Just trying to make an array so that I can iterate here
-    (dataframes as Array<any>).forEach(function (item, index) {
-      //console.log(item, index);
-      const dataframe_item = {value: item['varName'], label: item['varName']};
-      dataframe_list.push(dataframe_item);
-    });
-   
-    this.dataframes_available = dataframe_list;
-    
-    // Emit a signal so that the UI re-renders
-    this._signal.emit();
-  };
+
 
   // -------------------------------------------------------------------------------------------------------------
   // FUNCTION MERGE: Incomplete, custom code to handle this specific function
