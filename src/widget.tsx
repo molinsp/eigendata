@@ -30,6 +30,7 @@ import Demo from "./demo";
 
 
 
+
 /*
  Description: This extension provides a GUI over pandas data transformations, with the goal of facilitating the use by non experts
  Components:
@@ -62,7 +63,6 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   let logic = props.logic;
 
   console.log('------> Rendering UI');
-
 
   /*-----------------------------------
   CUSTOM SELECT
@@ -103,7 +103,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
         <Select options={props.options.enumOptions} 
           onChange= {selection => props.onChange(processSingleSelect(selection))}
           //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
-          value={props.options.enumOptions.filter((option: any) => option.label === props.value)}
+          defaultValue={props.options.enumOptions.filter((option: any) => option.label === props.value)}
         />
       );
     }
@@ -114,19 +114,6 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   const widgets = {
     SelectWidget: CustomSelect
   };
-
-  function handleChange (data:any) {
-    //console.log(data);
-
-    // FUNCTION: merge
-    // This handles the merge function
-    if(data.schema.title === 'merge' && typeof(data.formData['right']) !== 'undefined'){
-      console.log('-> Changed right in merge')
-      // This was an attempt to make a dynamic form but
-      //logic.updateMergeDataframesForm(data.formData['right']);
-      data.formData = {};
-    }
-  }
 
   // To-do: Bring react-select to jsonschemaform https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
 
@@ -150,7 +137,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
         <Select options={logic.dataframes_available} label="Select data" onChange={logic.handleTableSelectionChange} />
         <Select options={logic.dataframeFunctions} label="Select transformation" onChange={logic.handleTransformationSelectionChange} />
         {logic.show_formula_fields &&
-          <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm} onChange={handleChange.bind(this)} uiSchema={uiSchema} widgets={widgets}/>
+          <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm}  uiSchema={uiSchema} widgets={widgets}/>
         }
         </div>
        );
@@ -159,7 +146,6 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   else if(logic.state_screen.localeCompare('querybuilder') == 0){
     console.log('------------- QUERYBUILDER -------------');
     return(
-      //<QueryBuilder fields={fields} onQueryChange={logQuery} controlElements={{ valueEditor: ValueEditor }}/>\
       <Demo />
     );
   }
@@ -209,7 +195,7 @@ export class FormWidget extends ReactWidget {
   public transformationForm: JSONSchema7;
 
   // GUI screen state
-  public state_screen: string = 'querybuilder';
+  public state_screen: string = 'load csv';
 
   // Variable that controls if the formula field is shown
   public show_formula_fields: boolean = false;
@@ -582,7 +568,7 @@ export class FormWidget extends ReactWidget {
       console.log('Number of dataframes:', dataframes.length);
       if(dataframes.length == 0){
         // TEMP: Disable for testing
-        //this.state_screen = 'load csv';
+        this.state_screen = 'load csv';
         this.transformationSelection = 'read_csv';
       }else{
         console.log('Refreshing dataframes'); 
@@ -597,7 +583,7 @@ export class FormWidget extends ReactWidget {
         this.dataframes_available = dataframe_list;
 
         // TEMP: Disable for testing
-        //this.state_screen = 'transformations';
+        this.state_screen = 'transformations';
       }
       // Emit signal to re-render the component
       this._signal.emit();

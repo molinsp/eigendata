@@ -60,6 +60,7 @@ const config: Config = {
 };
 
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
+// Default empty query value
 const queryValue = {"id": QbUtils.uuid(), "type": "group"};
 
 
@@ -93,10 +94,10 @@ export default class DemoQueryBuilder extends Component {
     
     onChange = (immutableTree: ImmutableTree, config: Config) => {
       // Tip: for better performance you can apply `throttle` - see `examples/demo`
-      this.setState({tree: immutableTree, config: config});
+      // this.setState({tree: immutableTree, config: config});
 
-      const jsonTree = QbUtils.getTree(immutableTree);
-      console.log(jsonTree);
+      // const jsonTree = QbUtils.getTree(immutableTree);
+      // console.log('JSON TREE', jsonTree);
       // `jsonTree` can be saved to backend, and later loaded to `queryValue`
     }
 }
