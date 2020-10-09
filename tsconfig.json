@@ -20,7 +20,11 @@
     "target": "es2017",
     "types": [],
     "resolveJsonModule": true,
-    "esModuleInterop": true  
+    "esModuleInterop": true, 
+    "noImplicitAny": false
   },
-  "include": ["src/*"]
+  "include": ["src/*"],
+  "rules": {
+    "no-unused-vars": "off"
+  }
 }

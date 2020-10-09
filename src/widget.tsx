@@ -24,6 +24,12 @@ import {python_initialization_script} from './initscript';
 
 import CellUtilities from './CellUtilities';
 
+// Awesome querybuilder
+import Demo from "./demo";
+//import QueryBuilder from 'react-querybuilder';
+
+
+
 /*
  Description: This extension provides a GUI over pandas data transformations, with the goal of facilitating the use by non experts
  Components:
@@ -56,6 +62,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   let logic = props.logic;
 
   console.log('------> Rendering UI');
+
 
   /*-----------------------------------
   CUSTOM SELECT
@@ -152,7 +159,8 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   else if(logic.state_screen.localeCompare('querybuilder') == 0){
     console.log('------------- QUERYBUILDER -------------');
     return(
-      <h2> Querybuilder </h2>
+      //<QueryBuilder fields={fields} onQueryChange={logQuery} controlElements={{ valueEditor: ValueEditor }}/>\
+      <Demo />
     );
   }
 
@@ -201,7 +209,7 @@ export class FormWidget extends ReactWidget {
   public transformationForm: JSONSchema7;
 
   // GUI screen state
-  public state_screen: string = 'load csv';
+  public state_screen: string = 'querybuilder';
 
   // Variable that controls if the formula field is shown
   public show_formula_fields: boolean = false;
@@ -573,12 +581,11 @@ export class FormWidget extends ReactWidget {
       const dataframes = JSON.parse( content );
       console.log('Number of dataframes:', dataframes.length);
       if(dataframes.length == 0){
-        this.state_screen = 'load csv';
+        // TEMP: Disable for testing
+        //this.state_screen = 'load csv';
         this.transformationSelection = 'read_csv';
       }else{
-        console.log('Refreshing dataframes');
-        this.state_screen = 'transformations';
-        
+        console.log('Refreshing dataframes'); 
         let dataframe_list: Array<any> = [];
         // Note: Just trying to make an array so that I can iterate here
         (dataframes as Array<any>).forEach(function (item, index) {
@@ -588,6 +595,9 @@ export class FormWidget extends ReactWidget {
         });
 
         this.dataframes_available = dataframe_list;
+
+        // TEMP: Disable for testing
+        //this.state_screen = 'transformations';
       }
       // Emit signal to re-render the component
       this._signal.emit();
