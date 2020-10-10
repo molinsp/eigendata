@@ -120,7 +120,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   /*-----------------------------------
   NO DATA LOADED: Show a load data form
   -----------------------------------*/
-  if(logic.state_screen.localeCompare('load csv') == 0){
+  if(logic.screen.localeCompare('load csv') == 0){
     console.log('------------- DATA LOADING -------------');
     return(
       <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm}  uiSchema={uiSchema} />
@@ -130,20 +130,20 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   SELECT TRANSFORMATION: When data loaded
   ---------------------------------------*/
   // To-do: Add button to load data even in this case
-  else if(logic.state_screen.localeCompare('transformations') == 0){
+  else if(logic.screen.localeCompare('transformations') == 0){
     console.log('------------- DATA TRANSFORMATION -------------');
       return (
         <div>
-        <Select options={logic.dataframes_available} label="Select data" onChange={logic.handleTableSelectionChange} />
+        <Select options={logic.dataframesLoaded} label="Select data" onChange={logic.handleDataframeSelectionChange} />
         <Select options={logic.dataframeFunctions} label="Select transformation" onChange={logic.handleTransformationSelectionChange} />
-        {logic.show_formula_fields &&
+        {logic.showTransformationForm &&
           <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm}  uiSchema={uiSchema} widgets={widgets}/>
         }
         </div>
        );
   }
 
-  else if(logic.state_screen.localeCompare('querybuilder') == 0){
+  else if(logic.screen.localeCompare('querybuilder') == 0){
     console.log('------------- QUERYBUILDER -------------');
     return(
       <Demo />
@@ -154,7 +154,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
 
 
 // This allows to re-render the component whene there is a signal
-// This is the recommended approach from the Jupyter team: https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/developer/virtualdom.usesignal.tsx
+// This is the recommended approach from the Jupyter team: https://jupyterlab.readthedocs.io/en/stable/developer/virtualdom.html
 // Inspired by this example: https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/developer/virtualdom.usesignal.tsx
 
 function UseSignalComponent(props: { signal: ISignal<FormWidget, void>, logic: FormWidget}) {
@@ -185,8 +185,11 @@ export class FormWidget extends ReactWidget {
   // Signal that triggers the update of the react component 
   private _signal = new Signal<this, void>(this);
 
-  // Keeps track of the UI table selection
-  public tableSelection: any;
+  // GUI screen
+  public screen: string = 'load csv';
+
+  // Keeps track of the UI dataframe selection
+  public dataframeSelection: any;
   
   // Keeps track of the UI transformation selection
   public transformationSelection: string;
@@ -194,14 +197,12 @@ export class FormWidget extends ReactWidget {
   // JSON schema that defines the transformationform
   public transformationForm: JSONSchema7;
 
-  // GUI screen state
-  public state_screen: string = 'load csv';
-
-  // Variable that controls if the formula field is shown
-  public show_formula_fields: boolean = false;
+  // Variable that controls if the form for the function is shown
+  public showTransformationForm: boolean = false;
 
   // Keeps track of dataframes that can be transformed through the UI
-  public dataframes_available: any = [];
+  // Used to display forms
+  public dataframesLoaded: any = [];
 
   /*---------------------------------
     Communicate with Python Kernel
@@ -340,11 +341,11 @@ export class FormWidget extends ReactWidget {
     const formData = formReponse.formData;
     let callerObject: string;
 
-    if(!this.tableSelection){
-    // If there is no table selection, calling from pandas
+    if(!this.dataframeSelection){
+    // If there is no dataframe selection, calling from pandas
       callerObject = 'pd';
     }else{
-      callerObject = this.tableSelection;
+      callerObject = this.dataframeSelection;
     }
 
     // Formula that will be generated in the form of: object.transformation(parameters)
@@ -402,8 +403,8 @@ export class FormWidget extends ReactWidget {
         } else{
           // ------------------------------------ CODEGEN NOT DEFINED ------------------------------------------
             // The form input is a Table name 
-            if (key.localeCompare('New table') == 0){
-              console.log('* New table');
+            if (key.localeCompare('New dataframe') == 0){
+              console.log('* New dataframe');
               variable = formData[key];
             }else{
               formula = formula + key + '="' + String(formData[key]) + '", ';
@@ -411,12 +412,12 @@ export class FormWidget extends ReactWidget {
         }
     }
 
-    console.log('Table selection', this.tableSelection);
-    // If no variable defined, and calling from a given table apply to this table
-    // else if table not defined, name it data
-    if((variable === '') && (typeof(this.tableSelection) !== 'undefined')){
-      variable = this.tableSelection;
-    }else if ((variable === '') && (typeof(this.tableSelection) === 'undefined')){
+    console.log('Dataframe selection', this.dataframeSelection);
+    // If no variable defined, and calling from a given dataframe apply to this dataframe
+    // else if dataframe not defined, name it data
+    if((variable === '') && (typeof(this.dataframeSelection) !== 'undefined')){
+      variable = this.dataframeSelection;
+    }else if ((variable === '') && (typeof(this.dataframeSelection) === 'undefined')){
       variable = 'data';
     }
 
@@ -440,16 +441,25 @@ export class FormWidget extends ReactWidget {
     CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, formula, false);
 
     // Go back to transformation state
-    this.state_screen = 'transformations';
+    this.screen = 'transformations';
     //Reset the selection
     this.transformationSelection = null;
   };
 
-  // Log internally that a transformation has been loaded
+  // FUNCTIONS TO GET TRACK OF SELECTIONS
+
+  // Triggered from the frontend when transformation selection changes
   public handleTransformationSelectionChange = (selection:any) => {
     this.transformationSelection = selection.value;
     this.requestTransformationForm();
     //console.log(this.transformationSelection);
+  }
+
+  // Triggered from the frontend when dataframe selection changes
+  public handleDataframeSelectionChange = (selection:any) => {
+    this.dataframeSelection = selection.value as string;
+    this.requestTransformationForm();
+    //console.log(this.dataframeSelection);
   }
 
 
@@ -512,10 +522,9 @@ export class FormWidget extends ReactWidget {
     // Connect to changes running in the code
     this._connector.iopubMessage.connect( this.codeRunningOnNotebook );
 
-
-    // To-do:Need to call render so that the output function in the button has the latest version of 
+    // Need to re-render so that the output function in the button has the latest version of 
     // the current notebook. Probably there is a better way of doing this.
-    this.render();
+    this._signal.emit();
   }
 
   // -------------------------------------------------------------------------------------------------------------
@@ -568,7 +577,7 @@ export class FormWidget extends ReactWidget {
       console.log('Number of dataframes:', dataframes.length);
       if(dataframes.length == 0){
         // TEMP: Disable for testing
-        this.state_screen = 'load csv';
+        this.screen = 'load csv';
         this.transformationSelection = 'read_csv';
       }else{
         console.log('Refreshing dataframes'); 
@@ -580,10 +589,10 @@ export class FormWidget extends ReactWidget {
           dataframe_list.push(dataframe_item);
         });
 
-        this.dataframes_available = dataframe_list;
+        this.dataframesLoaded = dataframe_list;
 
         // TEMP: Disable for testing
-        this.state_screen = 'transformations';
+        this.screen = 'transformations';
       }
       // Emit signal to re-render the component
       this._signal.emit();
@@ -591,16 +600,16 @@ export class FormWidget extends ReactWidget {
   };
 
   private async requestTransformationForm(){
-    // Check that there is a transformation selection and a table selection
+    // Check that there is a transformation selection and a dataframe selection
     console.log('------> Get transformation UI form');
-    if(this.transformationSelection && this.tableSelection){
+    if(this.transformationSelection && this.dataframeSelection){
        
       if(typeof(this._transformationsConfig[this.transformationSelection]) === 'undefined'){
         /*-------------------------------------------
           Generate form on the fly by running python
         -------------------------------------------*/
         console.log('----> No custom transformation');
-        let request_expression = 'form = get_multi_select_values(' + this.tableSelection + '.' + this.transformationSelection + ',caller=' + this.tableSelection + ')';      
+        let request_expression = 'form = get_multi_select_values(' + this.dataframeSelection + '.' + this.transformationSelection + ',caller=' + this.dataframeSelection + ')';      
         // Save it so that we can avoid triggering the codeRunningOnNotebook function
         this._codeToRequestForm = request_expression;
         console.log('Form request expression',request_expression);
@@ -619,7 +628,7 @@ export class FormWidget extends ReactWidget {
           Read form from custom configuration
         -------------------------------------------*/
         console.log('Custom transformation', this._transformationsConfig[this.transformationSelection]);
-        let request_expression = 'form = get_json_column_values(' + this.tableSelection + ')';      
+        let request_expression = 'form = get_json_column_values(' + this.dataframeSelection + ')';      
         // Save it so that we can avoid triggering the codeRunningOnNotebook function
         this._codeToRequestForm = request_expression;
         console.log('Form request expression',request_expression);
@@ -650,7 +659,7 @@ export class FormWidget extends ReactWidget {
 
         // Check if there is a dataframes select
         if(typeof(custom_transformation['definitions']['dataframes']) !== 'undefined'){
-          custom_transformation['definitions']['dataframes']['enum'] = this.dataframes_available.map((item: any) => item.value);
+          custom_transformation['definitions']['dataframes']['enum'] = this.dataframesLoaded.map((item: any) => item.value);
         }
         
         this.transformationForm = custom_transformation;
@@ -659,13 +668,11 @@ export class FormWidget extends ReactWidget {
       }
 
       // Update the state to indicate that we are now ready to show a formula field
-      this.show_formula_fields = true;
+      this.showTransformationForm = true;
       this._signal.emit();
       console.log('<-------------- Transformation UI form generated');
     }
   }
-
-
 
   // -------------------------------------------------------------------------------------------------------------
   // FUNCTION MERGE: Incomplete, custom code to handle this specific function
@@ -700,19 +707,13 @@ export class FormWidget extends ReactWidget {
       };
 
       custom_merge_transformation['definitions']['columns']['items']['enum'] = columns;
-      custom_merge_transformation['definitions']['dataframes']['enum'] = this.dataframes_available.map((item: any) => item.value);
+      custom_merge_transformation['definitions']['dataframes']['enum'] = this.dataframesLoaded.map((item: any) => item.value);
 
       this.transformationForm = custom_merge_transformation;
 
       this._signal.emit();
 
       console.log('New transformation form', this.transformationForm);
-  }
-
-  public handleTableSelectionChange = (selection:any) => {
-    this.tableSelection = selection.value as string;
-    this.requestTransformationForm();
-    //console.log(this.tableSelection);
   }
 
   // -------------------------------------------------------------------------------------------------------------
