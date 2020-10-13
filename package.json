@@ -41,6 +41,7 @@
     "@rjsf/core": "^2.4.0",
     "@types/lodash": "^4.14.161",
     "@types/react-select": "^3.0.20",
+    "loadash": "^1.0.0",
     "react-awesome-query-builder": "^2.2.1",
     "react-querybuilder": "^3.7.1",
     "react-select": "^3.1.0"

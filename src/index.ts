@@ -83,16 +83,8 @@ const extension: JupyterFrontEndPlugin<void> = {
     // Add the command to the menu
     tutorialMenu.addItem({ command, args: { origin: 'from the menu' } });
 
-    // OLD: Keep track of notebooks
-    //notebook_tracker.currentChanged.connect(( sender, nbPanel: NotebookPanel ) => {
-    //  console.log('Current changed to: ', nbPanel.content.title.label)
-    //  content.update_current_notebook(nbPanel);
-    //
-    //} );
-
   }
 };
-
 
 /**
  * Export the plugins as default.

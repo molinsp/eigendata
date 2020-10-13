@@ -1,6 +1,6 @@
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 
-import React from 'react';
+import React, {useState} from 'react';
 
 import Form from "@rjsf/core";
 
@@ -10,7 +10,7 @@ import {JSONSchema7} from 'json-schema';
 
 import { KernelConnector } from './kernelconnector';
 
-import {NotebookPanel, NotebookActions, INotebookTracker} from '@jupyterlab/notebook';
+import {NotebookPanel, INotebookTracker} from '@jupyterlab/notebook';
 
 import { KernelMessage, Kernel } from '@jupyterlab/services';
 
@@ -23,6 +23,8 @@ import _transformationsConfig from './transformations.json';
 import {python_initialization_script} from './initscript';
 
 import CellUtilities from './CellUtilities';
+
+import _ from "lodash";
 
 // Awesome querybuilder
 import Demo from "./demo";
@@ -62,12 +64,27 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
 
   let logic = props.logic;
 
+  let transformationForm: JSONSchema7 = _transformationsConfig['read_csv']['form'] as JSONSchema7;
+
+
+  // State of the component
+  const [state, setState] = useState({
+      transformationForm: transformationForm,
+      showForm: null,
+      dataframeSelection: null,
+      transformationSelection: null
+    });
+
+  console.log('State:', state);
+
   console.log('------> Rendering UI');
+
 
   /*-----------------------------------
   CUSTOM SELECT
   -----------------------------------*/
-  // To-do: Remove in multi-select breaks
+  // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
+  // To-do: Move custom components to separate files
   const CustomSelect = function(props:any) {
     //console.log('Props custom select: ', props);
 
@@ -115,7 +132,161 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
     SelectWidget: CustomSelect
   };
 
-  // To-do: Bring react-select to jsonschemaform https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
+  // Handle changes in the form
+  const handleFormChange = async (data:any) => {
+
+     // FUNCTION: MERGE
+     // When the dataframe is changed
+     if(data.schema.title === 'merge' && typeof(data.formData['right']) !== 'undefined'){
+       console.log('-> Changed right in merge')
+       // Get the columns from the backend
+       let columns = await logic.getDataframeColumns(data.formData['right']);
+       // Perform deep copy of the object, otherwise it does not re-render
+       let new_state = _.cloneDeep(state.transformationForm);
+       // Add the queried columns to the state
+       new_state["definitions"]["right_columns"]['items']['enum'] = columns;
+       setState(state => ({...state,transformationForm : new_state}));
+     }
+   }
+
+  // Process selection of table
+   const handleDataframeSelectionChange = (input: any) => {
+     //console.log(this);
+     if(state.transformationSelection){
+       console.log('all defined');
+       dataframeTransformationSelection(input.value, state.transformationSelection);
+     }else{
+       setState(state => ({...state,dataframeSelection:input.value}));
+     }
+   }
+
+   // Process selection of transformation
+   const handleTransformationSelectionChange = (input: any) => {
+     //console.log(input);
+     if(state.dataframeSelection){
+       console.log('all defined');
+       dataframeTransformationSelection(state.dataframeSelection, input.value);
+     }else{
+       setState(state => ({...state,transformationSelection:input.value}));
+     }
+   }
+
+   
+   const dataframeTransformationSelection = async (dataframeSelection: string, transformationSelection: string) => {  
+     let newTransformationForm = await logic.requestTransformationFormJSON(dataframeSelection, transformationSelection);
+     setState({
+        transformationForm: newTransformationForm,
+        showForm: true,
+        dataframeSelection: dataframeSelection,
+        transformationSelection: transformationSelection
+     });
+   }
+
+   const generatePythonCode = ( formReponse: any) => {
+    console.log('------------------- Generating form code -------------------');
+    console.log("Data submitted: ", formReponse);
+
+    const formData = formReponse.formData;
+    let callerObject: string;
+    let transformationSelection: string = state.transformationSelection;
+    let dataframeSelection: string = state.transformationSelection; 
+
+    if(!dataframeSelection){
+    // If there is no dataframe selection, calling from pandas
+      callerObject = 'pd';
+    }else{
+      callerObject = state.dataframeSelection;
+    }
+
+    if(!transformationSelection){
+      transformationSelection = 'read_csv';
+    }
+
+    // Formula that will be generated in the form of: object.transformation(parameters)
+    let formula = callerObject + '.' + transformationSelection + '(';
+    
+    // The result will be saved in one variable
+    let variable = '';
+
+    // Process every input
+    for (var key in formData) {
+        console.log('-----> Paramter', key);     
+        // Check if there is a codegenstyle
+        console.log('Codegenstyle', formReponse.schema.properties[key]['codegenstyle']);
+        if(typeof(formReponse.schema.properties[key]['codegenstyle']) !== 'undefined'){
+            // ------------------------------------ CODEGEN STYLE DEFINED ------------------------------------------
+            /*-------------------------------
+               CODEGEN: VARIABLE
+            -------------------------------*/
+            if(formReponse.schema.properties[key]['codegenstyle'] === 'variable'){
+              console.log('*** Codgenstyle variable')
+              formula = formula + key + '=' + formData[key] + ', '; 
+            /*-------------------------------
+               CODEGEN: ARRAY
+            -------------------------------*/
+            }else if(formReponse.schema.properties[key]['codegenstyle'] === 'array'){
+              console.log('** Codegenstyle array')
+              formula = formula + key + '=["' + formData[key].join('","') + '"], ';
+            /*-------------------------------
+               CODEGEN: AGGREGATION
+            -------------------------------*/
+            }else if(formReponse.schema.properties[key]['codegenstyle'] === 'aggregation'){
+              console.log('** Codegenstyle dict')
+                var input = '{'
+                for(const aggregationdict of formData[key]){
+                    input = input + '"' + aggregationdict['column'] + '" : ' + aggregationdict['function'] + ', ';
+                }
+                input = input.substring(0,input.length - 2);
+                input = input + '}';
+                input = 'aggfunc=' + input;
+                formula = formula + input + ', ';
+                console.log('Input of dict parameter', input);
+            /*-------------------------------
+               CODEGEN: CHECK NONE
+            -------------------------------*/        
+            }else if(formReponse.schema.properties[key]['codegenstyle'] === 'checkNone') {
+              console.log('** Codegenstyle check none')
+              if (formData[key].localeCompare('None') == 0){
+                formula = formula + key + '=' + String(formData[key]) + ', ';
+              }else{
+                formula = formula + key + '="' + String(formData[key]) + '", ';
+              }
+            }else{
+              console.log('** Undefined codegenstyle')
+            }
+        } else{
+          // ------------------------------------ CODEGEN NOT DEFINED ------------------------------------------
+            // The form input is a Table name 
+            if (key.localeCompare('New table') == 0){
+              console.log('* New dataframe');
+              variable = formData[key];
+            }else{
+              formula = formula + key + '="' + String(formData[key]) + '", ';
+            }
+        }
+    }
+
+    console.log('Dataframe selection', dataframeSelection);
+    // If no variable defined, and calling from a given dataframe apply to this dataframe
+    // else if dataframe not defined, name it data
+    if((variable === '') && (dataframeSelection !== null)){
+      variable = dataframeSelection;
+    }else if ((variable === '') && (dataframeSelection === null)){
+      variable = 'data';
+    }
+
+    // Remove last comma and space given there are no more parameters
+    formula = formula.substring(0, formula.length - 2);
+    formula = formula + ')';
+    
+    // Compose formula
+    formula = variable + ' = ' + formula;
+    console.log('FORMULA: ', formula);
+
+    logic.writeAndExecuteCode(formula);
+
+   };
+
 
   /*-----------------------------------
   NO DATA LOADED: Show a load data form
@@ -123,7 +294,7 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
   if(logic.screen.localeCompare('load csv') == 0){
     console.log('------------- DATA LOADING -------------');
     return(
-      <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm}  uiSchema={uiSchema} />
+      <Form schema={state.transformationForm} onSubmit={generatePythonCode}  uiSchema={uiSchema} />
       )
   }
   /*--------------------------------------
@@ -134,10 +305,10 @@ const FormComponent = (props: {logic: FormWidget}): JSX.Element => {
     console.log('------------- DATA TRANSFORMATION -------------');
       return (
         <div>
-        <Select options={logic.dataframesLoaded} label="Select data" onChange={logic.handleDataframeSelectionChange} />
-        <Select options={logic.dataframeFunctions} label="Select transformation" onChange={logic.handleTransformationSelectionChange} />
-        {logic.showTransformationForm &&
-          <Form schema={logic.transformationForm} onSubmit={logic.generatePythonCodeFromForm}  uiSchema={uiSchema} widgets={widgets}/>
+        <Select options={logic.dataframesLoaded} label="Select data" onChange={handleDataframeSelectionChange.bind(this)} />
+        <Select options={logic.dataframeFunctions} label="Select transformation" onChange={handleTransformationSelectionChange} />
+        {state.showForm &&
+          <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} uiSchema={uiSchema} widgets={widgets}/>
         }
         </div>
        );
@@ -164,6 +335,7 @@ function UseSignalComponent(props: { signal: ISignal<FormWidget, void>, logic: F
 // -------------------------------------------------------------------------------------------------------------
 // 2. BUSINESS LOGIC
 // -------------------------------------------------------------------------------------------------------------
+// Class that acts as a wrapper for rendering React in jupyter (based on the react jupyterlab extension example )
 export class FormWidget extends ReactWidget {
 
   /*---------------------------------
@@ -187,18 +359,6 @@ export class FormWidget extends ReactWidget {
 
   // GUI screen
   public screen: string = 'load csv';
-
-  // Keeps track of the UI dataframe selection
-  public dataframeSelection: any;
-  
-  // Keeps track of the UI transformation selection
-  public transformationSelection: string;
-
-  // JSON schema that defines the transformationform
-  public transformationForm: JSONSchema7;
-
-  // Variable that controls if the form for the function is shown
-  public showTransformationForm: boolean = false;
 
   // Keeps track of dataframes that can be transformed through the UI
   // Used to display forms
@@ -236,46 +396,82 @@ export class FormWidget extends ReactWidget {
   // Returns a json object with all the dataframes
   private _inspectorScript = `_jupyterlab_variableinspector_dict_list()`;
 
-// -------------------------------------------------------------------------------------------------------------
-// FORM GENERATOR
-// -------------------------------------------------------------------------------------------------------------
+  // -------------------------------------------------------------------------------------------------------------
+  // FORM GENERATOR
+  // -------------------------------------------------------------------------------------------------------------
+   public async requestTransformationFormJSON(dataFrameSelection: string, transformationSelection: string){
+    // Check that there is a transformation selection and a dataframe selection
+    console.log('------> Get transformation UI form');
+
+       
+    if(typeof(this._transformationsConfig[transformationSelection]) === 'undefined'){
+      /*-------------------------------------------
+        Generate form on the fly by running python
+      -------------------------------------------*/
+      console.log('----> No custom transformation');
+      let request_expression = 'form = get_multi_select_values(' + dataFrameSelection + '.' + transformationSelection + ',caller=' + dataFrameSelection + ')';      
+      // Save it so that we can avoid triggering the codeRunningOnNotebook function
+      this._codeToRequestForm = request_expression;
+      console.log('Form request expression',request_expression);
+      const result = await FormWidget.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
+      let content = result.form.data["text/plain"];
+      
+      // The resulting python JSON neets to be cleaned
+      if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+        content = content.slice(1,-1);
+        content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+      }
+
+      return JSON.parse(content);
+    }else{
+      /*-------------------------------------------
+        Read form from custom configuration
+      -------------------------------------------*/
+      console.log('Custom transformation ',transformationSelection);
+      let request_expression = 'form = get_json_column_values(' + dataFrameSelection + ')';      
+      // Save it so that we can avoid triggering the codeRunningOnNotebook function
+      this._codeToRequestForm = request_expression;
+      console.log('Form request expression',request_expression);
+      const result = await FormWidget.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
+      let content = result.form.data["text/plain"];
+      
+      // The resulting python JSON neets to be cleaned
+      if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+        content = content.slice(1,-1);
+        content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+      }
+
+      const columns = JSON.parse(content);
+      console.log('Retrieved columns:', columns);
+
+      // Fill columns in custom transformation json
+      let custom_transformation = this._transformationsConfig[transformationSelection].form;
+      
+      // Check if multi-select columns defined
+      if(typeof(custom_transformation['definitions']['columns']) !== 'undefined'){
+        custom_transformation['definitions']['columns']['items']['enum'] = columns;
+      }
+
+      // Check if single select column defined
+      if(typeof(custom_transformation['definitions']['column']) !== 'undefined'){
+        custom_transformation['definitions']['column']['enum'] = columns;
+      }
+
+      // Check if there is a dataframes select
+      if(typeof(custom_transformation['definitions']['dataframes']) !== 'undefined'){
+        custom_transformation['definitions']['dataframes']['enum'] = this.dataframesLoaded.map((item: any) => item.value);
+      }
+      
+      return custom_transformation as JSONSchema7;
+    }
+    
+  }
 
   
 
   // -------------------------------------------------------------------------------------------------------------
   // INTERNAL UTILITIES
   // -------------------------------------------------------------------------------------------------------------
-  // Function to run cell at a specific nidex
-  // FROM: https://github.com/CDAT/jupyter-vcdat/blob/master/src/CellUtilities.ts
-  public async runCellAtIndex(
-    notebookPanel: NotebookPanel,
-    index: number
-  ): Promise<string> {
-    if (notebookPanel === null) {
-      throw new Error(
-        "Null or undefined parameter was given for command or notebook argument."
-      );
-    }
-    // await notebookPanel.sessionContext.ready;
-    const notebook = notebookPanel.content;
-    if (index < 0 || index >= notebook.widgets.length) {
-      throw new Error("The index was out of range.");
-    }
-    // Save the old index, then set the current active cell
-    const oldIndex = notebook.activeCellIndex;
-    notebook.activeCellIndex = index;
-    try {
-      await NotebookActions.run(notebook, notebookPanel.sessionContext);
-
-      // await command.execute("notebook:run-cell");
-      notebook.activeCellIndex = oldIndex;
-
-      return 'Success';
-    } finally {
-      notebook.activeCellIndex = oldIndex;
-    }
-  }
-
 
   // Send request to the Kernel (NOT USED)
   // From: https://github.com/kubeflow-kale/kale/blob/167aa8859b58918622bb9b742a08cf5807dee4d8/labextension/src/utils/NotebookUtils.tsx#L326
@@ -334,103 +530,11 @@ export class FormWidget extends ReactWidget {
 
   // CODE GENERATION FUNCTION
   // Takes the inputs of the form and creates a string that is sent to the notebook and executed
-  public generatePythonCodeFromForm = ( formReponse: any) => {
-    console.log('------------------- Generating form code -------------------');
-    console.log("Data submitted: ", formReponse);
 
-    const formData = formReponse.formData;
-    let callerObject: string;
-
-    if(!this.dataframeSelection){
-    // If there is no dataframe selection, calling from pandas
-      callerObject = 'pd';
-    }else{
-      callerObject = this.dataframeSelection;
-    }
-
-    // Formula that will be generated in the form of: object.transformation(parameters)
-    let formula = callerObject + '.' + this.transformationSelection + '(';
-    
-    // The result will be saved in one variable
-    let variable = '';
-
-    // Process every input
-    for (var key in formData) {
-        console.log('-----> Paramter', key);     
-        // Check if there is a codegenstyle
-        console.log('Codegenstyle', formReponse.schema.properties[key]['codegenstyle']);
-        if(typeof(formReponse.schema.properties[key]['codegenstyle']) !== 'undefined'){
-            // ------------------------------------ CODEGEN STYLE DEFINED ------------------------------------------
-            /*-------------------------------
-               CODEGEN: VARIABLE
-            -------------------------------*/
-            if(formReponse.schema.properties[key]['codegenstyle'] === 'variable'){
-              console.log('*** Codgenstyle variable')
-              formula = formula + key + '=' + formData[key] + ', '; 
-            /*-------------------------------
-               CODEGEN: ARRAY
-            -------------------------------*/
-            }else if(formReponse.schema.properties[key]['codegenstyle'] === 'array'){
-              console.log('** Codegenstyle array')
-              formula = formula + key + '=["' + formData[key].join('","') + '"], ';
-            /*-------------------------------
-               CODEGEN: AGGREGATION
-            -------------------------------*/
-            }else if(formReponse.schema.properties[key]['codegenstyle'] === 'aggregation'){
-              console.log('** Codegenstyle dict')
-                var input = '{'
-                for(const aggregationdict of formData[key]){
-                    input = input + '"' + aggregationdict['column'] + '" : ' + aggregationdict['function'] + ', ';
-                }
-                input = input.substring(0,input.length - 2);
-                input = input + '}';
-                input = 'aggfunc=' + input;
-                formula = formula + input + ', ';
-                console.log('Input of dict parameter', input);
-            /*-------------------------------
-               CODEGEN: CHECK NONE
-            -------------------------------*/        
-            }else if(formReponse.schema.properties[key]['codegenstyle'] === 'checkNone') {
-              console.log('** Codegenstyle check none')
-              if (formData[key].localeCompare('None') == 0){
-                formula = formula + key + '=' + String(formData[key]) + ', ';
-              }else{
-                formula = formula + key + '="' + String(formData[key]) + '", ';
-              }
-            }else{
-              console.log('** Undefined codegenstyle')
-            }
-        } else{
-          // ------------------------------------ CODEGEN NOT DEFINED ------------------------------------------
-            // The form input is a Table name 
-            if (key.localeCompare('New dataframe') == 0){
-              console.log('* New dataframe');
-              variable = formData[key];
-            }else{
-              formula = formula + key + '="' + String(formData[key]) + '", ';
-            }
-        }
-    }
-
-    console.log('Dataframe selection', this.dataframeSelection);
-    // If no variable defined, and calling from a given dataframe apply to this dataframe
-    // else if dataframe not defined, name it data
-    if((variable === '') && (typeof(this.dataframeSelection) !== 'undefined')){
-      variable = this.dataframeSelection;
-    }else if ((variable === '') && (typeof(this.dataframeSelection) === 'undefined')){
-      variable = 'data';
-    }
-
-    // Remove last comma and space given there are no more parameters
-    formula = formula.substring(0, formula.length - 2);
-    formula = formula + ')';
-    
-    // Compose formula
-    formula = variable + ' = ' + formula;
-
+  public writeAndExecuteCode = (code: string) => {
     // Add pandas if not already added
     if(this._importedPandas == false){
-      formula = 'import pandas as pd \n' + formula;
+      code = 'import pandas as pd \n' + code;
       this._importedPandas = true;
     }
 
@@ -438,30 +542,10 @@ export class FormWidget extends ReactWidget {
     const last_cell_index = this._currentNotebook.content.widgets.length - 1;
     
     // Run and insert using cell utilities
-    CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, formula, false);
+    CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, code, false);
 
-    // Go back to transformation state
     this.screen = 'transformations';
-    //Reset the selection
-    this.transformationSelection = null;
   };
-
-  // FUNCTIONS TO GET TRACK OF SELECTIONS
-
-  // Triggered from the frontend when transformation selection changes
-  public handleTransformationSelectionChange = (selection:any) => {
-    this.transformationSelection = selection.value;
-    this.requestTransformationForm();
-    //console.log(this.transformationSelection);
-  }
-
-  // Triggered from the frontend when dataframe selection changes
-  public handleDataframeSelectionChange = (selection:any) => {
-    this.dataframeSelection = selection.value as string;
-    this.requestTransformationForm();
-    //console.log(this.dataframeSelection);
-  }
-
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -480,9 +564,6 @@ export class FormWidget extends ReactWidget {
 
     // Read the transformation config
     this._transformationsConfig = _transformationsConfig;
-
-    // Default is to have the read csv form
-    this.transformationForm = this._transformationsConfig['read_csv']['form'];
 
     // Load initialization script
     this._initScripts = python_initialization_script;
@@ -540,7 +621,7 @@ export class FormWidget extends ReactWidget {
             let code = msg.content.code;
             // Check this is not my code running
             if(!(code == this._inspectorScript) && !(code == this._initScripts) && !(code == this._codeToRequestForm)){
-              console.log('Code running');
+              console.log('Non-internal running');
               this.requestDataframes();
             }
             break;
@@ -578,7 +659,6 @@ export class FormWidget extends ReactWidget {
       if(dataframes.length == 0){
         // TEMP: Disable for testing
         this.screen = 'load csv';
-        this.transformationSelection = 'read_csv';
       }else{
         console.log('Refreshing dataframes'); 
         let dataframe_list: Array<any> = [];
@@ -599,86 +679,11 @@ export class FormWidget extends ReactWidget {
     }
   };
 
-  private async requestTransformationForm(){
-    // Check that there is a transformation selection and a dataframe selection
-    console.log('------> Get transformation UI form');
-    if(this.transformationSelection && this.dataframeSelection){
-       
-      if(typeof(this._transformationsConfig[this.transformationSelection]) === 'undefined'){
-        /*-------------------------------------------
-          Generate form on the fly by running python
-        -------------------------------------------*/
-        console.log('----> No custom transformation');
-        let request_expression = 'form = get_multi_select_values(' + this.dataframeSelection + '.' + this.transformationSelection + ',caller=' + this.dataframeSelection + ')';      
-        // Save it so that we can avoid triggering the codeRunningOnNotebook function
-        this._codeToRequestForm = request_expression;
-        console.log('Form request expression',request_expression);
-        const result = await FormWidget.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
-        let content = result.form.data["text/plain"];
-        
-        // The resulting python JSON neets to be cleaned
-        if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
-          content = content.slice(1,-1);
-          content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
-        }
-
-        this.transformationForm = JSON.parse(content);
-      }else{
-        /*-------------------------------------------
-          Read form from custom configuration
-        -------------------------------------------*/
-        console.log('Custom transformation', this._transformationsConfig[this.transformationSelection]);
-        let request_expression = 'form = get_json_column_values(' + this.dataframeSelection + ')';      
-        // Save it so that we can avoid triggering the codeRunningOnNotebook function
-        this._codeToRequestForm = request_expression;
-        console.log('Form request expression',request_expression);
-        const result = await FormWidget.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
-        let content = result.form.data["text/plain"];
-        
-        // The resulting python JSON neets to be cleaned
-        if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
-          content = content.slice(1,-1);
-          content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
-        }
-
-        const columns = JSON.parse(content);
-        console.log('Retrieved columns:', columns);
-
-        // Fill columns in custom transformation json
-        let custom_transformation = this._transformationsConfig[this.transformationSelection].form;
-        
-        // Check if multi-select columns defined
-        if(typeof(custom_transformation['definitions']['columns']) !== 'undefined'){
-          custom_transformation['definitions']['columns']['items']['enum'] = columns;
-        }
-
-        // Check if single select column defined
-        if(typeof(custom_transformation['definitions']['column']) !== 'undefined'){
-          custom_transformation['definitions']['column']['enum'] = columns;
-        }
-
-        // Check if there is a dataframes select
-        if(typeof(custom_transformation['definitions']['dataframes']) !== 'undefined'){
-          custom_transformation['definitions']['dataframes']['enum'] = this.dataframesLoaded.map((item: any) => item.value);
-        }
-        
-        this.transformationForm = custom_transformation;
-
-
-      }
-
-      // Update the state to indicate that we are now ready to show a formula field
-      this.showTransformationForm = true;
-      this._signal.emit();
-      console.log('<-------------- Transformation UI form generated');
-    }
-  }
-
   // -------------------------------------------------------------------------------------------------------------
   // FUNCTION MERGE: Incomplete, custom code to handle this specific function
   // -------------------------------------------------------------------------------------------------------------
 
-  public async updateMergeDataframesForm(rightParameter: string){
+  public async getDataframeColumns(rightParameter: string){
      let request_expression = 'form = get_json_column_values(' + rightParameter + ')';      
       // Save it so that we can avoid triggering the codeRunningOnNotebook function
       this._codeToRequestForm = request_expression;
@@ -695,25 +700,7 @@ export class FormWidget extends ReactWidget {
       const columns = JSON.parse(content);
       console.log('New columns', columns);
 
-      let custom_merge_transformation = this._transformationsConfig[this.transformationSelection].form;
-
-      custom_merge_transformation['definitions']['right_columns'] = {
-        "type" : "array", 
-        "uniqueItems" : true, 
-        "items": {
-          "type":"array", 
-          "enum": columns
-          }
-      };
-
-      custom_merge_transformation['definitions']['columns']['items']['enum'] = columns;
-      custom_merge_transformation['definitions']['dataframes']['enum'] = this.dataframesLoaded.map((item: any) => item.value);
-
-      this.transformationForm = custom_merge_transformation;
-
-      this._signal.emit();
-
-      console.log('New transformation form', this.transformationForm);
+      return columns;
   }
 
   // -------------------------------------------------------------------------------------------------------------
