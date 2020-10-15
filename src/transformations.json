@@ -1,6 +1,5 @@
 {
   "pivot_table" : {
-    "name" : "pivot_table",
     "form" : {
       "definitions" : {
         "columns" : {
@@ -20,15 +19,16 @@
         "index",
         "aggfunc"
       ],
-      "title" : "pivot_table",
-      "type" : "object",
+      "title" : "Pivot Table",
       "properties" : {
         "index" : {
           "$ref" : "#/definitions/columns",
+          "title" : "rows",
           "codegenstyle" : "array"
         },
         "columns" : {
-          "$ref" : "#/definitions/columns"
+          "$ref" : "#/definitions/columns",
+          "codegenstyle" : "array"
         },
         "aggfunc" : {
           "type" : "array",
@@ -41,31 +41,55 @@
                 "$ref" : "#/definitions/column"
               },
               "function" : {
-                "type" : "string",
-                "enum" : [
-                  "np.mean",
-                  "\"count\"",
-                  "np.sum"
-                ],
-                "enumNames" : [
-                  "Mean",
-                  "Count",
-                  "Sum"
-                ]
+                "uniqueItems" : true,
+                "type" : "array",
+                "items" : {
+                  "type" : "string",
+                  "default" : "Count (excl. missing values)",
+                  "enumNames" : [
+                    "Count (incl. missing values)",
+                    "Count (excl. missing values)",
+                    "Count unique",
+                    "Mean",
+                    "Sum",
+                    "Maximum",
+                    "Minimum",
+                    "Median",
+                    "First value",
+                    "Last value",
+                    "Standard deviation",
+                    "Variance"
+                  ],
+                  "enum" : [
+                    "\"size\"",
+                    "\"count\"",
+                    "\"nunique\"",
+                    "\"mean\"",
+                    "\"sum\"",
+                    "\"max\"",
+                    "\"min\"",
+                    "\"median\"",
+                    "\"first\"",
+                    "\"last\"",
+                    "\"std\"",
+                    "\"var\""
+                  ]
+                }
               }
             }
           },
-          "default" : "numpy.mean",
-          "codegenstyle" : "aggregation"
+          "codegenstyle" : "aggregation",
+          "title" : "aggregations"
         },
         "New table" : {
           "type" : "string"
         }
-      }
+      },
+      "callerObject" : "DataFrame",
+      "function" : "pivot_table"
     }
   },
   "merge" : {
-    "name" : "merge",
     "form" : {
       "properties" : {
         "right" : {
@@ -93,8 +117,7 @@
           "type" : "string"
         }
       },
-      "type" : "object",
-      "title" : "merge",
+      "title" : "Join",
       "required" : [
         "right",
         "how",
@@ -122,33 +145,223 @@
             "enum" : []
           }
         }
-      }
+      },
+      "callerObject" : "DataFrame",
+      "function" : "merge"
     }
   },
   "read_csv" : {
-    "name" : "read_csv",
     "form" : {
       "properties" : {
         "filepath_or_buffer" : {
-          "type" : "string"
+          "type" : "string",
+          "title" : "filepath"
         },
         "sep" : {
           "type" : "string",
-          "default" : ","
-        },
-        "delimiter" : {
-          "type" : "string",
-          "default" : "None",
-          "codegenstyle" : "checkNone"
+          "default" : ",",
+          "title" : "separator",
+          "description" : "Character used to separate columns (e.g. commas, semicolons, etc.)"
         },
         "decimal" : {
           "type" : "string",
-          "default" : "."
+          "default" : ".",
+          "title" : "decimal character",
+          "description" : "Value used to indicate decimals."
         },
         "New table" : {
           "type" : "string"
         }
-      }
+      },
+      "title" : "Read CSV",
+      "callerObject" : "pd",
+      "function" : "read_csv"
+    }
+  },
+  "sort_values" : {
+    "form" : {
+      "properties" : {
+        "by" : {
+          "type" : "string",
+          "$ref" : "#/definitions/column",
+          "title" : "column"
+        },
+        "ascending" : {
+          "type" : "string",
+          "default" : "Ascending",
+          "enum" : [
+            "True",
+            "False"
+          ],
+          "enumNames" : [
+            "Ascending",
+            "Descending"
+          ],
+          "codegenstyle" : "variable",
+          "title" : "sorting type"
+        },
+        "New table" : {
+          "type" : "string"
+        }
+      },
+      "title" : "Sort data",
+      "required" : [
+        "by"
+      ],
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "callerObject" : "DataFrame",
+      "function" : "sort_values"
+    }
+  },
+  "get_dummies" : {
+    "form" : {
+      "title" : "Pivot Dummies",
+      "description" : "Pivot column values into multiple columns, with 1 and 0 indicators",
+      "properties" : {
+        "data" : {
+          "type" : "string",
+          "codegenstyle" : "variable",
+          "$ref" : "#/definitions/dataframes"
+        },
+        "dummy_na" : {
+          "title" : "Column for NA values",
+          "description" : "Include category for empty values",
+          "default" : "False",
+          "type" : "string",
+          "codegenstyle" : "variable",
+          "enum" : [
+            "True",
+            "False"
+          ]
+        },
+        "columns" : {
+          "type" : "array",
+          "$ref" : "#/definitions/columns",
+          "codegenstyle" : "array",
+          "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
+        },
+        "New table" : {
+          "type" : "string"
+        }
+      },
+      "required" : [
+        "data",
+        "columns"
+      ],
+      "definitions" : {
+        "columns" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "dataframes" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "callerObject" : "pd",
+      "function" : "get_dummies"
+    }
+  },
+  "drop" : {
+    "form" : {
+      "title" : "Drop columns",
+      "description" : "Drop columns from the data",
+      "properties" : {
+        "columns" : {
+          "type" : "array",
+          "$ref" : "#/definitions/columns",
+          "codegenstyle" : "array",
+          "description" : "Remove the columns from the table"
+        },
+        "New table" : {
+          "type" : "string"
+        }
+      },
+      "required" : [
+        "columns"
+      ],
+      "definitions" : {
+        "columns" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "callerObject" : "DataFrame",
+      "function" : "drop"
+    }
+  },
+  "flatten_multiindex" : {
+    "form" : {
+      "title" : "Flatten multiindex",
+      "description" : "Flatten multi-index in columns and rows",
+      "properties" : {
+        "axis" : {
+          "type" : "string",
+          "default" : "all",
+          "enum" : [
+            "all",
+            "index",
+            "columns"
+          ]
+        },
+        "New table" : {
+          "type" : "string"
+        }
+      },
+      "callerObject" : "DataFrame.fdt",
+      "function" : "flatten_multiindex"
+    }
+  },
+  "fillna" : {
+    "form" : {
+      "title" : "Fill empty values",
+      "properties" : {
+        "column" : {
+          "type" : "string",
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "method" : {
+          "type" : "string",
+          "enum" : [
+            "\"ffill\"",
+            "\"bfill\""
+          ],
+          "enumNames" : [
+            "forward fill (take the one above)",
+            "backward fill (take the one below)"
+          ],
+          "codegenstyle" : "variable"
+        },
+        "New table" : {
+          "type" : "string"
+        }
+      },
+      "callerObject" : "DataFrame[Series]",
+      "function" : "fillna",
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column"
+      ]
     }
   }
 }

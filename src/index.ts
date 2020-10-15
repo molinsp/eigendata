@@ -5,7 +5,7 @@ import {
 } from '@jupyterlab/application';
 
 import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
-import { FormWidget } from './widget';
+import { FormWidget, Backend } from './widget';
 import { reactIcon } from '@jupyterlab/ui-components';
 
 import {
@@ -45,7 +45,11 @@ const extension: JupyterFrontEndPlugin<void> = {
       icon: args => (args['isPalette'] ? null : reactIcon),
       execute: () => {
         if (!widget || widget.isDisposed) {
-          const content = new FormWidget(notebook_tracker);
+          // Create class that manages the backend behavior
+          const backend = new Backend(notebook_tracker);
+          // Create form component and pass backend behavior
+          const content = new FormWidget(backend);
+          // Create widget
           widget = new MainAreaWidget<FormWidget>({ content });
           widget.title.label = 'Magic Formula Bar';
           widget.title.closable = true;
