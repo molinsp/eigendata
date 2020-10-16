@@ -191,7 +191,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   const generatePythonCode = ( formReponse: any) => {
     // Commented out python implementation
-    //logic.generateFunctionCallWithPython(formReponse, state.dataframeSelection); 
+    logic.generateFunctionCallWithPython(formReponse, state.dataframeSelection); 
+    /*
     console.log('------------------- Generating form code -------------------');
     console.log("Data submitted: ", formReponse);
 
@@ -290,7 +291,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     // Write and execute the formula in the notebook
     logic.writeAndExecuteCode(formula);  
-   
+   */
    };
 
 
@@ -641,7 +642,7 @@ export class Backend {
   // Returns: Code to be called
   public async generateFunctionCallWithPython(formReponse: any, dataframeSelection: any){
      var start = new Date().getTime();
-     console.log('Form response',dataframeSelection);
+     console.log('Form response',formReponse);
      
      let dataframeSelectionInput: string;
      if(!dataframeSelection){
