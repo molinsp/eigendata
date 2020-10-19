@@ -8,8 +8,6 @@ import Select from 'react-select';
 
 import {JSONSchema7} from 'json-schema';
 
-import { KernelConnector } from './kernelconnector';
-
 import {NotebookPanel, INotebookTracker} from '@jupyterlab/notebook';
 
 import { KernelMessage, Kernel } from '@jupyterlab/services';
@@ -18,12 +16,19 @@ import {ISessionContext} from "@jupyterlab/apputils";
 
 import { ISignal, Signal } from '@lumino/signaling';
 
+// JSON configuration holding all information for the UI transformations
 import _transformationsConfig from './transformations.json';
 
+// Initialization scripts. See file for more details.
 import {python_initialization_script} from './initscript';
 
+// KernelConnector class. See file for more details.
+import { KernelConnector } from './kernelconnector';
+
+// Utilities from another project. See file for more details.
 import CellUtilities from './CellUtilities';
 
+// This is used to force refresh the form schema for dynamic forms with react-jsonschema-form
 import _ from "lodash";
 
 // Awesome querybuilder
@@ -62,9 +67,10 @@ import 'bootstrap/dist/css/bootstrap.css';
  */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
 const FormComponent = (props: {logic: Backend}): JSX.Element => {
-  // Testing definig a UI schema for the form
-  
+  // Access backend through logic object
   let logic = props.logic;
+
+  // Defaults for form and UI schema
   let transformationForm: JSONSchema7 = _transformationsConfig['read_csv']['form'] as JSONSchema7;
   const defaultUISchema: JSONSchema7 = {};
 
@@ -80,7 +86,6 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   console.log('State:', state);
   console.log('------> Rendering UI');
-
 
   /*-----------------------------------
   CUSTOM SELECT
@@ -129,12 +134,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   };
 
-  // Define mapping of custom widgets
+  // Customize react-jsonschema-form to use custom widgets
   const widgets = {
     SelectWidget: CustomSelect
   };
 
-  // Handle changes in the form
+  // Handle changes in the form. This is uded to UPDATE FORMS DYNAMICALLY
   const handleFormChange = async (data:any) => {
     console.log('Form data changed', data);
      /*-------------------------------
@@ -158,7 +163,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      }
    }
 
-  // Process selection of table
+  // Set dataframe selection to the state
   const handleDataframeSelectionChange = (input: any) => {
      //console.log(this);
      if(state.transformationSelection){
@@ -169,7 +174,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      }
   }
 
-   // Process selection of transformation
+  // Set transformation selection to the state
   const handleTransformationSelectionChange = (input: any) => {
      //console.log(input);
      if(state.dataframeSelection){
@@ -193,6 +198,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      });
   }
 
+  // Generate python code and write in the notebook
   const generatePythonCode = ( formReponse: any) => {
     // Commented out python implementation
     logic.pythonGenerateCodeAndRun(formReponse, state.dataframeSelection); 
@@ -337,7 +343,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 };
 
 
-// This allows to re-render the component whene there is a signal
+// This allows to re-render the component whene there is a signal emitted (Read about signals here https://jupyterlab.readthedocs.io/en/stable/developer/patterns.html)
 // This is the recommended approach from the Jupyter team: https://jupyterlab.readthedocs.io/en/stable/developer/virtualdom.html
 // Inspired by this example: https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/developer/virtualdom.usesignal.tsx
 // ...and this example: https://github.com/jupyterlab/jupyterlab/blob/f2e0cde0e7c960dc82fd9b010fcd3dbd9e9b43d0/packages/running/src/index.tsx#L157-L159
