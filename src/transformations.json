@@ -86,7 +86,13 @@
         }
       },
       "callerObject" : "DataFrame",
-      "function" : "pivot_table"
+      "function" : "pivot_table",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New table" : {
+        "ui:placeholder" : "Write into new data table or leave blank to modify selected table"
+      }
     }
   },
   "merge" : {
@@ -147,7 +153,8 @@
         }
       },
       "callerObject" : "DataFrame",
-      "function" : "merge"
+      "function" : "merge",
+      "type" : "object"
     }
   },
   "read_csv" : {
@@ -175,7 +182,8 @@
       },
       "title" : "Read CSV",
       "callerObject" : "pd",
-      "function" : "read_csv"
+      "function" : "read_csv",
+      "type" : "object"
     }
   },
   "sort_values" : {
@@ -215,7 +223,8 @@
         }
       },
       "callerObject" : "DataFrame",
-      "function" : "sort_values"
+      "function" : "sort_values",
+      "type" : "object"
     }
   },
   "get_dummies" : {
@@ -268,7 +277,8 @@
         }
       },
       "callerObject" : "pd",
-      "function" : "get_dummies"
+      "function" : "get_dummies",
+      "type" : "object"
     }
   },
   "drop" : {
@@ -300,7 +310,8 @@
         }
       },
       "callerObject" : "DataFrame",
-      "function" : "drop"
+      "function" : "drop",
+      "type" : "object"
     }
   },
   "flatten_multiindex" : {
@@ -322,7 +333,8 @@
         }
       },
       "callerObject" : "DataFrame.fdt",
-      "function" : "flatten_multiindex"
+      "function" : "flatten_multiindex",
+      "type" : "object"
     }
   },
   "fillna" : {
@@ -361,7 +373,8 @@
       },
       "required" : [
         "column"
-      ]
+      ],
+      "type" : "object"
     }
   }
 }

@@ -30,8 +30,7 @@ import _ from "lodash";
 import Demo from "./demo";
 //import QueryBuilder from 'react-querybuilder';
 
-
-
+import 'bootstrap/dist/css/bootstrap.css';
 
 /*
  Description: This extension provides a GUI over pandas data transformations, with the goal of facilitating the use by non experts
@@ -50,33 +49,36 @@ import Demo from "./demo";
 // -------------------------------------------------------------------------------------------------------------
 
  /**
- * React component that renders forms based on JSON
- *
- * 
+ React component that renders forms based on JSON
+ Inputs from the backend:
+   Functions:
+     - getTransformationFormSchema: Gets the transformation form from the backend
+     - getDataframeColumns: Used to update the forms dynamically 
+     - pythonGenerateCodeAndRun: Generate the code from the form using python (to accelerate development)
+   Properties:
+     - dataframesLoaded: Available dataframes
+     - transformations: Available transformations
+     - screen: Screen to show to the user
  */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
 const FormComponent = (props: {logic: Backend}): JSX.Element => {
-
   // Testing definig a UI schema for the form
-  const uiSchema = {
-    classNames: "input"   
-  };
-
+  
   let logic = props.logic;
-
   let transformationForm: JSONSchema7 = _transformationsConfig['read_csv']['form'] as JSONSchema7;
+  const defaultUISchema: JSONSchema7 = {};
 
 
   // State of the component
   const [state, setState] = useState({
       transformationForm: transformationForm,
+      transformationUI: defaultUISchema,
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null
     });
 
   console.log('State:', state);
-
   console.log('------> Rendering UI');
 
 
@@ -161,7 +163,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      //console.log(this);
      if(state.transformationSelection){
        console.log('all defined');
-       dataframeTransformationSelection(input.value, state.transformationSelection);
+       getTransformationFormToState(input.value, state.transformationSelection);
      }else{
        setState(state => ({...state,dataframeSelection:input.value}));
      }
@@ -172,17 +174,19 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      //console.log(input);
      if(state.dataframeSelection){
        console.log('all defined');
-       dataframeTransformationSelection(state.dataframeSelection, input.value);
+       getTransformationFormToState(state.dataframeSelection, input.value);
      }else{
        setState(state => ({...state,transformationSelection:input.value}));
      }
   }
 
-   
-  const dataframeTransformationSelection = async (dataframeSelection: string, transformationSelection: string) => {  
-     let newTransformationForm = await logic.requestTransformationFormJSON(dataframeSelection, transformationSelection);
+  // Pupulates the transformation form into the state 
+  const getTransformationFormToState = async (dataframeSelection: string, transformationSelection: string) => {  
+     let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
+     let newUISchema = logic.getTransfromationUISchema(transformationSelection);
      setState({
-        transformationForm: newTransformationForm,
+        transformationForm: newFormSchema,
+        transformationUI: newUISchema,
         showForm: true,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection
@@ -191,8 +195,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   const generatePythonCode = ( formReponse: any) => {
     // Commented out python implementation
-    logic.generateFunctionCallWithPython(formReponse, state.dataframeSelection); 
-    /*
+    logic.pythonGenerateCodeAndRun(formReponse, state.dataframeSelection); 
+    /* COMMENTED OUT CODE IS REPLACED BY PYTHON FUNCTION TO MAKE DEVELOPMENT FASTER
     console.log('------------------- Generating form code -------------------');
     console.log("Data submitted: ", formReponse);
 
@@ -290,7 +294,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     console.log('FORMULA: ', formula);
 
     // Write and execute the formula in the notebook
-    logic.writeAndExecuteCode(formula);  
+    logic.writeToNotebookAndExecute(formula);  
    */
    };
 
@@ -301,7 +305,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   if(logic.screen.localeCompare('load csv') == 0){
     console.log('------------- DATA LOADING -------------');
     return(
-      <Form schema={state.transformationForm} onSubmit={generatePythonCode}  uiSchema={uiSchema} />
+      <Form schema={state.transformationForm} onSubmit={generatePythonCode}  />
       )
   }
   /*--------------------------------------
@@ -312,16 +316,16 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     console.log('------------- DATA TRANSFORMATION -------------');
       return (
         <div>
-        <Select options={logic.dataframesLoaded} label="Select data" onChange={handleDataframeSelectionChange.bind(this)} />
-        <Select options={logic.dataframeFunctions} label="Select transformation" onChange={handleTransformationSelectionChange} />
+        <Select name='Select dataframe' placeholder='select data table' options={logic.dataframesLoaded} label="Select data" onChange={handleDataframeSelectionChange.bind(this)} />
+        <Select name='Select transformation' placeholder='select transformation' options={logic.transformations} label="Select transformation" onChange={handleTransformationSelectionChange} />
         {state.showForm &&
-          <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} uiSchema={uiSchema} widgets={widgets}/>
+          <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
         }
         </div>
        );
   }
   /*--------------------------------------
-  QUERY BUILDER
+  DEV: TEST QUERY BUILDER
   ---------------------------------------*/
   else if(logic.screen.localeCompare('querybuilder') == 0){
     console.log('------------- QUERYBUILDER -------------');
@@ -353,7 +357,6 @@ export class FormWidget extends ReactWidget {
     super();
     console.log('------> Constructor');
     this.addClass('jp-ReactWidget');
-    this.addClass('input');
 
     this._backend = backend;
   }
@@ -402,6 +405,16 @@ export class Backend {
   // Used to display forms
   public dataframesLoaded: any = [];
 
+  // Data transformation functions
+  public transformations = [{'value': 'merge', 'label': 'join'}, 
+    {'value': 'pivot_table', 'label': 'pivot table'},
+    {'value': 'get_dummies', 'label': 'pivot dummies'}, 
+    {'value': 'sort_values', 'label': 'sort'},
+    {'value': 'drop', 'label': 'drop columns'},
+    {'value': 'flatten_multiindex', 'label': 'flatten multi-index'},
+    {'value': 'fillna', 'label': 'fill empty values'}
+    ];
+
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -410,22 +423,12 @@ export class Backend {
   // needed, i.e. when we are executing code to get the form
   private _codeToRequestForm: string;
 
+  // Boolean to determine if libraries are imported
   private _importedLibraries: boolean = false;
 
   /*---------------------------------
     Configurations
   ----------------------------------*/
-
-  // Data transformation functions
-  public dataframeFunctions = [{'value': 'merge', 'label': 'join'}, 
-  {'value': 'pivot_table', 'label': 'pivot table'},
-  {'value': 'get_dummies', 'label': 'pivot dummies'}, 
-  {'value': 'sort_values', 'label': 'sort'},
-  {'value': 'drop', 'label': 'drop columns'},
-  {'value': 'flatten_multiindex', 'label': 'flatten multi-index'},
-  {'value': 'fillna', 'label': 'fill empty values'}
-  ];
-
   // Custom data transformations defined in JSON file
   private _transformationsConfig: any;
 
@@ -449,7 +452,7 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // VARIABLE INSPECTOR
+  // DATA/VARIABLE INSPECTOR
   // -------------------------------------------------------------------------------------------------------------
   
   // This script will run in the kernel every time code runs
@@ -464,8 +467,11 @@ export class Backend {
   // INTERNAL UTILITIES
   // -------------------------------------------------------------------------------------------------------------
 
-  // Send request to the Kernel (NOT USED)
-  // From: https://github.com/kubeflow-kale/kale/blob/167aa8859b58918622bb9b742a08cf5807dee4d8/labextension/src/utils/NotebookUtils.tsx#L326
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Sends request to Kernel
+  -> Returns: User expressions
+  SOURCE: https://github.com/kubeflow-kale/kale/blob/167aa8859b58918622bb9b742a08cf5807dee4d8/labextension/src/utils/NotebookUtils.tsx#L326
+  -----------------------------------------------------------------------------------------------------*/
   public static async sendKernelRequest(
     kernel: Kernel.IKernelConnection,
     runCode: string,
@@ -518,7 +524,15 @@ export class Backend {
   // API FOR REACT GUI
   // -------------------------------------------------------------------------------------------------------------
 
-  public async requestTransformationFormJSON(dataFrameSelection: string, transformationSelection: string){
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Based on the user selection of dataframe and transformation returns form to render UI
+  -> Returns: custom_transformation as JSONSchema7
+  -> Writes: _codeToRequestForm
+
+    Depends on:
+    - sendKernelRequest
+  -----------------------------------------------------------------------------------------------------*/
+  public async getTransformationFormSchema(dataFrameSelection: string, transformationSelection: string){
     // Check that there is a transformation selection and a dataframe selection
     console.log('------> Get transformation UI form');
     console.log('Transformation Selection', transformationSelection);
@@ -597,9 +611,25 @@ export class Backend {
     }
   }
 
-  // CODE GENERATION FUNCTION
-  // Takes the inputs of the form and creates a string that is sent to the notebook and executed
-  public writeAndExecuteCode = (code: string) => {
+  public getTransfromationUISchema(transformationSelection: string){
+    if(typeof(this._transformationsConfig[transformationSelection]) === 'undefined'){
+      console.log('No transformation form defined');
+      return;
+    }else{
+      if(typeof(this._transformationsConfig[transformationSelection]['uischema']) !== 'undefined'){
+        return this._transformationsConfig[transformationSelection]['uischema'];  
+      }else{
+        console.log('No transformation uischema defined');
+      }
+    }
+
+  }
+
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Write to the last cell of the notebook and execute
+  -> Returns: None
+  -----------------------------------------------------------------------------------------------------*/
+  public writeToNotebookAndExecute = (code: string) => {
     // Add pandas if not already added
     if(this._importedLibraries == false){
       code = 'import pandas as pd\nimport numpy as np\nfrom fastdata.fastdata.core import *\n' + code;
@@ -616,8 +646,10 @@ export class Backend {
     this.screen = 'transformations';
   };
 
-  // Get columns given a dataframe
-  // Returns: Array of columns
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Get list of columns from Kernel for selected dataframe
+  -> Returns: Array of columns
+  -----------------------------------------------------------------------------------------------------*/
   public async getDataframeColumns(rightParameter: string){
      let request_expression = 'form = get_json_column_values(' + rightParameter + ')';      
       // Save it so that we can avoid triggering the codeRunningOnNotebook function
@@ -638,9 +670,18 @@ export class Backend {
       return columns;
   }
 
-  // Request function from Python
-  // Returns: Code to be called
-  public async generateFunctionCallWithPython(formReponse: any, dataframeSelection: any){
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Request function from Python: Call python to generate code from form & write+execute
+  -> Returns: None
+    1. Send form output and dataframe selection to python
+    2. Get code returned from python
+    3. Write and execute this code
+   
+
+    Depends on:
+    - writeToNotebookAndExecute
+  -----------------------------------------------------------------------------------------------------*/
+  public async pythonGenerateCodeAndRun(formReponse: any, dataframeSelection: any){
      var start = new Date().getTime();
      console.log('Form response',formReponse);
      
@@ -677,14 +718,17 @@ export class Backend {
       console.log('Result ',content);
       var end = new Date().getTime();
       console.log('DURATION ',end - start);
-      this.writeAndExecuteCode(content);
+      this.writeToNotebookAndExecute(content);
   }
 
   // -------------------------------------------------------------------------------------------------------------
   // HANDLE CHANGE OF NOTEBOOK
   // -------------------------------------------------------------------------------------------------------------
 
-  // When the user changes notebook we re-initialize everything 
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Update current notebook and create kernel connector
+  -> Writes: _currentNotebook, _connector
+  -----------------------------------------------------------------------------------------------------*/
   private async updateCurrentNotebook(sender: any, nbPanel: NotebookPanel ){
     console.log('------> Notebook changed', nbPanel.content.title.label);
     // Update the current notebook
@@ -717,10 +761,15 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // HANDLE CODE RUNNING IN NOTEBOOK (GENERAL FOR ALL FUNCTIONS)
+  // HANDLE CODE RUNNING IN NOTEBOOK 
   // -------------------------------------------------------------------------------------------------------------
 
-  // Run inspector every time code is running and the code is not from eigendata application
+  // Overview: codeRunningOnNotebook ->  requestDataframes -> handleGetDataframesResponse
+
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Get list of dataframes through reqeuestDataframes when new code runs
+  -> Returns: None
+  -----------------------------------------------------------------------------------------------------*/
   private codeRunningOnNotebook = ( sess: ISessionContext, msg: KernelMessage.IExecuteInputMsg ) => {
     console.log('------> Code running in the notebook');
     let msgType = msg.header.msg_type;
@@ -738,7 +787,10 @@ export class Backend {
     }
   };
 
-  // This sends a request to the Kernel to get a list of dataframes
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Send request to the Kernel to get dataframes, processed with handleGetDataframesResponse
+  -> Returns: None
+  -----------------------------------------------------------------------------------------------------*/
   private requestDataframes(): void {
     console.log('------> Get dataframe list');
     let content: KernelMessage.IExecuteRequestMsg['content'] = {
@@ -749,7 +801,10 @@ export class Backend {
     this._connector.fetch( content, this.handleGetDataframesResponse );
   };
 
-  // Triggered when the getDataframesrequest responds.
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Send request to the Kernel to get dataframes, processed with handleGetDataframesResponse
+  -> Writes: screen, dataframesLoaded
+  -----------------------------------------------------------------------------------------------------*/
   private handleGetDataframesResponse = ( response: KernelMessage.IIOPubMessage ): void => {
     console.log('------> Handle inspector request');
     let message_type = response.header.msg_type;
