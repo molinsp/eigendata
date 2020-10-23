@@ -256,4 +256,41 @@ def get_multi_select_values(function, caller=None, debug=False):
 
 def get_json_column_values(caller):
     return json.dumps(caller.columns.tolist(), ensure_ascii=False)
+
+def generate_querybuilder_config(df):
+    queryprops = {}
+    for i,col_type in enumerate(df.dtypes):
+        col_name = df.columns[i]
+        if col_type == 'int64':      
+            if set(df[col_name].unique()) == {0,1}:
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'boolean'
+                }
+            else:
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'number'
+                }
+        elif col_type == 'float64':
+            queryprops[col_name] = {
+                'label' : col_name,
+                'type' : 'number'
+            }
+        elif col_type == 'object':
+            # Categorical if less than 10% of values are unique
+            if (df[col_name].nunique() / df[col_name].count() * 100.0 < 10):
+                queryprops[col_name] = {
+                'label' : col_name,
+                'type' : 'select',
+                'fieldSettings' : {
+                    'listValues' : [{'value': i, 'title': i} for i in df[col_name].unique()]
+                    }
+                }
+            else:
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'text'
+                }
+    return json.dumps(queryprops, ensure_ascii=False)
 `;

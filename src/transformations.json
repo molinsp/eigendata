@@ -196,7 +196,7 @@
         },
         "ascending" : {
           "type" : "string",
-          "default" : "Ascending",
+          "default" : "True",
           "enum" : [
             "True",
             "False"

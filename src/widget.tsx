@@ -93,7 +93,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
   // To-do: Move custom components to separate files
   const CustomSelect = function(props:any) {
-    //console.log('Props custom select: ', props);
+    console.log('Props custom select: ', props);
 
     const processSingleSelect = (selection: any) => {
       const {value} = selection;
@@ -127,7 +127,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         <Select options={props.options.enumOptions} 
           onChange= {selection => props.onChange(processSingleSelect(selection))}
           //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
-          defaultValue={props.options.enumOptions.filter((option: any) => option.label === props.value)}
+          //defaultValue={props.value}
+          defaultValue={props.options.enumOptions.filter((option: any) => option.value === props.value)}
         />
       );
     }
@@ -187,15 +188,21 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   // Pupulates the transformation form into the state 
   const getTransformationFormToState = async (dataframeSelection: string, transformationSelection: string) => {  
-     let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
-     let newUISchema = logic.getTransfromationUISchema(transformationSelection);
-     setState({
+    if(transformationSelection.localeCompare('query') == 0){
+      console.log('Querybuilder');
+      logic.generateQuerybuilderConfig(dataframeSelection);
+    }else{
+      let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
+      let newUISchema = logic.getTransfromationUISchema(transformationSelection);
+      setState({
         transformationForm: newFormSchema,
         transformationUI: newUISchema,
         showForm: true,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection
-     });
+      });
+    }
+
   }
 
   // Generate python code and write in the notebook
@@ -367,8 +374,6 @@ export class FormWidget extends ReactWidget {
     this._backend = backend;
   }
 
-
-
   // -------------------------------------------------------------------------------------------------------------
   // RENDER
   // -------------------------------------------------------------------------------------------------------------
@@ -418,7 +423,8 @@ export class Backend {
     {'value': 'sort_values', 'label': 'sort'},
     {'value': 'drop', 'label': 'drop columns'},
     {'value': 'flatten_multiindex', 'label': 'flatten multi-index'},
-    {'value': 'fillna', 'label': 'fill empty values'}
+    {'value': 'fillna', 'label': 'fill empty values'},
+    {'value': 'query', 'label': 'query'}
     ];
 
   /*---------------------------------
@@ -427,7 +433,7 @@ export class Backend {
 
   // This variable is created so that we can avoid running the code to get the available dataframes when it is not 
   // needed, i.e. when we are executing code to get the form
-  private _codeToRequestForm: string;
+  private _codeToIgnore: string;
 
   // Boolean to determine if libraries are imported
   private _importedLibraries: boolean = false;
@@ -533,7 +539,7 @@ export class Backend {
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Based on the user selection of dataframe and transformation returns form to render UI
   -> Returns: custom_transformation as JSONSchema7
-  -> Writes: _codeToRequestForm
+  -> Writes: _codeToIgnore
 
     Depends on:
     - sendKernelRequest
@@ -549,8 +555,8 @@ export class Backend {
       -------------------------------------------*/
       console.log('----> No custom transformation');
       let request_expression = 'form = get_multi_select_values(' + dataFrameSelection + '.' + transformationSelection + ',caller=' + dataFrameSelection + ')';      
-      // Save it so that we can avoid triggering the codeRunningOnNotebook function
-      this._codeToRequestForm = request_expression;
+      // Save it so that we can avoid triggering the requestDataframes function
+      this._codeToIgnore = request_expression;
       console.log('Form request expression',request_expression);
       const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
       let content = result.form.data["text/plain"];
@@ -578,8 +584,8 @@ export class Backend {
         if((typeof(definitions['columns']) !== 'undefined' ) || (typeof(definitions['column']) !== 'undefined')){
           console.log("Transformation needs columns");
           let request_expression = 'form = get_json_column_values(' + dataFrameSelection + ')';      
-          // Save it so that we can avoid triggering the codeRunningOnNotebook function
-          this._codeToRequestForm = request_expression;
+          // Save it so that we can avoid triggering the requestDataframes function
+          this._codeToIgnore = request_expression;
           console.log('Form request expression',request_expression);
           const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
           let content = result.form.data["text/plain"];
@@ -657,23 +663,53 @@ export class Backend {
   -> Returns: Array of columns
   -----------------------------------------------------------------------------------------------------*/
   public async getDataframeColumns(rightParameter: string){
-     let request_expression = 'form = get_json_column_values(' + rightParameter + ')';      
-      // Save it so that we can avoid triggering the codeRunningOnNotebook function
-      this._codeToRequestForm = request_expression;
-      console.log('Form request expression',request_expression);
-      const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
-      let content = result.form.data["text/plain"];
+    let codeToRun = 'form = get_json_column_values(' + rightParameter + ')';      
+    // Flag as code to ignore avoid triggering the requestDataframes function
+    this._codeToIgnore = codeToRun;
+    console.log('Request expression',codeToRun);
+
+    // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+    const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
+      codeToRun, {'form' : 'form'});
+    // Retriev the data behind the javascript object where the result is saved
+    let content = result.form.data["text/plain"];
+    
+    // Clean the JSON result that python returns
+    if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+      content = content.slice(1,-1);
+      content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+    }
+
+    const columns = JSON.parse(content);
+    console.log('New columns', columns);
+
+    return columns;
+  }
+
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Get 
+  -> Returns: JSON object to pass to querybuiler
+  -----------------------------------------------------------------------------------------------------*/
+  public async generateQuerybuilderConfig(dataframe: string){
+     let codeToRun = 'generate_querybuilder_config(' + dataframe + ')';        
+      // Flag as code to ignore avoid triggering the requestDataframes function
+      this._codeToIgnore = codeToRun;
+      console.log('Request expression',codeToRun);
       
-      // The resulting python JSON neets to be cleaned
+       // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+      const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
+        codeToRun, {'queryconfig' : 'queryconfig'});
+      // Retriev the data behind the javascript object where the result is saved
+      let content = result.queryconfig.data["text/plain"];
+      
+      // Clean the JSON result that python returns
       if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
         content = content.slice(1,-1);
         content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
       }
 
-      const columns = JSON.parse(content);
-      console.log('New columns', columns);
-
-      return columns;
+      const query_config = JSON.parse(content);
+      console.log('Query config', query_config);
   }
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -691,6 +727,7 @@ export class Backend {
      var start = new Date().getTime();
      console.log('Form response',formReponse);
      
+     // Dataframe input is a string. If it does not exist, write None
      let dataframeSelectionInput: string;
      if(!dataframeSelection){
        console.log('No dataframe input');
@@ -698,15 +735,16 @@ export class Backend {
      }else{
        dataframeSelectionInput = dataframeSelection as string;
      }
-     console.log('df sel input', dataframeSelectionInput);
+     console.log('Dataframe selection input: ', dataframeSelectionInput);
 
      // Replace True and False to be read by python
      let processedString = JSON.stringify(formReponse).replace(/true/g , 'True').replace(/false/g,'False');
+     console.log('Processed string', processedString);
 
      // Generate function call
-     let request_expression = 'functionCall = generate_function_call_from_form(' + processedString + ',' + dataframeSelectionInput +')';      
-      // Save it so that we can avoid triggering the codeRunningOnNotebook function
-      this._codeToRequestForm = request_expression;
+     let request_expression = 'functionCall = generate_function_call_from_form(' + processedString + ',"' + dataframeSelectionInput +'")';      
+      // Save it so that we can avoid triggering the requestDataframes function
+      this._codeToIgnore = request_expression;
       console.log('Funciton call request expression',request_expression);
       const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'functionCall' : 'functionCall'});
       console.log('result',result);
@@ -783,8 +821,8 @@ export class Backend {
         case 'execute_input':
             let code = msg.content.code;
             // Check this is not my code running
-            if(!(code == this._inspectorScript) && !(code == this._initScripts) && !(code == this._codeToRequestForm)){
-              console.log('Non-internal running');
+            if(!(code == this._inspectorScript) && !(code == this._initScripts) && !(code == this._codeToIgnore)){
+              console.log('Non-internal code running');
               this.requestDataframes();
             }
             break;
