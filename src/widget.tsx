@@ -58,7 +58,7 @@ import 'bootstrap/dist/css/bootstrap.css';
  Inputs from the backend:
    Functions:
      - getTransformationFormSchema: Gets the transformation form from the backend
-     - getDataframeColumns: Used to update the forms dynamically 
+     - pythonGetDataframeColumns: Used to update the forms dynamically 
      - pythonGenerateCodeAndRun: Generate the code from the form using python (to accelerate development)
    Properties:
      - dataframesLoaded: Available dataframes
@@ -149,7 +149,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      if(data.schema.function === 'merge' && typeof(data.formData['right']) !== 'undefined'){
        console.log('-> Changed right in merge')
        // Get the columns from the backend
-       let columns = await logic.getDataframeColumns(data.formData['right']);
+       let columns = await logic.pythonGetDataframeColumns(data.formData['right']);
        // Perform deep copy of the object, otherwise it does not re-render
        let new_state = _.cloneDeep(state.transformationForm);
        // Add the queried columns to the state
@@ -190,7 +190,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   const getTransformationFormToState = async (dataframeSelection: string, transformationSelection: string) => {  
     if(transformationSelection.localeCompare('query') == 0){
       console.log('Querybuilder');
-      logic.generateQuerybuilderConfig(dataframeSelection);
+      logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
     }else{
       let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
       let newUISchema = logic.getTransfromationUISchema(transformationSelection);
@@ -555,7 +555,7 @@ export class Backend {
       -------------------------------------------*/
       console.log('----> No custom transformation');
       let request_expression = 'form = get_multi_select_values(' + dataFrameSelection + '.' + transformationSelection + ',caller=' + dataFrameSelection + ')';      
-      // Save it so that we can avoid triggering the requestDataframes function
+      // Save it so that we can avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = request_expression;
       console.log('Form request expression',request_expression);
       const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
@@ -584,7 +584,7 @@ export class Backend {
         if((typeof(definitions['columns']) !== 'undefined' ) || (typeof(definitions['column']) !== 'undefined')){
           console.log("Transformation needs columns");
           let request_expression = 'form = get_json_column_values(' + dataFrameSelection + ')';      
-          // Save it so that we can avoid triggering the requestDataframes function
+          // Save it so that we can avoid triggering the pythonRequestDataframes function
           this._codeToIgnore = request_expression;
           console.log('Form request expression',request_expression);
           const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'form' : 'form'});
@@ -634,7 +634,6 @@ export class Backend {
         console.log('No transformation uischema defined');
       }
     }
-
   }
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -661,10 +660,11 @@ export class Backend {
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Get list of columns from Kernel for selected dataframe
   -> Returns: Array of columns
+  -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
-  public async getDataframeColumns(rightParameter: string){
+  public async pythonGetDataframeColumns(rightParameter: string){
     let codeToRun = 'form = get_json_column_values(' + rightParameter + ')';      
-    // Flag as code to ignore avoid triggering the requestDataframes function
+    // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('Request expression',codeToRun);
 
@@ -689,10 +689,11 @@ export class Backend {
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Get 
   -> Returns: JSON object to pass to querybuiler
+  -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
-  public async generateQuerybuilderConfig(dataframe: string){
+  public async pythonGenerateQuerybuilderConfig(dataframe: string){
      let codeToRun = 'generate_querybuilder_config(' + dataframe + ')';        
-      // Flag as code to ignore avoid triggering the requestDataframes function
+      // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);
       
@@ -743,7 +744,7 @@ export class Backend {
 
      // Generate function call
      let request_expression = 'functionCall = generate_function_call_from_form(' + processedString + ',"' + dataframeSelectionInput +'")';      
-      // Save it so that we can avoid triggering the requestDataframes function
+      // Save it so that we can avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = request_expression;
       console.log('Funciton call request expression',request_expression);
       const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, request_expression, {'functionCall' : 'functionCall'});
@@ -792,7 +793,7 @@ export class Backend {
         store_history: false
       };
       this._connector.fetch( content, ( () => { } ) ).then(() => {
-        this.requestDataframes();
+        this.pythonRequestDataframes();
       });
     });
 
@@ -808,7 +809,7 @@ export class Backend {
   // HANDLE CODE RUNNING IN NOTEBOOK 
   // -------------------------------------------------------------------------------------------------------------
 
-  // Overview: codeRunningOnNotebook ->  requestDataframes -> handleGetDataframesResponse
+  // Overview: codeRunningOnNotebook ->  pythonRequestDataframes -> handleGetDataframesResponse
 
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Get list of dataframes through reqeuestDataframes when new code runs
@@ -823,7 +824,7 @@ export class Backend {
             // Check this is not my code running
             if(!(code == this._inspectorScript) && !(code == this._initScripts) && !(code == this._codeToIgnore)){
               console.log('Non-internal code running');
-              this.requestDataframes();
+              this.pythonRequestDataframes();
             }
             break;
         default:
@@ -835,7 +836,7 @@ export class Backend {
   [FUNCTION] Send request to the Kernel to get dataframes, processed with handleGetDataframesResponse
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
-  private requestDataframes(): void {
+  private pythonRequestDataframes(): void {
     console.log('------> Get dataframe list');
     let content: KernelMessage.IExecuteRequestMsg['content'] = {
         code: this._inspectorScript,
