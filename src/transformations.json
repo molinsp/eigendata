@@ -23,25 +23,27 @@
       "properties" : {
         "index" : {
           "$ref" : "#/definitions/columns",
-          "title" : "rows",
+          "title" : "pivot table rows",
           "codegenstyle" : "array"
         },
         "columns" : {
           "$ref" : "#/definitions/columns",
-          "codegenstyle" : "array"
+          "codegenstyle" : "array",
+          "title" : "pivot table columns"
         },
         "aggfunc" : {
           "type" : "array",
           "items" : {
             "type" : "object",
-            "title" : "aggregation",
             "properties" : {
               "column" : {
                 "type" : "string",
-                "$ref" : "#/definitions/column"
+                "$ref" : "#/definitions/column",
+                "title": "column"
               },
               "function" : {
                 "uniqueItems" : true,
+                "title" : "aggregations",
                 "type" : "array",
                 "items" : {
                   "type" : "string",
@@ -78,10 +80,11 @@
               }
             }
           },
-          "codegenstyle" : "aggregation",
-          "title" : "aggregations"
+          "codegenstyle" : "aggfunc",
+          "title" : "aggregations",
+          "description": "Click plus to add aggregations to the columns"
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
@@ -90,8 +93,8 @@
       "type" : "object"
     },
     "uischema" : {
-      "New table" : {
-        "ui:placeholder" : "Write into new data table or leave blank to modify selected table"
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
       }
     }
   },
@@ -119,7 +122,7 @@
         "right_on" : {
           "$ref" : "#/definitions/right_columns"
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
@@ -155,6 +158,11 @@
       "callerObject" : "DataFrame",
       "function" : "merge",
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
     }
   },
   "read_csv" : {
@@ -176,14 +184,22 @@
           "title" : "decimal character",
           "description" : "Value used to indicate decimals."
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
+      "required" : [
+        "filepath_or_buffer"
+      ],
       "title" : "Read CSV",
       "callerObject" : "pd",
       "function" : "read_csv",
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
     }
   },
   "sort_values" : {
@@ -208,7 +224,7 @@
           "codegenstyle" : "variable",
           "title" : "sorting type"
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
@@ -225,6 +241,11 @@
       "callerObject" : "DataFrame",
       "function" : "sort_values",
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
     }
   },
   "get_dummies" : {
@@ -254,7 +275,7 @@
           "codegenstyle" : "array",
           "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
@@ -279,6 +300,11 @@
       "callerObject" : "pd",
       "function" : "get_dummies",
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
     }
   },
   "drop" : {
@@ -292,7 +318,7 @@
           "codegenstyle" : "array",
           "description" : "Remove the columns from the table"
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
@@ -312,6 +338,11 @@
       "callerObject" : "DataFrame",
       "function" : "drop",
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
     }
   },
   "flatten_multiindex" : {
@@ -328,13 +359,18 @@
             "columns"
           ]
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
       "callerObject" : "DataFrame.fdt",
       "function" : "flatten_multiindex",
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
     }
   },
   "fillna" : {
@@ -359,7 +395,7 @@
           ],
           "codegenstyle" : "variable"
         },
-        "New table" : {
+        "New table name" : {
           "type" : "string"
         }
       },
@@ -375,6 +411,144 @@
         "column"
       ],
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
+    }
+  },
+  "rename" : {
+    "form" : {
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "columns"
+      ],
+      "title" : "Rename columns",
+      "properties" : {
+        "columns" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "properties" : {
+              "column" : {
+                "type" : "string",
+                "$ref" : "#/definitions/column",
+                "title" : "Column to rename"
+              },
+              "newname" : {
+                "type" : "string",
+                "title" : "New name"
+              }
+            }
+          },
+          "codegenstyle" : "mapper",
+          "title" : "Columns to rename"
+        },
+        "New table name" : {
+          "type" : "string"
+        }
+      },
+      "callerObject" : "DataFrame",
+      "function" : "rename",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
+    }
+  },
+  "to_csv" : {
+    "form" : {
+      "properties" : {
+        "path_or_buf" : {
+          "type" : "string",
+          "title" : "filepath"
+        },
+        "index" : {
+          "type" : "string",
+          "default" : "False",
+          "enum" : [
+            "True",
+            "False"
+          ],
+          "enumNames" : [
+            "Include index",
+            "Exclude index"
+          ],
+          "codegenstyle" : "variable",
+          "title" : "Index"
+        }
+      },
+      "title" : "Save as CSV",
+      "callerObject" : "DataFrame",
+      "function" : "to_csv",
+      "type" : "object"
+    }
+  },
+  "astype" : {
+    "form" : {
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "dtype"
+      ],
+      "title" : "Assign column types",
+      "properties" : {
+        "dtype" : {
+          "type" : "array",
+          "items" : {
+            "type" : "object",
+            "properties" : {
+              "column" : {
+                "type" : "string",
+                "$ref" : "#/definitions/column",
+                "title" : "Column to rename"
+              },
+              "type" : {
+                "type" : "string",
+                "enum" : [
+                  "int64",
+                  "float64",
+                  "string",
+                  "bool",
+                  "datetime64"
+                ],
+                "enumNames" : [
+                  "Integer (e.g. 2)",
+                  "Decimal number (e.g. 99.99)",
+                  "Text",
+                  "Boolean (True/False)",
+                  "Date time"
+                ]
+              }
+            }
+          },
+          "codegenstyle" : "mapper",
+          "title" : "Columns to reassign"
+        },
+        "New table name" : {
+          "type" : "string"
+        }
+      },
+      "callerObject" : "DataFrame",
+      "function" : "astype",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
     }
   }
 }

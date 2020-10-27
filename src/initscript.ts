@@ -1,4 +1,6 @@
 export const python_initialization_script = `
+# ---------------- VARIABLE INSPECTOR ----------------
+
 import json
 import sys
 from IPython import get_ipython
@@ -65,9 +67,11 @@ custom_config = {
     }    
 }
 
+
+# ---------------- TRANSFORMATION DEVELOPMENT ----------------
+
 from numpydoc.docscrape import NumpyDocString
 import re
-import json
 def get_multi_select_values(function, caller=None, debug=False):
     """
     This function takes a pandas function an returns a parameter configuration that allows us to build a graphical
@@ -253,9 +257,12 @@ def get_multi_select_values(function, caller=None, debug=False):
     res = json.dumps(parameter_configuration, ensure_ascii=False) 
     return json.dumps(parameter_configuration, ensure_ascii=False) 
 
+# ---------------- JSON COLUMNS ----------------
 
 def get_json_column_values(caller):
     return json.dumps(caller.columns.tolist(), ensure_ascii=False)
+
+# ---------------- QUERYBUILDER BACKEND ----------------
 
 def generate_querybuilder_config(df):
     queryprops = {}
@@ -293,4 +300,142 @@ def generate_querybuilder_config(df):
                     'type' : 'text'
                 }
     return json.dumps(queryprops, ensure_ascii=False)
+
+# ---------------- DATA VISUALIZER ----------------
+
+def build_colDefs_for_mi_cols(df):
+    """
+    create agGrid columnDefs dict for column grouping
+    from multiindex dataframe columns
+    """
+    # utility
+    def get_idx(s, x):
+        li_headerName = [e['Header'] for e in s]
+        if x not in li_headerName:
+            return -1
+        else:
+            return li_headerName.index(x)
+
+    mindexcol = df.columns
+    li_idx_col = mindexcol.tolist()
+    s = []
+    for levels in li_idx_col:
+        col = df.loc[:, levels]
+        num_levels = len(levels)
+        s2 = s
+        flat_field = None
+        for k, index_name in enumerate(levels):
+            if flat_field:
+                # Generate flat field names
+                flat_field = str(flat_field) + '_' + str(index_name)
+            else:
+                flat_field = index_name
+            # Upper levels
+            if k < num_levels - 1:
+                i = get_idx(s2, index_name)
+                if i < 0:
+                    new_index_name = {'Header': str(index_name),
+                             'columns': []}
+                    s2.append(new_index_name)
+                    i = len(s2) - 1
+                s2 = s2[i]['columns']
+            # Lowes level
+            else:
+                flat_field = flat_field.replace('.', '_')
+                new_index_name = {'accessor': flat_field,
+                         'Header': str(index_name)}
+                s2.append(new_index_name)
+    return s
+
+def build_colDefs_for_si_cols(df, verbose=False):
+    colDefs = []
+    for c in df.columns:
+        dic = {}
+        col = df[c]
+        field = col.name
+        header_name = field.title()
+        if col.dtype.kind in 'O':
+            # string
+            dic['accessor'] = field
+            dic['Header'] = header_name
+        if col.dtype.kind in 'ifc':
+            # number
+            dic['accessor'] = field
+            dic['Header'] = header_name
+        if col.dtype.kind in 'M':
+            # date
+            dic['accessor'] = field
+            dic['Header'] = header_name
+        colDefs.append(dic)
+    return colDefs
+
+def build_colDefs_for_mi_rows(df):
+    """
+    create agGrid columnDefs dict for column grouping
+    from multiindex dataframe columns
+    """
+    mindexrow = df.index
+    s = []
+    for e in list(mindexrow.names):
+        new_e = {'accessor': e,
+                 'Header': e.title()}
+        s.append(new_e)
+    return s
+
+def flatten_mi_col_df(dfmi):
+    """
+    create flattend dataframe
+    multi index col ('a', 'b', 'c') turned to 'a-b-c'
+    """
+    df = dfmi.copy()
+    cols = df.columns.map(lambda x: '_'.join([str(i) for i in x]))
+    df.columns = cols
+    return df
+
+def is_multiindex_col_df(df):
+    if isinstance(df, pd.core.frame.DataFrame):
+        if isinstance(df.columns, pd.core.indexes.multi.MultiIndex):
+            return True
+    return False
+
+def is_df(data):
+    if isinstance(data, pd.core.frame.DataFrame):
+        return True
+    return False
+
+def is_multiindex_row_df(df):
+    if is_df(df):
+        if isinstance(df.index, pd.core.indexes.multi.MultiIndex):
+            return True
+    return False
+
+def prepare_multiindex_df(dfmi,index=False):
+    """
+    Prepare multiindex dataframe (data) and options
+    to display it with corresponding row grouping and
+    column grouping
+    To do that the dataframe is modified
+    + multi index columns are flattened
+    + multi index rows are made regular columns
+    """
+
+    df_data = dfmi
+
+    if is_multiindex_col_df(df_data):
+        columnDefs_col = build_colDefs_for_mi_cols(df_data)
+        df_data = flatten_mi_col_df(df_data)
+    else:
+        columnDefs_col = build_colDefs_for_si_cols(df_data)
+
+    if is_multiindex_row_df(df_data):
+        columnDefs_row = build_colDefs_for_mi_rows(df_data)
+        df_data = df_data.reset_index()
+    else:
+        columnDefs_row = []
+        if index:
+            df_data = df_data.reset_index()
+    
+    new_columnDefs = columnDefs_row + columnDefs_col
+    
+    return df_data.to_json(orient='records'), new_columnDefs
 `;

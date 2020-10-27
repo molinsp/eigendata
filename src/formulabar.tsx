@@ -67,15 +67,22 @@ import 'bootstrap/dist/css/bootstrap.css';
  */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
 const FormComponent = (props: {logic: Backend}): JSX.Element => {
-  // Access backend through logic object
+  // Access backend class through logic object
   let logic = props.logic;
 
   // Defaults for form and UI schema
   let transformationForm: JSONSchema7 = _transformationsConfig['read_csv']['form'] as JSONSchema7;
-  const defaultUISchema: JSONSchema7 = {};
+  let defaultUISchema: JSONSchema7 = _transformationsConfig['read_csv']['uischema'] as JSONSchema7;
 
 
-  // State of the component
+  /* State of the component:
+      - Transformation form
+      - UI schema
+      - Show or not show form: If we don't have both dataframe and transformation selected, we don't show the form
+      - DataFrame selection
+      - Transformation selection
+    
+  */
   const [state, setState] = useState({
       transformationForm: transformationForm,
       transformationUI: defaultUISchema,
@@ -88,7 +95,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   console.log('------> Rendering UI');
 
   /*-----------------------------------
-  CUSTOM SELECT
+  CUSTOM SELECT: Use React select with JSONschema form
   -----------------------------------*/
   // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
   // To-do: Move custom components to separate files
@@ -135,17 +142,19 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   };
 
-  // Customize react-jsonschema-form to use custom widgets
+  // Add the behavior described above
   const widgets = {
     SelectWidget: CustomSelect
   };
 
-  // Handle changes in the form. This is uded to UPDATE FORMS DYNAMICALLY
+  // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
   const handleFormChange = async (data:any) => {
     console.log('Form data changed', data);
      /*-------------------------------
-        MERGE
+     MERGE
      -------------------------------*/
+     // By selecting the right parameter, we get the options for the right_on 
+
      if(data.schema.function === 'merge' && typeof(data.formData['right']) !== 'undefined'){
        console.log('-> Changed right in merge')
        // Get the columns from the backend
@@ -156,15 +165,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
        new_state["definitions"]["right_columns"]['items']['enum'] = columns;
        setState(state => ({...state,transformationForm : new_state}));
      }
-     /*-------------------------------
-        GET DUMMIES
-     -------------------------------*/
-     else if(data.schema.title === 'merge' && typeof(data.formData['right']) !== 'undefined'){
-
-     }
    }
 
-  // Set dataframe selection to the state
+  // Save the input of the Dataframe seleciton in the UI to the state
   const handleDataframeSelectionChange = (input: any) => {
      //console.log(this);
      if(state.transformationSelection){
@@ -175,7 +178,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      }
   }
 
-  // Set transformation selection to the state
+  // Save the input of the transformation seleciton in the UI to the state
   const handleTransformationSelectionChange = (input: any) => {
      //console.log(input);
      if(state.dataframeSelection){
@@ -188,10 +191,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   // Pupulates the transformation form into the state 
   const getTransformationFormToState = async (dataframeSelection: string, transformationSelection: string) => {  
+    // Querybuilder placeholder
     if(transformationSelection.localeCompare('query') == 0){
       console.log('Querybuilder');
       logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
     }else{
+    // STANDARD behavior
       let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
       let newUISchema = logic.getTransfromationUISchema(transformationSelection);
       setState({
@@ -207,9 +212,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   // Generate python code and write in the notebook
   const generatePythonCode = ( formReponse: any) => {
-    // Commented out python implementation
-    logic.pythonGenerateCodeAndRun(formReponse, state.dataframeSelection); 
-    /* COMMENTED OUT CODE IS REPLACED BY PYTHON FUNCTION TO MAKE DEVELOPMENT FASTER
+    // Commented out python implementation of the same functionality
+    //logic.pythonGenerateCodeAndRun(formReponse, state.dataframeSelection); 
+    // COMMENTED OUT CODE IS REPLACED BY PYTHON FUNCTION TO MAKE DEVELOPMENT FASTER
     console.log('------------------- Generating form code -------------------');
     console.log("Data submitted: ", formReponse);
 
@@ -253,33 +258,51 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
             const codegenstyle = formReponse.schema.properties[key]['codegenstyle'];
             // ------------------------------------ CODEGEN STYLE DEFINED ------------------------------------------
             // CODEGEN: VARIABLE
-            if(codegenstyle === 'variable'){
+            if(codegenstyle.localeCompare('variable') == 0){
               console.log('*** Codgenstyle variable')
               formula = formula + parameterPrefix + key + '=' + formData[key] + ', '; 
             // CODEGEN: ARRAY
-            }else if(codegenstyle === 'array'){
+            }else if(codegenstyle.localeCompare('array') == 0){
               console.log('** Codegenstyle array')
               formula = formula + parameterPrefix + key + '=["' + formData[key].join('","') + '"], ';
             // CODEGEN: PIVOT TABLE: FUNCTION
-            }else if(codegenstyle === 'aggregation'){
+            }else if(codegenstyle.localeCompare('aggfunc') == 0){
               console.log('** Codegenstyle dict')
-                var aggregationDict = '{'
+                var parameterDict = '{'
                 for(const dict of formData[key]){
-                    aggregationDict = aggregationDict + '"' + dict['column'] + '" : [' + dict['function'] + '], ';
+                    parameterDict = parameterDict + '"' + dict['column'] + '" : [' + dict['function'] + '], ';
                 }
-                aggregationDict = aggregationDict.substring(0,aggregationDict.length - 2);
-                aggregationDict = aggregationDict + '}';
-                console.log('Aggregation Dict',aggregationDict);
-                aggregationDict = parameterPrefix + 'aggfunc=' + aggregationDict;
-                formula = formula + aggregationDict + ', ';
+                parameterDict = parameterDict.substring(0,parameterDict.length - 2);
+                parameterDict = parameterDict + '}';
+                console.log('Aggregation Dict',parameterDict);
+                parameterDict = parameterPrefix + key + '=' + parameterDict;
+                formula = formula + parameterDict + ', ';
             //   CODEGEN: CHECK NONE        
-            }else{
+            }else if(codegenstyle.localeCompare('mapper') == 0){
+              console.log('** Codegenstyle mapper');
+                var parameterDict = '{'
+                //console.log('properties', formReponse.schema.properties[key].items.properties);
+                const mapperProperties = formReponse.schema.properties[key].items.properties;
+                const mapperKey = Object.keys(mapperProperties)[0];
+                const mapperValue = Object.keys(mapperProperties)[1];
+
+                for(const dict of formData[key]){
+                    parameterDict = parameterDict + '"' + dict[mapperKey] + '" : "' + dict[mapperValue] + '", ';
+                }
+                parameterDict = parameterDict.substring(0,parameterDict.length - 2);
+                parameterDict = parameterDict + '}';
+                console.log('Aggregation Dict',parameterDict);
+                parameterDict = parameterPrefix + key + '=' + parameterDict;
+                formula = formula + parameterDict + ', ';
+            //   CODEGEN: CHECK NONE        
+            }
+            else{
               console.log('** Un-implemented codegenstyle')
             }
         } else{
           // ------------------------------------ CODEGEN NOT DEFINED ------------------------------------------
             // The form input is a Table name 
-            if (key.localeCompare('New table') == 0){
+            if (key.localeCompare('New table name') == 0){
               console.log('* New dataframe');
               variable = formData[key];
             }else{
@@ -308,7 +331,6 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     // Write and execute the formula in the notebook
     logic.writeToNotebookAndExecute(formula);  
-   */
    };
 
 
@@ -318,7 +340,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   if(logic.screen.localeCompare('load csv') == 0){
     console.log('------------- DATA LOADING -------------');
     return(
-      <Form schema={state.transformationForm} onSubmit={generatePythonCode}  />
+      <Form schema={state.transformationForm} onSubmit={generatePythonCode} uiSchema={state.transformationUI} />
       )
   }
   /*--------------------------------------
@@ -424,7 +446,10 @@ export class Backend {
     {'value': 'drop', 'label': 'drop columns'},
     {'value': 'flatten_multiindex', 'label': 'flatten multi-index'},
     {'value': 'fillna', 'label': 'fill empty values'},
-    {'value': 'query', 'label': 'query'}
+    {'value': 'query', 'label': 'query'},
+    {'value': 'rename', 'label': 'rename columns'},
+    {'value': 'to_csv', 'label': 'save as csv'},
+    {'value': 'astype', 'label': 'change datatypes'}
     ];
 
   /*---------------------------------

@@ -74,7 +74,8 @@ Arkit installed as a dev-dependency to create overview diagrams. More info [here
 - Main files
 
   - **index.ts:** file starts the extension and creates an instance of the FormWidget class, which holds all the logic
-  - **widget.tsx:** Both logic (Backend class) and UI (FormComponent function) are in the file
+  - **formulabar.tsx:** Both logic (Backend class) and UI (FormComponent function) are in the file
+  - **datavisualizer.tsx:** Skeleton for the datavisualizer (WIP)
 
 - Support files
 
@@ -83,6 +84,6 @@ Arkit installed as a dev-dependency to create overview diagrams. More info [here
     - The core version of jupyterlab has a similar implementation so it may be wiser to use that 
   - **CellUtilities.ts:** is based on an [open-source project](https://github.com/CDAT/jupyter-vcdat/blob/master/src/CellUtilities.ts). Using only the insertRunShow function to insert a new cell and run it in a notebook
   - **transformations.json:** Holds the UI definition of data transformation functions in python
-- **demo.tsx:** Holds code to test the react-awesome-querybuilder
+- **demo.tsx:** Holds code to test the react-awesome-querybuilder (WIP)
   
   
