@@ -32,7 +32,7 @@ import CellUtilities from './CellUtilities';
 import _ from "lodash";
 
 // Awesome querybuilder
-import Demo from "./demo";
+import Demo from "./querybuilder";
 //import QueryBuilder from 'react-querybuilder';
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -195,6 +195,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     if(transformationSelection.localeCompare('query') == 0){
       console.log('Querybuilder');
       logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
+      logic.setScreen('querybuilder');
     }else{
     // STANDARD behavior
       let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
@@ -717,7 +718,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGenerateQuerybuilderConfig(dataframe: string){
-     let codeToRun = 'generate_querybuilder_config(' + dataframe + ')';        
+     let codeToRun = 'queryconfig = generate_querybuilder_config(' + dataframe + ')';        
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);
@@ -739,13 +740,20 @@ export class Backend {
   }
 
   /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Get 
+  -> Writes: _codeToIgnore
+  -----------------------------------------------------------------------------------------------------*/
+  public setScreen(screen: string){
+    this.screen = screen;
+    this.signal.emit();
+  }
+
+  /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Request function from Python: Call python to generate code from form & write+execute
   -> Returns: None
     1. Send form output and dataframe selection to python
     2. Get code returned from python
     3. Write and execute this code
-   
-
     Depends on:
     - writeToNotebookAndExecute
   -----------------------------------------------------------------------------------------------------*/
