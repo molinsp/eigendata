@@ -92,7 +92,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     });
 
   console.log('State:', state);
-  console.log('------> Rendering UI');
+  console.log('------> Rendering Formulabar UI');
 
   /*-----------------------------------
   CUSTOM SELECT: Use React select with JSONschema form
@@ -209,6 +209,10 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       });
     }
 
+  }
+
+  const goToLoadDataScreen = () => {
+    logic.setScreen('load csv');
   }
 
   // Generate python code and write in the notebook
@@ -357,6 +361,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         {state.showForm &&
           <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
         }
+        <button onClick={goToLoadDataScreen}> Load data </button>
         </div>
        );
   }
@@ -450,7 +455,8 @@ export class Backend {
     {'value': 'query', 'label': 'query'},
     {'value': 'rename', 'label': 'rename columns'},
     {'value': 'to_csv', 'label': 'save as csv'},
-    {'value': 'astype', 'label': 'change datatypes'}
+    {'value': 'astype', 'label': 'change datatypes'},
+    {'value': 'extract_number_from_string', 'label': 'extract number from string'}
     ];
 
   /*---------------------------------
@@ -737,6 +743,23 @@ export class Backend {
 
       const query_config = JSON.parse(content);
       console.log('Query config', query_config);
+  }
+
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Get 
+  -> Returns: JSON object to pass to querybuiler
+  -> Writes: _codeToIgnore
+  -----------------------------------------------------------------------------------------------------*/
+  public async pythonGetDataForVisualization(dataframe: string){
+     let codeToRun = '_visualizer_data, _visualizer_columns = prepare_multiindex_df(' + dataframe + ')';        
+      // Flag as code to ignore avoid triggering the pythonRequestDataframes function
+      this._codeToIgnore = codeToRun;
+      console.log('Request expression',codeToRun);
+      
+       // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+      const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
+        codeToRun, {'data' : '_visualizer_data', 'columns':'_visualizer_columns'});
+      console.log('Result', result);
   }
 
   /*---------------------------------------------------------------------------------------------------- 

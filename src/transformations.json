@@ -39,7 +39,7 @@
               "column" : {
                 "type" : "string",
                 "$ref" : "#/definitions/column",
-                "title": "column"
+                "title" : "column"
               },
               "function" : {
                 "uniqueItems" : true,
@@ -82,7 +82,7 @@
           },
           "codegenstyle" : "aggfunc",
           "title" : "aggregations",
-          "description": "Click plus to add aggregations to the columns"
+          "description" : "Click plus to add aggregations to the columns"
         },
         "New table name" : {
           "type" : "string"
@@ -544,6 +544,35 @@
       "callerObject" : "DataFrame",
       "function" : "astype",
       "type" : "object"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
+    }
+  },
+  "extract_number_from_string" : {
+    "form" : {
+      "title" : "Extract number from string",
+      "description" : "Extract the first occurrence of a number from a sting column",
+      "properties" : {
+        "column" : {
+          "type" : "string",
+          "$ref" : "#/definitions/column"
+        },
+        "New table name" : {
+          "type" : "string"
+        }
+      },
+      "callerObject" : "DataFrame.fdt",
+      "function" : "extract_number_from_string",
+      "type" : "object",
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      }
     },
     "uischema" : {
       "New table name" : {

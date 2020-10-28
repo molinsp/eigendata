@@ -419,7 +419,7 @@ def prepare_multiindex_df(dfmi,index=False):
     + multi index rows are made regular columns
     """
 
-    df_data = dfmi
+    df_data = dfmi.copy()
 
     if is_multiindex_col_df(df_data):
         columnDefs_col = build_colDefs_for_mi_cols(df_data)

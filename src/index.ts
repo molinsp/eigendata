@@ -6,7 +6,7 @@ import {
 
 import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
 import { FormWidget, Backend } from './formulabar';
-import { DataVisualizer } from './datavisualizer';
+import { DataVisualizerWidget } from './datavisualizer';
 import { reactIcon } from '@jupyterlab/ui-components';
 
 import {
@@ -36,7 +36,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab Eigendata is activated!');
     
     let formulawidget : MainAreaWidget<FormWidget>;
-    let datavizwidget : MainAreaWidget<DataVisualizer>;
+    let datavizwidget : MainAreaWidget<DataVisualizerWidget>;
 
     const { commands } = app;
     const command = CommandIDs.create;
@@ -81,9 +81,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       execute: () => {
         if (!datavizwidget || datavizwidget.isDisposed) {
           // Create form component and pass backend behavior
-          const content = new DataVisualizer();
+          const content = new DataVisualizerWidget(backend);
           // Create datavizwidget
-          datavizwidget = new MainAreaWidget<DataVisualizer>({ content });
+          datavizwidget = new MainAreaWidget<DataVisualizerWidget>({ content });
           datavizwidget.title.label = 'Data Visualizer';
           datavizwidget.title.closable = true;
           //app.shell.add(datavizwidget, 'main');
@@ -113,7 +113,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     // Track and restore the formulawidget state
-    let viztracker = new WidgetTracker<MainAreaWidget<DataVisualizer>>({
+    let viztracker = new WidgetTracker<MainAreaWidget<DataVisualizerWidget>>({
       namespace: 'ed'
     });
     restorer.restore(viztracker, {
