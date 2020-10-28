@@ -579,5 +579,42 @@
         "ui:placeholder" : "Leave blank to modify selected table"
       }
     }
+  },
+  "round" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "type" : "string",
+          "$ref" : "#/definitions/column",
+          "codegenstyle" : "ignore"
+        },
+        "decimals" : {
+          "type" : "string",
+          "codegenstyle" : "variable"
+        },
+        "New table name" : {
+          "type" : "string"
+        }
+      },
+      "title" : "Round column",
+      "required" : [
+        "column",
+        "decimals"
+      ],
+      "callerObject" : "DataFrame[Series]",
+      "function" : "round",
+      "type" : "object",
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      }
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
+    }
   }
 }

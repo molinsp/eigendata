@@ -358,10 +358,10 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         <div>
         <Select name='Select dataframe' placeholder='select data table' options={logic.dataframesLoaded} label="Select data" onChange={handleDataframeSelectionChange.bind(this)} />
         <Select name='Select transformation' placeholder='select transformation' options={logic.transformations} label="Select transformation" onChange={handleTransformationSelectionChange} />
+        <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
           <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
         }
-        <button onClick={goToLoadDataScreen}> Load data </button>
         </div>
        );
   }
@@ -456,7 +456,8 @@ export class Backend {
     {'value': 'rename', 'label': 'rename columns'},
     {'value': 'to_csv', 'label': 'save as csv'},
     {'value': 'astype', 'label': 'change datatypes'},
-    {'value': 'extract_number_from_string', 'label': 'extract number from string'}
+    {'value': 'extract_number_from_string', 'label': 'extract number from string'},
+    {'value': 'round', 'label': 'round'}
     ];
 
   /*---------------------------------
