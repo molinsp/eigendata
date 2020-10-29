@@ -23,12 +23,10 @@
       "properties" : {
         "index" : {
           "$ref" : "#/definitions/columns",
-          "title" : "pivot table rows",
-          "codegenstyle" : "array"
+          "title" : "pivot table rows"
         },
         "columns" : {
           "$ref" : "#/definitions/columns",
-          "codegenstyle" : "array",
           "title" : "pivot table columns"
         },
         "aggfunc" : {
@@ -37,7 +35,6 @@
             "type" : "object",
             "properties" : {
               "column" : {
-                "type" : "string",
                 "$ref" : "#/definitions/column",
                 "title" : "column"
               },
@@ -46,6 +43,7 @@
                 "title" : "aggregations",
                 "type" : "array",
                 "items" : {
+                  "codegenstyle" : "variable",
                   "type" : "string",
                   "default" : "Count (excl. missing values)",
                   "enumNames" : [
@@ -80,7 +78,6 @@
               }
             }
           },
-          "codegenstyle" : "aggfunc",
           "title" : "aggregations",
           "description" : "Click plus to add aggregations to the columns"
         },
@@ -192,9 +189,9 @@
         "filepath_or_buffer"
       ],
       "title" : "Read CSV",
+      "type" : "object",
       "callerObject" : "pd",
-      "function" : "read_csv",
-      "type" : "object"
+      "function" : "read_csv"
     },
     "uischema" : {
       "New table name" : {
@@ -270,9 +267,7 @@
           ]
         },
         "columns" : {
-          "type" : "array",
           "$ref" : "#/definitions/columns",
-          "codegenstyle" : "array",
           "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
         },
         "New table name" : {
@@ -313,10 +308,8 @@
       "description" : "Drop columns from the data",
       "properties" : {
         "columns" : {
-          "type" : "array",
           "$ref" : "#/definitions/columns",
-          "codegenstyle" : "array",
-          "description" : "Remove the columns from the table"
+          "description" : "Select the columns that you want to remove"
         },
         "New table name" : {
           "type" : "string"
@@ -342,6 +335,9 @@
     "uischema" : {
       "New table name" : {
         "ui:placeholder" : "Leave blank to modify selected table"
+      },
+      "columns" : {
+        "ui:widget" : "checkboxes"
       }
     }
   },
@@ -378,7 +374,6 @@
       "title" : "Fill empty values",
       "properties" : {
         "column" : {
-          "type" : "string",
           "$ref" : "#/definitions/column",
           "title" : "column",
           "codegenstyle" : "ignore"
@@ -395,7 +390,7 @@
           ],
           "codegenstyle" : "variable"
         },
-        "New table name" : {
+        "New column name" : {
           "type" : "string"
         }
       },
@@ -413,8 +408,8 @@
       "type" : "object"
     },
     "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
+      "New column name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
       }
     }
   },
@@ -437,7 +432,6 @@
             "type" : "object",
             "properties" : {
               "column" : {
-                "type" : "string",
                 "$ref" : "#/definitions/column",
                 "title" : "Column to rename"
               },
@@ -447,7 +441,6 @@
               }
             }
           },
-          "codegenstyle" : "mapper",
           "title" : "Columns to rename"
         },
         "New table name" : {
@@ -511,7 +504,6 @@
             "type" : "object",
             "properties" : {
               "column" : {
-                "type" : "string",
                 "$ref" : "#/definitions/column",
                 "title" : "Column to rename"
               },
@@ -525,8 +517,8 @@
                   "datetime64"
                 ],
                 "enumNames" : [
-                  "Integer (e.g. 2)",
-                  "Decimal number (e.g. 99.99)",
+                  "Integer (e.g. 1, 2, 3)",
+                  "Decimal number (e.g. 49.99)",
                   "Text",
                   "Boolean (True/False)",
                   "Date time"
@@ -534,7 +526,6 @@
               }
             }
           },
-          "codegenstyle" : "mapper",
           "title" : "Columns to reassign"
         },
         "New table name" : {
@@ -557,8 +548,20 @@
       "description" : "Extract the first occurrence of a number from a sting column",
       "properties" : {
         "column" : {
-          "type" : "string",
           "$ref" : "#/definitions/column"
+        },
+        "dtype" : {
+          "type" : "string",
+          "default" : "int64",
+          "enum" : [
+            "int64",
+            "float64"
+          ],
+          "enumNames" : [
+            "Integer (e.g. 1, 2, 3)",
+            "Decimal number (e.g. 49.99)"
+          ],
+          "title" : "Number type"
         },
         "New table name" : {
           "type" : "string"
@@ -584,15 +587,13 @@
     "form" : {
       "properties" : {
         "column" : {
-          "type" : "string",
           "$ref" : "#/definitions/column",
           "codegenstyle" : "ignore"
         },
         "decimals" : {
-          "type" : "string",
-          "codegenstyle" : "variable"
+          "type" : "number"
         },
-        "New table name" : {
+        "New column name" : {
           "type" : "string"
         }
       },
@@ -612,8 +613,55 @@
       }
     },
     "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
+      "New column name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
+  },
+  "contains" : {
+    "form" : {
+      "title" : "Contains text",
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "pat" : {
+          "title" : "pattern",
+          "type" : "string"
+        },
+        "case" : {
+          "type" : "string",
+          "title" : "case sensitive",
+          "enum" : [
+            "True",
+            "False"
+          ],
+          "default" : "True",
+          "codegenstyle" : "variable"
+        },
+        "New column name" : {
+          "type" : "string"
+        }
+      },
+      "callerObject" : "DataFrame[Series].str",
+      "function" : "contains",
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column",
+        "pat"
+      ],
+      "type" : "object"
+    },
+    "uischema" : {
+      "New column name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
       }
     }
   }

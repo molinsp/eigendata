@@ -16,7 +16,7 @@ import {ISessionContext} from "@jupyterlab/apputils";
 
 import { ISignal, Signal } from '@lumino/signaling';
 
-// JSON configuration holding all information for the UI transformations
+// JSON configuration holding all information for the UI transformationsList
 import _transformationsConfig from './transformations.json';
 
 // Initialization scripts. See file for more details.
@@ -38,7 +38,7 @@ import Demo from "./querybuilder";
 import 'bootstrap/dist/css/bootstrap.css';
 
 /*
- Description: This extension provides a GUI over pandas data transformations, with the goal of facilitating the use by non experts
+ Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
  Components:
    1.  REACT GUI
        - Form code generator: A function that takes the form input and generates+executes the code in the notebook
@@ -62,7 +62,7 @@ import 'bootstrap/dist/css/bootstrap.css';
      - pythonGenerateCodeAndRun: Generate the code from the form using python (to accelerate development)
    Properties:
      - dataframesLoaded: Available dataframes
-     - transformations: Available transformations
+     - transformationsList: Available transformationsList
      - screen: Screen to show to the user
  */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
@@ -213,6 +213,66 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   const goToLoadDataScreen = () => {
     logic.setScreen('load csv');
+          setState({
+        transformationForm: transformationForm,
+        transformationUI: defaultUISchema,
+        showForm: null,
+        dataframeSelection: null,
+        transformationSelection: null
+      });
+  }
+
+
+  const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any) => {
+    console.log('------- MAP FORM RESPONSE -------');
+
+    console.log('field fieldInput', fieldInput);
+    console.log('field schema', fieldSchema);
+    console.log('field schema type', typeof(fieldSchema['$ref']));
+    // CASE 1: Custom defined
+    if(typeof(fieldSchema['codegenstyle']) !== 'undefined'){
+      console.log('Codegenstyle detected');
+      const codegenstyle = fieldSchema['codegenstyle'];
+      if(codegenstyle.localeCompare('variable') == 0){
+        return fieldInput;
+      }
+    }
+    else if(typeof(fieldSchema['$ref']) !== 'undefined'){
+      // Specific hardcoded cases
+      console.log('REF detected');
+      if(fieldSchema['$ref'].localeCompare('#/definitions/columns') == 0){    
+        console.log('Column multi-select detected');
+        return JSON.stringify(fieldInput);
+      }else if(fieldSchema['$ref'].localeCompare('#/definitions/column') == 0){
+        console.log('Column single-select detected');
+        const inputAsString = '"' + fieldInput + '"';
+        return inputAsString;
+      }
+    }
+    else if(fieldSchema['type'].localeCompare('array') == 0){
+      if((typeof(fieldSchema.items['codegenstyle']) !== 'undefined')){
+        const codegenstyle = fieldSchema.items['codegenstyle'];
+        if(codegenstyle.localeCompare('variable') == 0){
+          const removedQuotations = '[' + fieldInput.map((item: any) => item.replace( '/\\"/g', '' )) + ']';
+          return removedQuotations;
+        }
+      }else if(fieldSchema.items['type'].localeCompare('string') == 0){
+        return JSON.stringify(fieldInput);
+      }
+
+    }
+    else if(fieldSchema['type'].localeCompare('string') == 0){
+      console.log('String detected');
+      const inputAsString = '"' + fieldInput + '"';
+      return inputAsString;
+    }
+    else if(fieldSchema['type'].localeCompare('number') == 0){
+      console.log('Number detected');
+      return fieldInput;
+    }
+
+    console.log('---------------------------------------');
+
   }
 
   // Generate python code and write in the notebook
@@ -237,6 +297,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     if(callerObject.includes('Series') == true){
     // In case of a series, the formula becomes df[series] = df[series].function(params)
       console.log('Series here');
+      // Replace the callerobject series placeholder with the value from the column parameter
       const seriesString = '"' + formData['column'] + '"';
       series = '[' + seriesString + ']';
       callerObject = callerObject.replace('Series',seriesString);
@@ -256,76 +317,69 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     // Process every input
     for (var key in formData) {
-        console.log('-----> Paramter', key);
-        let parameterPrefix: string = '\n    ';     
-        // Check if there is a codegenstyle
-        if(typeof(formReponse.schema.properties[key]['codegenstyle']) !== 'undefined'){
-            const codegenstyle = formReponse.schema.properties[key]['codegenstyle'];
-            // ------------------------------------ CODEGEN STYLE DEFINED ------------------------------------------
-            // CODEGEN: VARIABLE
-            if(codegenstyle.localeCompare('variable') == 0){
-              console.log('*** Codgenstyle variable')
-              formula = formula + parameterPrefix + key + '=' + formData[key] + ', '; 
-            // CODEGEN: ARRAY
-            }else if(codegenstyle.localeCompare('array') == 0){
-              console.log('** Codegenstyle array')
-              formula = formula + parameterPrefix + key + '=["' + formData[key].join('","') + '"], ';
-            // CODEGEN: PIVOT TABLE: FUNCTION
-            }else if(codegenstyle.localeCompare('aggfunc') == 0){
-              console.log('** Codegenstyle dict')
-                var parameterDict = '{'
-                for(const dict of formData[key]){
-                    parameterDict = parameterDict + '"' + dict['column'] + '" : [' + dict['function'] + '], ';
-                }
-                parameterDict = parameterDict.substring(0,parameterDict.length - 2);
-                parameterDict = parameterDict + '}';
-                console.log('Aggregation Dict',parameterDict);
-                parameterDict = parameterPrefix + key + '=' + parameterDict;
-                formula = formula + parameterDict + ', ';
-            //   CODEGEN: CHECK NONE        
-            }else if(codegenstyle.localeCompare('mapper') == 0){
-              console.log('** Codegenstyle mapper');
-                var parameterDict = '{'
-                //console.log('properties', formReponse.schema.properties[key].items.properties);
-                const mapperProperties = formReponse.schema.properties[key].items.properties;
-                const mapperKey = Object.keys(mapperProperties)[0];
-                const mapperValue = Object.keys(mapperProperties)[1];
+      let parameterPrefix: string = '\n    '; 
+      const fieldInput = formData[key];
+      const fieldSchema = formReponse.schema.properties[key];
 
-                for(const dict of formData[key]){
-                    parameterDict = parameterDict + '"' + dict[mapperKey] + '" : "' + dict[mapperValue] + '", ';
-                }
-                parameterDict = parameterDict.substring(0,parameterDict.length - 2);
-                parameterDict = parameterDict + '}';
-                console.log('Aggregation Dict',parameterDict);
-                parameterDict = parameterPrefix + key + '=' + parameterDict;
-                formula = formula + parameterDict + ', ';
-            //   CODEGEN: CHECK NONE        
-            }
-            else{
-              console.log('** Un-implemented codegenstyle')
-            }
-        } else{
-          // ------------------------------------ CODEGEN NOT DEFINED ------------------------------------------
-            // The form input is a Table name 
-            if (key.localeCompare('New table name') == 0){
-              console.log('* New dataframe');
-              variable = formData[key];
-            }else{
-              formula = formula + parameterPrefix + key + '="' + String(formData[key]) + '", ';
-            }
+
+      if (key.localeCompare('New table name') == 0){
+        variable = formData[key];
+      }
+      else if(key.localeCompare('New column name') == 0){
+        series = '["' + formData[key] + '"]';
+      }
+      else if((typeof(fieldSchema['codegenstyle']) !== 'undefined')
+              && (fieldSchema['codegenstyle'].localeCompare('ignore') == 0)
+        ){
+        //ignore
+        console.log('Ignore column field');
+      }
+      else if((typeof(fieldSchema['type']) !== 'undefined')
+          && (fieldSchema['type'].localeCompare('array') == 0)  
+          && (typeof(fieldSchema['items']['type']) !== 'undefined')   
+          && (fieldSchema['items']['type'].localeCompare('object') == 0)
+        ){
+        // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
+        console.log('Complex object');
+        var parameterDict = '{'
+        const mapperProperties = fieldSchema.items.properties;
+        // Firs element is the key
+        const mapperKey = Object.keys(mapperProperties)[0];
+        // Second element is the value
+        const mapperValue = Object.keys(mapperProperties)[1];
+
+        console.log('Sub-field schema for key', fieldSchema.items.properties[mapperKey]);
+        for(const dict of formData[key]){
+            const key = mapFormResponseToPythonCode(dict[mapperKey], fieldSchema.items.properties[mapperKey]);
+            const value = mapFormResponseToPythonCode(dict[mapperValue], fieldSchema.items.properties[mapperValue]);
+            parameterDict = parameterDict  + key + ' : ' + value + ', ';
         }
+
+        parameterDict = parameterDict.substring(0,parameterDict.length - 2);
+        parameterDict = parameterDict + '}';
+        console.log('Aggregation Dict',parameterDict);
+        parameterDict = parameterPrefix + key + '=' + parameterDict;
+        formula = formula + parameterDict + ', ';
+
+      }
+      else{
+        const mappedFieldResponse = mapFormResponseToPythonCode(fieldInput, fieldSchema);
+        formula = formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';
+        console.log('Mapped field', formula); 
+      }
     }
 
-
+    
     // If no variable defined, and calling from a given dataframe apply to this dataframe
     // else if dataframe not defined, name it data
     if((variable === '') && (dataframeSelection !== null)){
+      console.log('DF Selection', dataframeSelection);
       variable = dataframeSelection;
     // If there is no variable defined and it is not being called from a dataframe, set as data
     }else if ((variable === '') && (dataframeSelection === null)){
       variable = 'data';
     }
-
+    
     // Remove last comma and space given there are no more parameters
     formula = formula.substring(0, formula.length - 2);
     formula = formula + ')';
@@ -336,6 +390,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     // Write and execute the formula in the notebook
     logic.writeToNotebookAndExecute(formula);  
+
+
    };
 
 
@@ -352,12 +408,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   SELECT TRANSFORMATION: When data loaded
   ---------------------------------------*/
   // To-do: Add button to load data even in this case
-  else if(logic.screen.localeCompare('transformations') == 0){
+  else if(logic.screen.localeCompare('transformationsList') == 0){
     console.log('------------- DATA TRANSFORMATION -------------');
       return (
         <div>
         <Select name='Select dataframe' placeholder='select data table' options={logic.dataframesLoaded} label="Select data" onChange={handleDataframeSelectionChange.bind(this)} />
-        <Select name='Select transformation' placeholder='select transformation' options={logic.transformations} label="Select transformation" onChange={handleTransformationSelectionChange} />
+        <Select name='Select transformation' placeholder='select transformation' options={logic.transformationsList} label="Select transformation" onChange={handleTransformationSelectionChange} />
         <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
           <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
@@ -445,20 +501,8 @@ export class Backend {
   public dataframesLoaded: any = [];
 
   // Data transformation functions
-  public transformations = [{'value': 'merge', 'label': 'join'}, 
-    {'value': 'pivot_table', 'label': 'pivot table'},
-    {'value': 'get_dummies', 'label': 'pivot dummies'}, 
-    {'value': 'sort_values', 'label': 'sort'},
-    {'value': 'drop', 'label': 'drop columns'},
-    {'value': 'flatten_multiindex', 'label': 'flatten multi-index'},
-    {'value': 'fillna', 'label': 'fill empty values'},
-    {'value': 'query', 'label': 'query'},
-    {'value': 'rename', 'label': 'rename columns'},
-    {'value': 'to_csv', 'label': 'save as csv'},
-    {'value': 'astype', 'label': 'change datatypes'},
-    {'value': 'extract_number_from_string', 'label': 'extract number from string'},
-    {'value': 'round', 'label': 'round'}
-    ];
+  public transformationsList = []
+
 
   /*---------------------------------
     Communicate with Python Kernel
@@ -474,7 +518,7 @@ export class Backend {
   /*---------------------------------
     Configurations
   ----------------------------------*/
-  // Custom data transformations defined in JSON file
+  // Custom data transformationsList defined in JSON file
   private _transformationsConfig: any;
 
   // -------------------------------------------------------------------------------------------------------------
@@ -491,6 +535,14 @@ export class Backend {
 
     // Read the transformation config
     this._transformationsConfig = _transformationsConfig;
+
+    let transformationList = [];
+    for (var transformation in _transformationsConfig){
+      transformationList.push({"value": transformation, "label": _transformationsConfig[transformation]['form']['title']} );
+    };
+    console.log('Transformation list', transformationList);
+
+    this.transformationsList = transformationList;
 
     // Load initialization script
     this._initScripts = python_initialization_script;
@@ -687,7 +739,7 @@ export class Backend {
     // Run and insert using cell utilities
     CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, code, false);
 
-    this.screen = 'transformations';
+    this.screen = 'transformationsList';
   };
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -769,7 +821,6 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public setScreen(screen: string){
     this.screen = screen;
-    this.signal.emit();
   }
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -937,7 +988,7 @@ export class Backend {
         this.dataframesLoaded = dataframe_list;
 
         // TEMP: Disable for testing
-        this.screen = 'transformations';
+        this.screen = 'transformationsList';
       }
       // Emit signal to re-render the component
       this.signal.emit();
