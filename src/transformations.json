@@ -873,5 +873,101 @@
         "ui:placeholder" : "Leave blank to modify selected column"
       }
     }
+  },
+  "sum" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "New variable name" : {
+          "type" : "string"
+        }
+      },
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column"
+      ],
+      "title" : "[Series] Sum of a column",
+      "callerObject" : "DataFrame[Series]",
+      "function" : "sum",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New variable name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
+  },
+  "var" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "New variable name" : {
+          "type" : "string"
+        }
+      },
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column"
+      ],
+      "title" : "[Series] Sum of a column",
+      "callerObject" : "DataFrame[Series]",
+      "function" : "var",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New variable name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
+  },
+  "std" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "New variable name" : {
+          "type" : "string"
+        }
+      },
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column"
+      ],
+      "title" : "[Series] Sum of a column",
+      "callerObject" : "DataFrame[Series]",
+      "function" : "std",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New variable name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
   }
 }

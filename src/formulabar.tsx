@@ -349,7 +349,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       }
       else if(key.localeCompare('New variable name') == 0){
         console.log('Result is variable');
-        series = formData[key];
+        variable = formData[key];
       }
       // IGNORE the fields marked as ignore
       else if((typeof(fieldSchema['codegenstyle']) !== 'undefined')
