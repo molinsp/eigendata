@@ -283,20 +283,36 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     console.log('------------------- Generating form code -------------------');
     console.log("Data submitted: ", formReponse);
 
+    /*-------------------------------------------------------------------
+    Process formula with this pattern:
+      result_variable = caller_object.transformation(parameters)
+        1. Generate caller object & transformation selection
+        2. Process every parameter input
+        3. Assign to result to variable
+    --------------------------------------------------------------------*/
+
     const formData = formReponse.formData;
     let transformationSelection: string = formReponse.schema.function;
     let dataframeSelection: string = state.dataframeSelection; 
     let callerObject: string =  formReponse.schema.callerObject;
     let series:string = '';
 
+    // The result will be saved in one variable: result_variable = object.transformation(parameters)
+    // This variable is of type dataframe by default
+    let variable = '';
+
+    /*-------------------------------------------------------------------
+      1. Generate caller object & transformation selection
+    --------------------------------------------------------------------*/
+    // Compose the caller object
     if(callerObject.includes('DataFrame') == true){
     // If there is no dataframe selection, calling from pandas
-      console.log('Replace dataframe name with', dataframeSelection);
+      console.log('Transforming Dataframe object');
       callerObject = callerObject.replace('DataFrame',dataframeSelection);
     }
     if(callerObject.includes('Series') == true){
     // In case of a series, the formula becomes df[series] = df[series].function(params)
-      console.log('Series here');
+      console.log('Transforming Series object');
       // Replace the callerobject series placeholder with the value from the column parameter
       const seriesString = '"' + formData['column'] + '"';
       series = '[' + seriesString + ']';
@@ -311,23 +327,31 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     // Formula that will be generated in the form of: object.transformation(parameters)
     let formula = callerObject + '.' + transformationSelection + '(';
-    
-    // The result will be saved in one variable: variable = object.transformation(parameters)
-    let variable = '';
 
+    /*-------------------------------------------------------------------
+      2. Process every parameter input
+    --------------------------------------------------------------------*/
     // Process every input
+    let parameter_counter = 0;
     for (var key in formData) {
       let parameterPrefix: string = '\n    '; 
       const fieldInput = formData[key];
       const fieldSchema = formReponse.schema.properties[key];
 
-
+      // IF specified by the user, set the name of the result
       if (key.localeCompare('New table name') == 0){
+        console.log('Result is series');
         variable = formData[key];
       }
       else if(key.localeCompare('New column name') == 0){
+        console.log('Result is series');
         series = '["' + formData[key] + '"]';
       }
+      else if(key.localeCompare('New variable name') == 0){
+        console.log('Result is variable');
+        series = formData[key];
+      }
+      // IGNORE the fields marked as ignore
       else if((typeof(fieldSchema['codegenstyle']) !== 'undefined')
               && (fieldSchema['codegenstyle'].localeCompare('ignore') == 0)
         ){
@@ -360,32 +384,58 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         console.log('Aggregation Dict',parameterDict);
         parameterDict = parameterPrefix + key + '=' + parameterDict;
         formula = formula + parameterDict + ', ';
-
+        parameter_counter +=1;
       }
       else{
         const mappedFieldResponse = mapFormResponseToPythonCode(fieldInput, fieldSchema);
         formula = formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';
         console.log('Mapped field', formula); 
+        parameter_counter +=1;
       }
     }
 
-    
-    // If no variable defined, and calling from a given dataframe apply to this dataframe
-    // else if dataframe not defined, name it data
-    if((variable === '') && (dataframeSelection !== null)){
-      console.log('DF Selection', dataframeSelection);
-      variable = dataframeSelection;
-    // If there is no variable defined and it is not being called from a dataframe, set as data
-    }else if ((variable === '') && (dataframeSelection === null)){
-      variable = 'data';
+    if(parameter_counter != 0){
+      // Remove last comma and space given there are no more parameters
+      formula = formula.substring(0, formula.length - 2);
     }
-    
-    // Remove last comma and space given there are no more parameters
-    formula = formula.substring(0, formula.length - 2);
     formula = formula + ')';
-    
-    // Compose formula
-    formula = variable + series + ' = ' + formula;
+
+
+
+    /*-------------------------------------------------------------------
+      3. PAssign to result to variable
+    --------------------------------------------------------------------*/  
+
+    // Determine the type of the result variable
+    let returnType = 'dataframe';
+    if(typeof(formReponse.schema.properties['New variable name']) !== 'undefined'){
+      returnType = 'variable';
+    }
+
+    // ------------ HANDLE DEFAULTS FOR RESULT VARIABLE (i.e. if not specified in the form)
+    if(returnType.localeCompare('dataframe') == 0){
+      // If no target variable, and calling from a given dataframe apply transformation to this dataframe
+      if((variable === '') && (dataframeSelection !== null)){
+        console.log('DF Selection', dataframeSelection);
+        variable = dataframeSelection;
+      }
+      // else if dataframe not defined (only case is read_csv), name it data
+      else if ((variable === '') && (dataframeSelection === null)){
+        variable = 'data';
+      }
+    }else if (returnType.localeCompare('variable') == 0){
+      if(variable === ''){
+        variable = 'var';
+      }
+    }
+     
+    // Assign transformation to result variable
+    if(returnType.localeCompare('dataframe') == 0){
+      formula = variable + series + ' = ' + formula; 
+    }
+    else if(returnType.localeCompare('variable') == 0){
+      formula = variable + ' = ' + formula;
+    }
     console.log('FORMULA: ', formula);
 
     // Write and execute the formula in the notebook

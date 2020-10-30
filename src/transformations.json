@@ -1,4 +1,98 @@
 {
+  "read_csv" : {
+    "form" : {
+      "properties" : {
+        "filepath_or_buffer" : {
+          "type" : "string",
+          "title" : "filepath"
+        },
+        "sep" : {
+          "type" : "string",
+          "default" : ",",
+          "title" : "separator",
+          "description" : "Character used to separate columns (e.g. commas, semicolons, etc.)"
+        },
+        "decimal" : {
+          "type" : "string",
+          "default" : ".",
+          "title" : "decimal character",
+          "description" : "Value used to indicate decimals."
+        },
+        "New table name" : {
+          "type" : "string"
+        }
+      },
+      "required" : [
+        "filepath_or_buffer"
+      ],
+      "title" : "Read CSV",
+      "type" : "object",
+      "callerObject" : "pd",
+      "function" : "read_csv"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
+    }
+  },
+  "get_dummies" : {
+    "form" : {
+      "required" : [
+        "data",
+        "columns"
+      ],
+      "definitions" : {
+        "columns" : {
+          "type" : "array",
+          "uniqueItems" : true,
+          "items" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "dataframes" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "properties" : {
+        "data" : {
+          "type" : "string",
+          "codegenstyle" : "variable",
+          "$ref" : "#/definitions/dataframes"
+        },
+        "dummy_na" : {
+          "title" : "Column for NA values",
+          "description" : "Include category for empty values",
+          "default" : "False",
+          "type" : "string",
+          "codegenstyle" : "variable",
+          "enum" : [
+            "True",
+            "False"
+          ]
+        },
+        "columns" : {
+          "$ref" : "#/definitions/columns",
+          "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
+        },
+        "New table name" : {
+          "type" : "string"
+        }
+      },
+      "title" : "Pivot Dummies",
+      "description" : "Pivot column values into multiple columns, with 1 and 0 indicators",
+      "type" : "object",
+      "callerObject" : "pd",
+      "function" : "get_dummies"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
+    }
+  },
   "pivot_table" : {
     "form" : {
       "properties" : {
@@ -162,43 +256,6 @@
       }
     }
   },
-  "read_csv" : {
-    "form" : {
-      "properties" : {
-        "filepath_or_buffer" : {
-          "type" : "string",
-          "title" : "filepath"
-        },
-        "sep" : {
-          "type" : "string",
-          "default" : ",",
-          "title" : "separator",
-          "description" : "Character used to separate columns (e.g. commas, semicolons, etc.)"
-        },
-        "decimal" : {
-          "type" : "string",
-          "default" : ".",
-          "title" : "decimal character",
-          "description" : "Value used to indicate decimals."
-        },
-        "New table name" : {
-          "type" : "string"
-        }
-      },
-      "required" : [
-        "filepath_or_buffer"
-      ],
-      "title" : "Read CSV",
-      "type" : "object",
-      "callerObject" : "pd",
-      "function" : "read_csv"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      }
-    }
-  },
   "sort_values" : {
     "form" : {
       "properties" : {
@@ -238,63 +295,6 @@
       "type" : "object",
       "callerObject" : "DataFrame",
       "function" : "sort_values"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      }
-    }
-  },
-  "get_dummies" : {
-    "form" : {
-      "required" : [
-        "data",
-        "columns"
-      ],
-      "definitions" : {
-        "columns" : {
-          "type" : "array",
-          "uniqueItems" : true,
-          "items" : {
-            "type" : "string",
-            "enum" : []
-          }
-        },
-        "dataframes" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "properties" : {
-        "data" : {
-          "type" : "string",
-          "codegenstyle" : "variable",
-          "$ref" : "#/definitions/dataframes"
-        },
-        "dummy_na" : {
-          "title" : "Column for NA values",
-          "description" : "Include category for empty values",
-          "default" : "False",
-          "type" : "string",
-          "codegenstyle" : "variable",
-          "enum" : [
-            "True",
-            "False"
-          ]
-        },
-        "columns" : {
-          "$ref" : "#/definitions/columns",
-          "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
-        },
-        "New table name" : {
-          "type" : "string"
-        }
-      },
-      "title" : "Pivot Dummies",
-      "description" : "Pivot column values into multiple columns, with 1 and 0 indicators",
-      "type" : "object",
-      "callerObject" : "pd",
-      "function" : "get_dummies"
     },
     "uischema" : {
       "New table name" : {
@@ -366,50 +366,6 @@
     "uischema" : {
       "New table name" : {
         "ui:placeholder" : "Leave blank to modify selected table"
-      }
-    }
-  },
-  "fillna" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "method" : {
-          "type" : "string",
-          "enum" : [
-            "\"ffill\"",
-            "\"bfill\""
-          ],
-          "enumNames" : [
-            "forward fill (take the one above)",
-            "backward fill (take the one below)"
-          ],
-          "codegenstyle" : "variable"
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column"
-      ],
-      "title" : "Fill empty values",
-      "type" : "object",
-      "callerObject" : "DataFrame[Series]",
-      "function" : "fillna"
-    },
-    "uischema" : {
-      "New column name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
       }
     }
   },
@@ -566,7 +522,7 @@
           "type" : "string"
         }
       },
-      "title" : "Extract number from string",
+      "title" : "[Series] Extract number from string",
       "description" : "Extract the first occurrence of a number from a sting column",
       "type" : "object",
       "callerObject" : "DataFrame[Series].fdt",
@@ -602,7 +558,7 @@
         "column",
         "decimals"
       ],
-      "title" : "Round column",
+      "title" : "[Series] Round column",
       "type" : "object",
       "callerObject" : "DataFrame[Series]",
       "function" : "round",
@@ -612,6 +568,50 @@
           "enum" : []
         }
       }
+    },
+    "uischema" : {
+      "New column name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
+  },
+  "fillna" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "method" : {
+          "type" : "string",
+          "enum" : [
+            "\"ffill\"",
+            "\"bfill\""
+          ],
+          "enumNames" : [
+            "forward fill (take the one above)",
+            "backward fill (take the one below)"
+          ],
+          "codegenstyle" : "variable"
+        },
+        "New column name" : {
+          "type" : "string"
+        }
+      },
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column"
+      ],
+      "title" : "[Series] Fill empty values",
+      "type" : "object",
+      "callerObject" : "DataFrame[Series]",
+      "function" : "fillna"
     },
     "uischema" : {
       "New column name" : {
@@ -629,6 +629,7 @@
         },
         "pat" : {
           "title" : "pattern",
+          "description" : "Find this patter in the column (includes partial matches)",
           "type" : "string"
         },
         "case" : {
@@ -665,7 +666,7 @@
         "column",
         "pat"
       ],
-      "title" : "Contains text",
+      "title" : "[Series] Contains text",
       "type" : "object",
       "callerObject" : "DataFrame[Series].str",
       "function" : "contains"
@@ -728,7 +729,7 @@
         "repl"
       ],
       "type" : "object",
-      "title" : "Replace text",
+      "title" : "[Series] Replace text",
       "callerObject" : "DataFrame[Series].str",
       "function" : "replace",
       "definitions" : {
@@ -741,24 +742,11 @@
     "uischema" : {
       "New column name" : {
         "ui:placeholder" : "Leave blank to modify selected column"
-      },
-      "n" : {
-        "ui:widget" : "updown"
       }
     }
   },
   "find" : {
     "form" : {
-      "required" : [
-        "column",
-        "sub"
-      ],
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
       "properties" : {
         "column" : {
           "$ref" : "#/definitions/column",
@@ -779,8 +767,17 @@
           "type" : "string"
         }
       },
-      "title" : "Find text",
-      "definition" : "",
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column",
+        "sub"
+      ],
+      "title" : "[Series] Find text",
       "callerObject" : "DataFrame[Series].str",
       "function" : "find",
       "type" : "object"
@@ -788,9 +785,92 @@
     "uischema" : {
       "New column name" : {
         "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
+  },
+  "split" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "pat" : {
+          "title" : "pattern",
+          "description" : "Find this patter in the column (includes partial matches)",
+          "type" : "string"
+        },
+        "n" : {
+          "title" : "Number of replacements",
+          "type" : "number",
+          "description" : "Number of replacements to perform if there is more than 1 match. To replace all leave as -1.",
+          "default" : -1
+        },
+        "expand" : {
+          "type" : "string",
+          "description" : "Expand into separate columns",
+          "codegenstyle" : "variable",
+          "enum" : [
+            "True",
+            "False"
+          ],
+          "default" : "False"
+        },
+        "New column name" : {
+          "type" : "string"
+        }
       },
-      "n" : {
-        "ui:widget" : "updown"
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column",
+        "pat"
+      ],
+      "title" : "[Series] Split text",
+      "callerObject" : "DataFrame[Series].str",
+      "function" : "split",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New column name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
+  },
+  "mean" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "New variable name" : {
+          "type" : "string"
+        }
+      },
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column"
+      ],
+      "title" : "[Series] Mean of a column",
+      "callerObject" : "DataFrame[Series]",
+      "function" : "mean",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New variable name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
       }
     }
   }

@@ -12,19 +12,21 @@ _jupyterlab_variableinspector_Jupyter = get_ipython()
 _jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
 
 
-def _jupyterlab_variableinspector_keep_dataframes(v):
+def _get_allowed_types(v):
     try:
         obj = eval(v)
-        # Check if datadrame
-        if isinstance(obj, pd.core.frame.DataFrame) or isinstance(obj,pd.core.series.Series):
-            return True
+        # Check if datadrame or series
+        if isinstance(obj, pd.core.frame.DataFrame): 
+            return '[Dataframe] ' + str(v)
+        #elif isinstance(obj,pd.core.series.Series):
+        #    return '[Series] ' + str(v)
         return False
     except:
         return False
 
 def _jupyterlab_variableinspector_dict_list():
     values = _jupyterlab_variableinspector_nms.who_ls()
-    vardic = [{'varName': _v} for _v in values if _jupyterlab_variableinspector_keep_dataframes(_v)]
+    vardic = [{'varName': _v, 'label': _get_allowed_types(_v)} for _v in values if _get_allowed_types(_v) != False]
     return json.dumps(vardic, ensure_ascii=False)
 
 def _jupyterlab_variableinspector_array():
@@ -32,6 +34,7 @@ def _jupyterlab_variableinspector_array():
     vararray = [_v for _v in values if _jupyterlab_variableinspector_keep_dataframes(_v)]
     return vararray
 
+# ---------------- TRANSFORMATIONS ----------------
 
 custom_config = {
     'read_csv' : {
