@@ -14,6 +14,8 @@
 
 ## Install
 
+Not working yet, if use the install method from below in the contributing section
+
 ```bash
 jupyter labextension install eigendata-formula-bar
 ```
