@@ -344,15 +344,15 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       // IF specified by the user, set the name of the result
       if (key.localeCompare('New table name') == 0){
         console.log('Result is series');
-        variable = formData[key];
+        variable = formData[key].replace(/ /g,"_");
       }
       else if(key.localeCompare('New column name') == 0){
         console.log('Result is series');
-        series = '["' + formData[key] + '"]';
+        series = '["' + formData[key].replace(/ /g,"_") + '"]';
       }
       else if(key.localeCompare('New variable name') == 0){
         console.log('Result is variable');
-        variable = formData[key];
+        variable = formData[key].replace(/ /g,"_");
       }
       // IGNORE the fields marked as ignore
       else if((typeof(fieldSchema['codegenstyle']) !== 'undefined')
@@ -785,7 +785,7 @@ export class Backend {
   public writeToNotebookAndExecute = (code: string) => {
     // Add pandas if not already added
     if(this._importedLibraries == false){
-      code = 'import pandas as pd\nimport numpy as np\nfrom fastdata.fastdata.core import *\n' + code;
+      code = 'import pandas as pd\nimport numpy as np\nfrom fastdata.core import *\n' + code;
       this._importedLibraries = true;
     }
 

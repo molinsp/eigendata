@@ -256,6 +256,35 @@
       }
     }
   },
+  "append" : {
+    "form" : {
+      "properties" : {
+        "other" : {
+          "type" : "string",
+          "codegenstyle" : "variable",
+          "$ref" : "#/definitions/dataframes"
+        }
+      },
+      "definitions" : {
+        "dataframes" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "other"
+      ],
+      "title" : "Append dataframes",
+      "type" : "object",
+      "callerObject" : "DataFrame",
+      "function" : "append"
+    },
+    "uischema" : {
+      "New table name" : {
+        "ui:placeholder" : "Leave blank to modify selected table"
+      }
+    }
+  },
   "sort_values" : {
     "form" : {
       "properties" : {
@@ -927,7 +956,7 @@
       "required" : [
         "column"
       ],
-      "title" : "[Series] Sum of a column",
+      "title" : "[Series] Variance",
       "callerObject" : "DataFrame[Series]",
       "function" : "var",
       "type" : "object"
@@ -959,7 +988,7 @@
       "required" : [
         "column"
       ],
-      "title" : "[Series] Sum of a column",
+      "title" : "[Series] Standard deviation",
       "callerObject" : "DataFrame[Series]",
       "function" : "std",
       "type" : "object"
