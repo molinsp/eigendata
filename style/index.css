@@ -7,3 +7,23 @@
   padding-bottom: 10px;
   padding-left: 20px;
 }
+
+.side-by-side-fields > fieldset {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.side-by-side-fields .left-field,
+.side-by-side-fields .right-field {
+  width: 49%;
+}
+
+#root_aggfunc .array-item {
+  display: flex;
+  align-items: center;
+}
+
+#root_aggfunc .array-item-toolbox {
+  margin-bottom: 6px;
+}
