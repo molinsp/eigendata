@@ -186,6 +186,17 @@
     "uischema" : {
       "New table name" : {
         "ui:placeholder" : "Leave blank to modify selected table"
+      },
+      "aggfunc" : {
+        "items" : {
+          "classNames" : "side-by-side-fields",
+          "column" : {
+            "classNames": "left-field"
+          },
+          "function" : {
+            "classNames" : "right-field"
+          }
+        }
       }
     }
   },
