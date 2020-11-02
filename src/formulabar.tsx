@@ -593,6 +593,9 @@ export class Backend {
     for (var transformation in _transformationsConfig){
       transformationList.push({"value": transformation, "label": _transformationsConfig[transformation]['form']['title']} );
     };
+
+    // Add a transformation for queries. Currently for development purposes
+    transformationList.push({"value": 'query', "label": '[DEV] Querybuilder'});
     console.log('Transformation list', transformationList);
 
     this.transformationsList = transformationList;
@@ -878,6 +881,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public setScreen(screen: string){
     this.screen = screen;
+    this.signal.emit();
   }
 
   /*---------------------------------------------------------------------------------------------------- 
