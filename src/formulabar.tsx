@@ -464,9 +464,29 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   else if(logic.screen.localeCompare('transformationsList') == 0){
     console.log('------------- DATA TRANSFORMATION -------------');
       return (
-        <div>
-        <Select name='Select dataframe' placeholder='select data table' options={logic.dataframesLoaded} label="Select data" onChange={handleDataframeSelectionChange.bind(this)} />
-        <Select name='Select transformation' placeholder='select transformation' options={logic.transformationsList} label="Select transformation" onChange={handleTransformationSelectionChange} />
+        <div className="side-by-side-fields">
+          <fieldset className="data-transformation-form">
+            <Select
+              name='Select dataframe'
+              placeholder='select data table'
+              options={logic.dataframesLoaded}
+              label="Select data"
+              onChange={handleDataframeSelectionChange.bind(this)}
+              className="left-field"
+            />
+            <Select
+              name='Select transformation'
+              placeholder='select transformation'
+              options={logic.transformationsList}
+              label="Select transformation"
+              onChange={handleTransformationSelectionChange}
+              className="right-field"
+              components={{
+                DropdownIndicator: () => null,
+                IndicatorSeparator: () => null
+              }}
+            />
+          </fieldset>
         <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
           <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
