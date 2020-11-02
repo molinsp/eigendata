@@ -27,3 +27,11 @@
 #root_aggfunc .array-item-toolbox {
   margin-bottom: 6px;
 }
+
+.data-transformation-form .left-field {
+  width: 33%;
+}
+
+.data-transformation-form .right-field {
+  width: 66%;
+}
