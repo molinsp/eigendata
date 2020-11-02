@@ -339,7 +339,20 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     for (var key in formData) {
       let parameterPrefix: string = '\n    '; 
       const fieldInput = formData[key];
-      const fieldSchema = formReponse.schema.properties[key];
+      let fieldSchema = null;
+
+      if(typeof(formReponse.schema.properties[key]) !== 'undefined'){
+        fieldSchema = formReponse.schema.properties[key];
+      }
+      // Check if we can't find it because it is part of a schema dependency
+      else if (typeof(formReponse.schema.properties['mode']) !== 'undefined'){
+        const selectedMode = formData['mode'];
+        const selectedModeIndex = formReponse.schema.properties['mode']['enum'].findIndex((element) => element.localeCompare(selectedMode) == 0);
+        console.log('SELECTED MODE INDEX', selectedModeIndex);
+        console.log('--->', formReponse.schema.dependencies.mode['oneOf'][selectedModeIndex]);
+        fieldSchema = formReponse.schema.dependencies.mode['oneOf'][selectedModeIndex].properties[key];
+      }
+
 
       // IF specified by the user, set the name of the result
       if (key.localeCompare('New table name') == 0){
@@ -361,12 +374,15 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         //ignore
         console.log('Ignore column field');
       }
+      /*-------------------
+        Dictionary inputs
+      --------------------*/ 
+      // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
       else if((typeof(fieldSchema['type']) !== 'undefined')
           && (fieldSchema['type'].localeCompare('array') == 0)  
           && (typeof(fieldSchema['items']['type']) !== 'undefined')   
           && (fieldSchema['items']['type'].localeCompare('object') == 0)
-        ){
-        // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
+        ){ 
         console.log('Complex object');
         var parameterDict = '{'
         const mapperProperties = fieldSchema.items.properties;
@@ -389,6 +405,11 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         formula = formula + parameterDict + ', ';
         parameter_counter +=1;
       }
+      /*-------------------
+        Based on JSONSchema
+        definition 
+        + codegenstyle
+      --------------------*/ 
       else{
         const mappedFieldResponse = mapFormResponseToPythonCode(fieldInput, fieldSchema);
         formula = formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';

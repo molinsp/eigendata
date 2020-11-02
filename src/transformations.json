@@ -191,7 +191,7 @@
         "items" : {
           "classNames" : "side-by-side-fields",
           "column" : {
-            "classNames": "left-field"
+            "classNames" : "left-field"
           },
           "function" : {
             "classNames" : "right-field"
@@ -1002,6 +1002,94 @@
       "title" : "[Series] Standard deviation",
       "callerObject" : "DataFrame[Series]",
       "function" : "std",
+      "type" : "object"
+    },
+    "uischema" : {
+      "New variable name" : {
+        "ui:placeholder" : "Leave blank to modify selected column"
+      }
+    }
+  },
+  "bin_column" : {
+    "form" : {
+      "properties" : {
+        "column" : {
+          "$ref" : "#/definitions/column",
+          "title" : "column",
+          "codegenstyle" : "ignore"
+        },
+        "mode" : {
+          "type" : "string",
+          "enum" : [
+            "size",
+            "number",
+            "quantiles"
+          ]
+        }
+      },
+      "definitions" : {
+        "column" : {
+          "type" : "string",
+          "enum" : []
+        }
+      },
+      "required" : [
+        "column"
+      ],
+      "dependencies" : {
+        "mode" : {
+          "oneOf" : [
+            {
+              "title" : "Size of bins",
+              "properties" : {
+                "mode" : {
+                  "enum" : [
+                    "size"
+                  ]
+                },
+                "start" : {
+                  "type" : "number"
+                },
+                "size" : {
+                  "type" : "number"
+                },
+                "end" : {
+                  "type" : "number"
+                }
+              }
+            },
+            {
+              "title" : "Number of bins",
+              "properties" : {
+                "mode" : {
+                  "enum" : [
+                    "number"
+                  ]
+                },
+                "bin_number" : {
+                  "type" : "number"
+                }
+              }
+            },
+            {
+              "title" : "Number of bins",
+              "properties" : {
+                "mode" : {
+                  "enum" : [
+                    "quantiles"
+                  ]
+                },
+                "quantiles" : {
+                  "type" : "number"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "title" : "[Series] Bin/Bucket columns",
+      "callerObject" : "DataFrame[Series].fdt",
+      "function" : "bin_column",
       "type" : "object"
     },
     "uischema" : {
