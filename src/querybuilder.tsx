@@ -15,67 +15,26 @@ import 'react-awesome-query-builder/lib/css/styles.css';
 // @ts-ignore
 const InitialConfig = BasicConfig; // or BasicConfig
 
-// You need to provide your own config. See below 'Config format'
-const config: Config = {
-  ...InitialConfig,
-  fields: {
-    qty: {
-        label: 'Qty',
-        type: 'number',
-        fieldSettings: {
-            min: 0,
-        },
-        valueSources: ['value'],
-        preferWidgets: ['number'],
-    },
-    price: {
-        label: 'Price',
-        type: 'number',
-        valueSources: ['value'],
-        fieldSettings: {
-            min: 10,
-            max: 100,
-        },
-        preferWidgets: ['slider', 'rangeslider'],
-    },
-    color: {
-        label: 'Color',
-        type: 'select',
-        valueSources: ['value'],
-        fieldSettings: {
-          listValues: [
-            { value: 'yellow', title: 'Yellow' },
-            { value: 'green', title: 'Green' },
-            { value: 'orange', title: 'Orange' }
-          ],
-        }
-    },
-    is_promotion: {
-        label: 'Promo?',
-        type: 'boolean',
-        operators: ['equal'],
-        valueSources: ['value'],
-    },
-  }
-};
-
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
 // Default empty query value
 const queryValue = {"id": QbUtils.uuid(), "type": "group"};
 
+export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, DemoQueryBuilderState> {
+    constructor(props: DemoQueryBuilderProps) {
+        super(props);
+        const config = {...InitialConfig, fields: {...this.props.queryConfig}};
+        this.state = {
+            // @ts-ignore
+            tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
+            config: config
+        };
+    }
 
-export default class DemoQueryBuilder extends Component {
-    state = {
-      // @ts-ignore
-      tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
-      config: config
-    };
-    
     render = () => (
       // @ts-ignore
       <div>
         <Query
-            {...config} 
+            {...this.state.config}
             value={this.state.tree}
             onChange={this.onChange}
             renderBuilder={this.renderBuilder}
@@ -100,4 +59,13 @@ export default class DemoQueryBuilder extends Component {
       // console.log('JSON TREE', jsonTree);
       // `jsonTree` can be saved to backend, and later loaded to `queryValue`
     }
+}
+
+interface DemoQueryBuilderProps {
+    queryConfig: object;
+}
+
+interface DemoQueryBuilderState {
+    tree: ImmutableTree;
+    config: Config;
 }
