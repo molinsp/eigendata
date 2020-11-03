@@ -90,7 +90,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       transformationUI: defaultUISchema,
       showForm: null,
       dataframeSelection: null,
-      transformationSelection: null
+      transformationSelection: null,
+      queryConfig: null
     });
 
   console.log('State:', state);
@@ -197,8 +198,13 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     // Querybuilder placeholder
     if(transformationSelection.localeCompare('query') == 0){
       console.log('Querybuilder');
-      logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
-      logic.setScreen('querybuilder');
+      const queryConfig = await logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
+      setState(state => ({...state,
+        queryConfig: queryConfig,
+        showForm: false,
+        dataframeSelection: dataframeSelection,
+        transformationSelection: transformationSelection,
+      }));
     }else{
     // STANDARD behavior
       let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
@@ -208,7 +214,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         transformationUI: newUISchema,
         showForm: true,
         dataframeSelection: dataframeSelection,
-        transformationSelection: transformationSelection
+        transformationSelection: transformationSelection,
+        queryConfig: null
       });
     }
 
@@ -216,12 +223,13 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   const goToLoadDataScreen = () => {
     logic.setScreen('load csv');
-          setState({
+    setState({
         transformationForm: transformationForm,
         transformationUI: defaultUISchema,
         showForm: null,
         dataframeSelection: null,
-        transformationSelection: null
+        transformationSelection: null,
+        queryConfig: null
       });
   }
 
@@ -525,21 +533,18 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
           </fieldset>
         <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
-          <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
+          <Form
+            schema={state.transformationForm}
+            onSubmit={generatePythonCode}
+            onChange={handleFormChange.bind(this)}
+            widgets={widgets}
+            uiSchema={state.transformationUI}
+          />
         }
+        {state.queryConfig && <Demo queryConfig={state.queryConfig} />}
         </div>
        );
   }
-  /*--------------------------------------
-  DEV: TEST QUERY BUILDER
-  ---------------------------------------*/
-  else if(logic.screen.localeCompare('querybuilder') == 0){
-    console.log('------------- QUERYBUILDER -------------');
-    return(
-      <Demo />
-    );
-  }
-
 };
 
 
@@ -912,6 +917,7 @@ export class Backend {
 
       const query_config = JSON.parse(content);
       console.log('Query config', query_config);
+      return query_config;
   }
 
   /*---------------------------------------------------------------------------------------------------- 
