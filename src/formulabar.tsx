@@ -450,7 +450,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
 
     /*-------------------------------------------------------------------
-      3. PAssign to result to variable
+      3. Assign to result to variable
     --------------------------------------------------------------------*/  
 
     // Determine the type of the result variable
@@ -541,7 +541,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
             uiSchema={state.transformationUI}
           />
         }
-        {state.queryConfig && <Demo queryConfig={state.queryConfig} />}
+        {state.queryConfig && <Demo queryConfig={state.queryConfig} dataframeSelection={state.dataframeSelection} backend={logic} />}
         </div>
        );
   }
