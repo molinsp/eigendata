@@ -199,8 +199,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     if(transformationSelection.localeCompare('query') == 0){
       console.log('Querybuilder');
       const queryConfig = await logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
-      setState(state => ({...state, queryConfig: queryConfig}));
-      logic.setScreen('querybuilder');
+      setState(state => ({...state,
+        queryConfig: queryConfig,
+        showForm: false,
+        dataframeSelection: dataframeSelection,
+        transformationSelection: transformationSelection,
+      }));
     }else{
     // STANDARD behavior
       let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
@@ -529,21 +533,18 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
           </fieldset>
         <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
-          <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
+          <Form
+            schema={state.transformationForm}
+            onSubmit={generatePythonCode}
+            onChange={handleFormChange.bind(this)}
+            widgets={widgets}
+            uiSchema={state.transformationUI}
+          />
         }
+        {state.queryConfig && <Demo queryConfig={state.queryConfig} />}
         </div>
        );
   }
-  /*--------------------------------------
-  DEV: TEST QUERY BUILDER
-  ---------------------------------------*/
-  else if(logic.screen.localeCompare('querybuilder') == 0){
-    console.log('------------- QUERYBUILDER -------------');
-    return(
-      <Demo queryConfig={state.queryConfig} />
-    );
-  }
-
 };
 
 
