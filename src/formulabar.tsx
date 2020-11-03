@@ -227,50 +227,64 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
 
   const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any) => {
-    console.log('------- MAP FORM RESPONSE -------');
-
     console.log('field fieldInput', fieldInput);
     console.log('field schema', fieldSchema);
     console.log('field schema type', typeof(fieldSchema['$ref']));
+    
     // CASE 1: Custom defined
     if(typeof(fieldSchema['codegenstyle']) !== 'undefined'){
-      console.log('Codegenstyle detected');
+      console.log('1. Codegenstyle detected');
       const codegenstyle = fieldSchema['codegenstyle'];
       if(codegenstyle.localeCompare('variable') == 0){
+        console.log('1.1 Variable codegenstyle')
         return fieldInput;
       }
+      console.log('WARNING: No codegenstyle');
     }
+    // CASE 1: Ref to a column definition
     else if(typeof(fieldSchema['$ref']) !== 'undefined'){
       // Specific hardcoded cases
-      console.log('REF detected');
+      console.log('2. REF detected');
       if(fieldSchema['$ref'].localeCompare('#/definitions/columns') == 0){    
-        console.log('Column multi-select detected');
+        console.log('2.1 Column multi-select detected');
         return JSON.stringify(fieldInput);
       }else if(fieldSchema['$ref'].localeCompare('#/definitions/column') == 0){
-        console.log('Column single-select detected');
+        console.log('2.2 Column single-select detected');
         const inputAsString = '"' + fieldInput + '"';
         return inputAsString;
       }
+      console.log('WARNING: No ref found');
     }
     else if(fieldSchema['type'].localeCompare('array') == 0){
+      console.log('3. Array detected');
+      // Array of variables, i.e. no quotation marks
       if((typeof(fieldSchema.items['codegenstyle']) !== 'undefined')){
+        console.log('3.1 Array of variables');
         const codegenstyle = fieldSchema.items['codegenstyle'];
         if(codegenstyle.localeCompare('variable') == 0){
           const removedQuotations = '[' + fieldInput.map((item: any) => item.replace( '/\\"/g', '' )) + ']';
           return removedQuotations;
         }
-      }else if(fieldSchema.items['type'].localeCompare('string') == 0){
+      }
+      // Standard array of strings
+      else if(fieldSchema.items['type'].localeCompare('string') == 0){
+        console.log('3.2 Array of strings');
+        return JSON.stringify(fieldInput);
+      }
+      else if(fieldSchema.items['type'].localeCompare('number') == 0){
+        console.log('3.3 Array of numbers');
         return JSON.stringify(fieldInput);
       }
 
     }
     else if(fieldSchema['type'].localeCompare('string') == 0){
+      console.log('4. String detected');
       console.log('String detected');
       const inputAsString = '"' + fieldInput + '"';
       return inputAsString;
     }
     else if(fieldSchema['type'].localeCompare('number') == 0){
-      console.log('Number detected');
+      console.log('5. Number detected');
       return fieldInput;
     }
 
@@ -411,6 +425,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         + codegenstyle
       --------------------*/ 
       else{
+         console.log('------- MAP FORM RESPONSE:',key);
         const mappedFieldResponse = mapFormResponseToPythonCode(fieldInput, fieldSchema);
         formula = formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';
         console.log('Mapped field', formula); 

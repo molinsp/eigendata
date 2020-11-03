@@ -1023,7 +1023,14 @@
           "enum" : [
             "size",
             "number",
-            "quantiles"
+            "quantiles",
+            "custom"
+          ],
+          "enumNames" : [
+            "Size of bin",
+            "Number of bins",
+            "Quantiles (e.g. quartiles)",
+            "Custom interval ranges"
           ]
         }
       },
@@ -1081,6 +1088,34 @@
                 },
                 "quantiles" : {
                   "type" : "number"
+                }
+              }
+            },
+            {
+              "title" : "Custom bins",
+              "properties" : {
+                "mode" : {
+                  "enum" : [
+                    "custom"
+                  ]
+                },
+                "breaks" : {
+                  "description" : "Set the break points for the custom ranges. Need to include start and end elements",
+                  "type" : "array",
+                  "items" : {
+                    "type" : "number"
+                  }
+                },
+                "closed" : {
+                  "type" : "string",
+                  "enum" : [
+                    "left",
+                    "right",
+                    "both",
+                    "neither"
+                  ],
+                  "default" : "right",
+                  "description" : "For example, breaks of [1, 3, 5 o] closed on the right implies that nubmer 3 will be part of the interval (1-3]. If closed on the let, then 3 would be part of interval [3-5)"
                 }
               }
             }
