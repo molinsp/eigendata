@@ -73,8 +73,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   let logic = props.logic;
 
   // Defaults for form and UI schema
-  let transformationForm: JSONSchema7 = _transformationsConfig['read_csv']['form'] as JSONSchema7;
-  let defaultUISchema: JSONSchema7 = _transformationsConfig['read_csv']['uischema'] as JSONSchema7;
+  let transformationForm: JSONSchema7 = logic._transformationsConfig['read_csv']['form'] as JSONSchema7;
+  let defaultUISchema: JSONSchema7 = logic._transformationsConfig['read_csv']['uischema'] as JSONSchema7;
 
 
   /* State of the component:
@@ -90,7 +90,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       transformationUI: defaultUISchema,
       showForm: null,
       dataframeSelection: null,
-      transformationSelection: null
+      transformationSelection: null,
+      queryConfig: null
     });
 
   console.log('State:', state);
@@ -197,8 +198,13 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     // Querybuilder placeholder
     if(transformationSelection.localeCompare('query') == 0){
       console.log('Querybuilder');
-      logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
-      logic.setScreen('querybuilder');
+      const queryConfig = await logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
+      setState(state => ({...state,
+        queryConfig: queryConfig,
+        showForm: false,
+        dataframeSelection: dataframeSelection,
+        transformationSelection: transformationSelection,
+      }));
     }else{
     // STANDARD behavior
       let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
@@ -208,7 +214,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         transformationUI: newUISchema,
         showForm: true,
         dataframeSelection: dataframeSelection,
-        transformationSelection: transformationSelection
+        transformationSelection: transformationSelection,
+        queryConfig: null
       });
     }
 
@@ -216,61 +223,76 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   const goToLoadDataScreen = () => {
     logic.setScreen('load csv');
-          setState({
+    setState({
         transformationForm: transformationForm,
         transformationUI: defaultUISchema,
         showForm: null,
         dataframeSelection: null,
-        transformationSelection: null
+        transformationSelection: null,
+        queryConfig: null
       });
   }
 
 
   const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any) => {
-    console.log('------- MAP FORM RESPONSE -------');
-
     console.log('field fieldInput', fieldInput);
     console.log('field schema', fieldSchema);
     console.log('field schema type', typeof(fieldSchema['$ref']));
+    
     // CASE 1: Custom defined
     if(typeof(fieldSchema['codegenstyle']) !== 'undefined'){
-      console.log('Codegenstyle detected');
+      console.log('1. Codegenstyle detected');
       const codegenstyle = fieldSchema['codegenstyle'];
       if(codegenstyle.localeCompare('variable') == 0){
+        console.log('1.1 Variable codegenstyle')
         return fieldInput;
       }
+      console.log('WARNING: No codegenstyle');
     }
+    // CASE 1: Ref to a column definition
     else if(typeof(fieldSchema['$ref']) !== 'undefined'){
       // Specific hardcoded cases
-      console.log('REF detected');
+      console.log('2. REF detected');
       if(fieldSchema['$ref'].localeCompare('#/definitions/columns') == 0){    
-        console.log('Column multi-select detected');
+        console.log('2.1 Column multi-select detected');
         return JSON.stringify(fieldInput);
       }else if(fieldSchema['$ref'].localeCompare('#/definitions/column') == 0){
-        console.log('Column single-select detected');
+        console.log('2.2 Column single-select detected');
         const inputAsString = '"' + fieldInput + '"';
         return inputAsString;
       }
+      console.log('WARNING: No ref found');
     }
     else if(fieldSchema['type'].localeCompare('array') == 0){
+      console.log('3. Array detected');
+      // Array of variables, i.e. no quotation marks
       if((typeof(fieldSchema.items['codegenstyle']) !== 'undefined')){
+        console.log('3.1 Array of variables');
         const codegenstyle = fieldSchema.items['codegenstyle'];
         if(codegenstyle.localeCompare('variable') == 0){
           const removedQuotations = '[' + fieldInput.map((item: any) => item.replace( '/\\"/g', '' )) + ']';
           return removedQuotations;
         }
-      }else if(fieldSchema.items['type'].localeCompare('string') == 0){
+      }
+      // Standard array of strings
+      else if(fieldSchema.items['type'].localeCompare('string') == 0){
+        console.log('3.2 Array of strings');
+        return JSON.stringify(fieldInput);
+      }
+      else if(fieldSchema.items['type'].localeCompare('number') == 0){
+        console.log('3.3 Array of numbers');
         return JSON.stringify(fieldInput);
       }
 
     }
     else if(fieldSchema['type'].localeCompare('string') == 0){
+      console.log('4. String detected');
       console.log('String detected');
       const inputAsString = '"' + fieldInput + '"';
       return inputAsString;
     }
     else if(fieldSchema['type'].localeCompare('number') == 0){
-      console.log('Number detected');
+      console.log('5. Number detected');
       return fieldInput;
     }
 
@@ -339,7 +361,20 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     for (var key in formData) {
       let parameterPrefix: string = '\n    '; 
       const fieldInput = formData[key];
-      const fieldSchema = formReponse.schema.properties[key];
+      let fieldSchema = null;
+
+      if(typeof(formReponse.schema.properties[key]) !== 'undefined'){
+        fieldSchema = formReponse.schema.properties[key];
+      }
+      // Check if we can't find it because it is part of a schema dependency
+      else if (typeof(formReponse.schema.properties['mode']) !== 'undefined'){
+        const selectedMode = formData['mode'];
+        const selectedModeIndex = formReponse.schema.properties['mode']['enum'].findIndex((element) => element.localeCompare(selectedMode) == 0);
+        console.log('SELECTED MODE INDEX', selectedModeIndex);
+        console.log('--->', formReponse.schema.dependencies.mode['oneOf'][selectedModeIndex]);
+        fieldSchema = formReponse.schema.dependencies.mode['oneOf'][selectedModeIndex].properties[key];
+      }
+
 
       // IF specified by the user, set the name of the result
       if (key.localeCompare('New table name') == 0){
@@ -361,12 +396,15 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         //ignore
         console.log('Ignore column field');
       }
+      /*-------------------
+        Dictionary inputs
+      --------------------*/ 
+      // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
       else if((typeof(fieldSchema['type']) !== 'undefined')
           && (fieldSchema['type'].localeCompare('array') == 0)  
           && (typeof(fieldSchema['items']['type']) !== 'undefined')   
           && (fieldSchema['items']['type'].localeCompare('object') == 0)
-        ){
-        // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
+        ){ 
         console.log('Complex object');
         var parameterDict = '{'
         const mapperProperties = fieldSchema.items.properties;
@@ -389,7 +427,13 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         formula = formula + parameterDict + ', ';
         parameter_counter +=1;
       }
+      /*-------------------
+        Based on JSONSchema
+        definition 
+        + codegenstyle
+      --------------------*/ 
       else{
+         console.log('------- MAP FORM RESPONSE:',key);
         const mappedFieldResponse = mapFormResponseToPythonCode(fieldInput, fieldSchema);
         formula = formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';
         console.log('Mapped field', formula); 
@@ -406,7 +450,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
 
     /*-------------------------------------------------------------------
-      3. PAssign to result to variable
+      3. Assign to result to variable
     --------------------------------------------------------------------*/  
 
     // Determine the type of the result variable
@@ -464,26 +508,43 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   else if(logic.screen.localeCompare('transformationsList') == 0){
     console.log('------------- DATA TRANSFORMATION -------------');
       return (
-        <div>
-        <Select name='Select dataframe' placeholder='select data table' options={logic.dataframesLoaded} label="Select data" onChange={handleDataframeSelectionChange.bind(this)} />
-        <Select name='Select transformation' placeholder='select transformation' options={logic.transformationsList} label="Select transformation" onChange={handleTransformationSelectionChange} />
+        <div className="side-by-side-fields">
+          <fieldset className="data-transformation-form">
+            <Select
+              name='Select dataframe'
+              placeholder='select data table'
+              options={logic.dataframesLoaded}
+              label="Select data"
+              onChange={handleDataframeSelectionChange.bind(this)}
+              className="left-field"
+            />
+            <Select
+              name='Select transformation'
+              placeholder='select transformation'
+              options={logic.transformationsList}
+              label="Select transformation"
+              onChange={handleTransformationSelectionChange}
+              className="right-field"
+              components={{
+                DropdownIndicator: () => null,
+                IndicatorSeparator: () => null
+              }}
+            />
+          </fieldset>
         <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
-          <Form schema={state.transformationForm} onSubmit={generatePythonCode} onChange={handleFormChange.bind(this)} widgets={widgets} uiSchema={state.transformationUI}/>
+          <Form
+            schema={state.transformationForm}
+            onSubmit={generatePythonCode}
+            onChange={handleFormChange.bind(this)}
+            widgets={widgets}
+            uiSchema={state.transformationUI}
+          />
         }
+        {state.queryConfig && <Demo queryConfig={state.queryConfig} dataframeSelection={state.dataframeSelection} backend={logic} />}
         </div>
        );
   }
-  /*--------------------------------------
-  DEV: TEST QUERY BUILDER
-  ---------------------------------------*/
-  else if(logic.screen.localeCompare('querybuilder') == 0){
-    console.log('------------- QUERYBUILDER -------------');
-    return(
-      <Demo />
-    );
-  }
-
 };
 
 
@@ -572,7 +633,7 @@ export class Backend {
     Configurations
   ----------------------------------*/
   // Custom data transformationsList defined in JSON file
-  private _transformationsConfig: any;
+  public _transformationsConfig: any;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -587,12 +648,18 @@ export class Backend {
     this._notebookTracker.currentChanged.connect(this.updateCurrentNotebook, this);
 
     // Read the transformation config
-    this._transformationsConfig = _transformationsConfig;
+    this._transformationsConfig = _transformationsConfig["transformations"];
+
+    console.log('TRANSFORMATIONS VERSION:', _transformationsConfig["version"]);
 
     let transformationList = [];
-    for (var transformation in _transformationsConfig){
-      transformationList.push({"value": transformation, "label": _transformationsConfig[transformation]['form']['title']} );
+    for (var transformation in _transformationsConfig["transformations"]){
+      //console.log('type', transformation);
+      transformationList.push({"value": transformation, "label": _transformationsConfig["transformations"][transformation]['form']['title']} );
     };
+
+    // Add a transformation for queries. Currently for development purposes
+    transformationList.push({"value": 'query', "label": '[DEV] Querybuilder'});
     console.log('Transformation list', transformationList);
 
     this.transformationsList = transformationList;
@@ -853,6 +920,7 @@ export class Backend {
 
       const query_config = JSON.parse(content);
       console.log('Query config', query_config);
+      return query_config;
   }
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -878,6 +946,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public setScreen(screen: string){
     this.screen = screen;
+    this.signal.emit();
   }
 
   /*---------------------------------------------------------------------------------------------------- 

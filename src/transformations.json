@@ -1,1001 +1,1138 @@
 {
-  "read_csv" : {
-    "form" : {
-      "properties" : {
-        "filepath_or_buffer" : {
-          "type" : "string",
-          "title" : "filepath"
+  "version" : "0.0.1",
+  "transformations": {
+    "read_csv" : {
+      "form" : {
+        "properties" : {
+          "filepath_or_buffer" : {
+            "type" : "string",
+            "title" : "filepath"
+          },
+          "sep" : {
+            "type" : "string",
+            "default" : ",",
+            "title" : "separator",
+            "description" : "Character used to separate columns (e.g. commas, semicolons, etc.)"
+          },
+          "decimal" : {
+            "type" : "string",
+            "default" : ".",
+            "title" : "decimal character",
+            "description" : "Value used to indicate decimals."
+          },
+          "New table name" : {
+            "type" : "string"
+          }
         },
-        "sep" : {
-          "type" : "string",
-          "default" : ",",
-          "title" : "separator",
-          "description" : "Character used to separate columns (e.g. commas, semicolons, etc.)"
-        },
-        "decimal" : {
-          "type" : "string",
-          "default" : ".",
-          "title" : "decimal character",
-          "description" : "Value used to indicate decimals."
-        },
-        "New table name" : {
-          "type" : "string"
-        }
+        "required" : [
+          "filepath_or_buffer"
+        ],
+        "title" : "Read CSV",
+        "type" : "object",
+        "callerObject" : "pd",
+        "function" : "read_csv"
       },
-      "required" : [
-        "filepath_or_buffer"
-      ],
-      "title" : "Read CSV",
-      "type" : "object",
-      "callerObject" : "pd",
-      "function" : "read_csv"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
       }
-    }
-  },
-  "get_dummies" : {
-    "form" : {
-      "required" : [
-        "data",
-        "columns"
-      ],
-      "definitions" : {
-        "columns" : {
-          "type" : "array",
-          "uniqueItems" : true,
-          "items" : {
+    },
+    "get_dummies" : {
+      "form" : {
+        "required" : [
+          "data",
+          "columns"
+        ],
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          },
+          "dataframes" : {
             "type" : "string",
             "enum" : []
           }
         },
-        "dataframes" : {
-          "type" : "string",
-          "enum" : []
-        }
+        "properties" : {
+          "data" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes"
+          },
+          "dummy_na" : {
+            "title" : "Column for NA values",
+            "description" : "Include category for empty values",
+            "default" : "False",
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "True",
+              "False"
+            ]
+          },
+          "columns" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Pivot Dummies",
+        "description" : "Pivot column values into multiple columns, with 1 and 0 indicators",
+        "type" : "object",
+        "callerObject" : "pd",
+        "function" : "get_dummies"
       },
-      "properties" : {
-        "data" : {
-          "type" : "string",
-          "codegenstyle" : "variable",
-          "$ref" : "#/definitions/dataframes"
-        },
-        "dummy_na" : {
-          "title" : "Column for NA values",
-          "description" : "Include category for empty values",
-          "default" : "False",
-          "type" : "string",
-          "codegenstyle" : "variable",
-          "enum" : [
-            "True",
-            "False"
-          ]
-        },
-        "columns" : {
-          "$ref" : "#/definitions/columns",
-          "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
-        },
+      "uischema" : {
         "New table name" : {
-          "type" : "string"
+          "ui:placeholder" : "Leave blank to modify selected table"
         }
-      },
-      "title" : "Pivot Dummies",
-      "description" : "Pivot column values into multiple columns, with 1 and 0 indicators",
-      "type" : "object",
-      "callerObject" : "pd",
-      "function" : "get_dummies"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
       }
-    }
-  },
-  "pivot_table" : {
-    "form" : {
-      "properties" : {
-        "index" : {
-          "$ref" : "#/definitions/columns",
-          "title" : "pivot table rows"
+    },
+    "pivot_table" : {
+      "form" : {
+        "properties" : {
+          "index" : {
+            "$ref" : "#/definitions/columns",
+            "title" : "pivot table rows"
+          },
+          "columns" : {
+            "$ref" : "#/definitions/columns",
+            "title" : "pivot table columns"
+          },
+          "aggfunc" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column",
+                  "title" : "column"
+                },
+                "function" : {
+                  "uniqueItems" : true,
+                  "title" : "aggregations",
+                  "type" : "array",
+                  "items" : {
+                    "codegenstyle" : "variable",
+                    "type" : "string",
+                    "default" : "Count (excl. missing values)",
+                    "enumNames" : [
+                      "Count (incl. missing values)",
+                      "Count (excl. missing values)",
+                      "Count unique",
+                      "Mean",
+                      "Sum",
+                      "Maximum",
+                      "Minimum",
+                      "Median",
+                      "First value",
+                      "Last value",
+                      "Standard deviation",
+                      "Variance"
+                    ],
+                    "enum" : [
+                      "\"size\"",
+                      "\"count\"",
+                      "\"nunique\"",
+                      "\"mean\"",
+                      "\"sum\"",
+                      "\"max\"",
+                      "\"min\"",
+                      "\"median\"",
+                      "\"first\"",
+                      "\"last\"",
+                      "\"std\"",
+                      "\"var\""
+                    ]
+                  }
+                }
+              }
+            },
+            "title" : "aggregations",
+            "description" : "Click plus to add aggregations to the columns"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
         },
-        "columns" : {
-          "$ref" : "#/definitions/columns",
-          "title" : "pivot table columns"
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          },
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "index",
+          "aggfunc"
+        ],
+        "title" : "Pivot Table",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "pivot_table"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
         },
         "aggfunc" : {
-          "type" : "array",
           "items" : {
-            "type" : "object",
-            "properties" : {
-              "column" : {
-                "$ref" : "#/definitions/column",
-                "title" : "column"
-              },
-              "function" : {
-                "uniqueItems" : true,
-                "title" : "aggregations",
-                "type" : "array",
-                "items" : {
-                  "codegenstyle" : "variable",
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "function" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
+      }
+    },
+    "merge" : {
+      "form" : {
+        "properties" : {
+          "right" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes"
+          },
+          "how" : {
+            "type" : "string",
+            "enum" : [
+              "left",
+              "right",
+              "outer",
+              "inner"
+            ],
+            "default" : "inner"
+          },
+          "left_on" : {
+            "$ref" : "#/definitions/columns"
+          },
+          "right_on" : {
+            "$ref" : "#/definitions/right_columns"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          },
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          },
+          "right_columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "required" : [
+          "right",
+          "how",
+          "left_on",
+          "right_on"
+        ],
+        "title" : "Join",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "merge"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "append" : {
+      "form" : {
+        "properties" : {
+          "other" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes"
+          }
+        },
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "other"
+        ],
+        "title" : "Append dataframes",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "append"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "sort_values" : {
+      "form" : {
+        "properties" : {
+          "by" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "title" : "column"
+          },
+          "ascending" : {
+            "type" : "string",
+            "default" : "True",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "enumNames" : [
+              "Ascending",
+              "Descending"
+            ],
+            "codegenstyle" : "variable",
+            "title" : "sorting type"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "by"
+        ],
+        "title" : "Sort data",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "sort_values"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "drop" : {
+      "form" : {
+        "required" : [
+          "columns"
+        ],
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "properties" : {
+          "columns" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Select the columns that you want to remove"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Drop columns",
+        "description" : "Drop columns from the data",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "drop"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "columns" : {
+          "ui:widget" : "checkboxes"
+        }
+      }
+    },
+    "flatten_multiindex" : {
+      "form" : {
+        "properties" : {
+          "axis" : {
+            "type" : "string",
+            "default" : "all",
+            "enum" : [
+              "all",
+              "index",
+              "columns"
+            ]
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Flatten multiindex",
+        "description" : "Flatten multi-index in columns and rows",
+        "type" : "object",
+        "callerObject" : "DataFrame.fdt",
+        "function" : "flatten_multiindex"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "rename" : {
+      "form" : {
+        "properties" : {
+          "columns" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column",
+                  "title" : "Column to rename"
+                },
+                "newname" : {
                   "type" : "string",
-                  "default" : "Count (excl. missing values)",
-                  "enumNames" : [
-                    "Count (incl. missing values)",
-                    "Count (excl. missing values)",
-                    "Count unique",
-                    "Mean",
-                    "Sum",
-                    "Maximum",
-                    "Minimum",
-                    "Median",
-                    "First value",
-                    "Last value",
-                    "Standard deviation",
-                    "Variance"
-                  ],
+                  "title" : "New name"
+                }
+              }
+            },
+            "title" : "Columns to rename"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "columns"
+        ],
+        "title" : "Rename columns",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "rename"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "to_csv" : {
+      "form" : {
+        "properties" : {
+          "path_or_buf" : {
+            "type" : "string",
+            "title" : "filepath"
+          },
+          "index" : {
+            "type" : "string",
+            "default" : "False",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "enumNames" : [
+              "Include index",
+              "Exclude index"
+            ],
+            "codegenstyle" : "variable",
+            "title" : "Index"
+          }
+        },
+        "title" : "Save as CSV",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "to_csv"
+      }
+    },
+    "astype" : {
+      "form" : {
+        "properties" : {
+          "dtype" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column",
+                  "title" : "Column to rename"
+                },
+                "type" : {
+                  "type" : "string",
                   "enum" : [
-                    "\"size\"",
-                    "\"count\"",
-                    "\"nunique\"",
-                    "\"mean\"",
-                    "\"sum\"",
-                    "\"max\"",
-                    "\"min\"",
-                    "\"median\"",
-                    "\"first\"",
-                    "\"last\"",
-                    "\"std\"",
-                    "\"var\""
+                    "int64",
+                    "float64",
+                    "string",
+                    "bool",
+                    "datetime64"
+                  ],
+                  "enumNames" : [
+                    "Integer (e.g. 1, 2, 3)",
+                    "Decimal number (e.g. 49.99)",
+                    "Text",
+                    "Boolean (True/False)",
+                    "Date time"
                   ]
                 }
               }
-            }
+            },
+            "title" : "Columns to reassign"
           },
-          "title" : "aggregations",
-          "description" : "Click plus to add aggregations to the columns"
+          "New table name" : {
+            "type" : "string"
+          }
         },
-        "New table name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "columns" : {
-          "type" : "array",
-          "uniqueItems" : true,
-          "items" : {
+        "definitions" : {
+          "column" : {
             "type" : "string",
             "enum" : []
           }
         },
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
+        "required" : [
+          "dtype"
+        ],
+        "title" : "Assign column types",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "astype"
       },
-      "required" : [
-        "index",
-        "aggfunc"
-      ],
-      "title" : "Pivot Table",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "pivot_table"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
       }
-    }
-  },
-  "merge" : {
-    "form" : {
-      "properties" : {
-        "right" : {
-          "type" : "string",
-          "codegenstyle" : "variable",
-          "$ref" : "#/definitions/dataframes"
-        },
-        "how" : {
-          "type" : "string",
-          "enum" : [
-            "left",
-            "right",
-            "outer",
-            "inner"
-          ],
-          "default" : "inner"
-        },
-        "left_on" : {
-          "$ref" : "#/definitions/columns"
-        },
-        "right_on" : {
-          "$ref" : "#/definitions/right_columns"
-        },
-        "New table name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "columns" : {
-          "type" : "array",
-          "uniqueItems" : true,
-          "items" : {
+    },
+    "extract_number_from_string" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "codegenstyle" : "ignore"
+          },
+          "dtype" : {
             "type" : "string",
-            "enum" : []
+            "default" : "int64",
+            "enum" : [
+              "int64",
+              "float64"
+            ],
+            "enumNames" : [
+              "Integer (e.g. 1, 2, 3)",
+              "Decimal number (e.g. 49.99)"
+            ],
+            "title" : "Number type"
+          },
+          "New column name" : {
+            "type" : "string"
           }
         },
-        "dataframes" : {
-          "type" : "string",
-          "enum" : []
-        },
-        "right_columns" : {
-          "type" : "array",
-          "uniqueItems" : true,
-          "items" : {
+        "title" : "[Series] Extract number from string",
+        "description" : "Extract the first occurrence of a number from a sting column",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].fdt",
+        "function" : "extract_number_from_string",
+        "definitions" : {
+          "column" : {
             "type" : "string",
             "enum" : []
           }
         }
       },
-      "required" : [
-        "right",
-        "how",
-        "left_on",
-        "right_on"
-      ],
-      "title" : "Join",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "merge"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      }
-    }
-  },
-  "append" : {
-    "form" : {
-      "properties" : {
-        "other" : {
-          "type" : "string",
-          "codegenstyle" : "variable",
-          "$ref" : "#/definitions/dataframes"
-        }
-      },
-      "definitions" : {
-        "dataframes" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "other"
-      ],
-      "title" : "Append dataframes",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "append"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      }
-    }
-  },
-  "sort_values" : {
-    "form" : {
-      "properties" : {
-        "by" : {
-          "type" : "string",
-          "$ref" : "#/definitions/column",
-          "title" : "column"
-        },
-        "ascending" : {
-          "type" : "string",
-          "default" : "True",
-          "enum" : [
-            "True",
-            "False"
-          ],
-          "enumNames" : [
-            "Ascending",
-            "Descending"
-          ],
-          "codegenstyle" : "variable",
-          "title" : "sorting type"
-        },
+      "uischema" : {
         "New table name" : {
-          "type" : "string"
+          "ui:placeholder" : "Leave blank to modify selected column"
         }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "by"
-      ],
-      "title" : "Sort data",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "sort_values"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
       }
-    }
-  },
-  "drop" : {
-    "form" : {
-      "required" : [
-        "columns"
-      ],
-      "definitions" : {
-        "columns" : {
-          "type" : "array",
-          "uniqueItems" : true,
-          "items" : {
+    },
+    "round" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "codegenstyle" : "ignore"
+          },
+          "decimals" : {
+            "type" : "number"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "column",
+          "decimals"
+        ],
+        "title" : "[Series] Round column",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "round",
+        "definitions" : {
+          "column" : {
             "type" : "string",
             "enum" : []
           }
         }
       },
-      "properties" : {
-        "columns" : {
-          "$ref" : "#/definitions/columns",
-          "description" : "Select the columns that you want to remove"
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "fillna" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "method" : {
+            "type" : "string",
+            "enum" : [
+              "\"ffill\"",
+              "\"bfill\""
+            ],
+            "enumNames" : [
+              "forward fill (take the one above)",
+              "backward fill (take the one below)"
+            ],
+            "codegenstyle" : "variable"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
         },
-        "New table name" : {
-          "type" : "string"
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Series] Fill empty values",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "fillna"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "contains" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "pat" : {
+            "title" : "pattern",
+            "description" : "Find this patter in the column (includes partial matches)",
+            "type" : "string"
+          },
+          "case" : {
+            "type" : "string",
+            "title" : "case sensitive",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "default" : "True",
+            "codegenstyle" : "variable"
+          },
+          "regex" : {
+            "type" : "string",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "default" : "False",
+            "title" : "",
+            "description" : "[Advanced] extraction using a regular expression."
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "pat"
+        ],
+        "title" : "[Series] Contains text",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "contains"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "replace" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "pat" : {
+            "type" : "string",
+            "title" : "text to replace"
+          },
+          "repl" : {
+            "type" : "string",
+            "title" : "replacement text"
+          },
+          "case" : {
+            "type" : "string",
+            "title" : "case sensitive",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "default" : "True",
+            "codegenstyle" : "variable"
+          },
+          "n" : {
+            "title" : "Number of replacements",
+            "type" : "number",
+            "description" : "Number of replacements to perform if there is more than 1 match. To replace all leave as -1.",
+            "default" : -1
+          },
+          "regex" : {
+            "type" : "string",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "default" : "False",
+            "title" : "",
+            "description" : "[Advanced] extraction using a regular expression."
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "column",
+          "pat",
+          "repl"
+        ],
+        "type" : "object",
+        "title" : "[Series] Replace text",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "replace",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
         }
       },
-      "title" : "Drop columns",
-      "description" : "Drop columns from the data",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "drop"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      },
-      "columns" : {
-        "ui:widget" : "checkboxes"
-      }
-    }
-  },
-  "flatten_multiindex" : {
-    "form" : {
-      "properties" : {
-        "axis" : {
-          "type" : "string",
-          "default" : "all",
-          "enum" : [
-            "all",
-            "index",
-            "columns"
-          ]
-        },
-        "New table name" : {
-          "type" : "string"
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
         }
-      },
-      "title" : "Flatten multiindex",
-      "description" : "Flatten multi-index in columns and rows",
-      "type" : "object",
-      "callerObject" : "DataFrame.fdt",
-      "function" : "flatten_multiindex"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
       }
-    }
-  },
-  "rename" : {
-    "form" : {
-      "properties" : {
-        "columns" : {
-          "type" : "array",
-          "items" : {
-            "type" : "object",
-            "properties" : {
-              "column" : {
-                "$ref" : "#/definitions/column",
-                "title" : "Column to rename"
+    },
+    "find" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "sub" : {
+            "type" : "string",
+            "title" : "Text being searched"
+          },
+          "start" : {
+            "type" : "number"
+          },
+          "end" : {
+            "type" : "number"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "sub"
+        ],
+        "title" : "[Series] Find text",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "find",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "split" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "pat" : {
+            "title" : "pattern",
+            "description" : "Find this patter in the column (includes partial matches)",
+            "type" : "string"
+          },
+          "n" : {
+            "title" : "Number of replacements",
+            "type" : "number",
+            "description" : "Number of replacements to perform if there is more than 1 match. To replace all leave as -1.",
+            "default" : -1
+          },
+          "expand" : {
+            "type" : "string",
+            "description" : "Expand into separate columns",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "default" : "False"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "pat"
+        ],
+        "title" : "[Series] Split text",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "split",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "mean" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New variable name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Series] Mean of a column",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "mean",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New variable name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "sum" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New variable name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Series] Sum of a column",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "sum",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New variable name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "var" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New variable name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Series] Variance",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "var",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New variable name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "std" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New variable name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Series] Standard deviation",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "std",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New variable name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "bin_column" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "size",
+              "number",
+              "quantiles",
+              "custom"
+            ],
+            "enumNames" : [
+              "Size of bin",
+              "Number of bins",
+              "Quantiles (e.g. quartiles)",
+              "Custom interval ranges"
+            ]
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "title" : "Size of bins",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "size"
+                    ]
+                  },
+                  "start" : {
+                    "type" : "number"
+                  },
+                  "size" : {
+                    "type" : "number"
+                  },
+                  "end" : {
+                    "type" : "number"
+                  }
+                }
               },
-              "newname" : {
-                "type" : "string",
-                "title" : "New name"
-              }
-            }
-          },
-          "title" : "Columns to rename"
-        },
-        "New table name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "columns"
-      ],
-      "title" : "Rename columns",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "rename"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      }
-    }
-  },
-  "to_csv" : {
-    "form" : {
-      "properties" : {
-        "path_or_buf" : {
-          "type" : "string",
-          "title" : "filepath"
-        },
-        "index" : {
-          "type" : "string",
-          "default" : "False",
-          "enum" : [
-            "True",
-            "False"
-          ],
-          "enumNames" : [
-            "Include index",
-            "Exclude index"
-          ],
-          "codegenstyle" : "variable",
-          "title" : "Index"
-        }
-      },
-      "title" : "Save as CSV",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "to_csv"
-    }
-  },
-  "astype" : {
-    "form" : {
-      "properties" : {
-        "dtype" : {
-          "type" : "array",
-          "items" : {
-            "type" : "object",
-            "properties" : {
-              "column" : {
-                "$ref" : "#/definitions/column",
-                "title" : "Column to rename"
+              {
+                "title" : "Number of bins",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "number"
+                    ]
+                  },
+                  "bin_number" : {
+                    "type" : "number"
+                  }
+                }
               },
-              "type" : {
-                "type" : "string",
-                "enum" : [
-                  "int64",
-                  "float64",
-                  "string",
-                  "bool",
-                  "datetime64"
-                ],
-                "enumNames" : [
-                  "Integer (e.g. 1, 2, 3)",
-                  "Decimal number (e.g. 49.99)",
-                  "Text",
-                  "Boolean (True/False)",
-                  "Date time"
-                ]
+              {
+                "title" : "Number of bins",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "quantiles"
+                    ]
+                  },
+                  "quantiles" : {
+                    "type" : "number"
+                  }
+                }
+              },
+              {
+                "title" : "Custom bins",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "custom"
+                    ]
+                  },
+                  "breaks" : {
+                    "description" : "Set the break points for the custom ranges. Need to include start and end elements",
+                    "type" : "array",
+                    "items" : {
+                      "type" : "number"
+                    }
+                  },
+                  "closed" : {
+                    "type" : "string",
+                    "enum" : [
+                      "left",
+                      "right",
+                      "both",
+                      "neither"
+                    ],
+                    "default" : "right",
+                    "description" : "For example, breaks of [1, 3, 5 o] closed on the right implies that nubmer 3 will be part of the interval (1-3]. If closed on the let, then 3 would be part of interval [3-5)"
+                  }
+                }
               }
-            }
-          },
-          "title" : "Columns to reassign"
+            ]
+          }
         },
-        "New table name" : {
-          "type" : "string"
-        }
+        "title" : "[Series] Bin/Bucket columns",
+        "callerObject" : "DataFrame[Series].fdt",
+        "function" : "bin_column",
+        "type" : "object"
       },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "dtype"
-      ],
-      "title" : "Assign column types",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "astype"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      }
-    }
-  },
-  "extract_number_from_string" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "codegenstyle" : "ignore"
-        },
-        "dtype" : {
-          "type" : "string",
-          "default" : "int64",
-          "enum" : [
-            "int64",
-            "float64"
-          ],
-          "enumNames" : [
-            "Integer (e.g. 1, 2, 3)",
-            "Decimal number (e.g. 49.99)"
-          ],
-          "title" : "Number type"
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "title" : "[Series] Extract number from string",
-      "description" : "Extract the first occurrence of a number from a sting column",
-      "type" : "object",
-      "callerObject" : "DataFrame[Series].fdt",
-      "function" : "extract_number_from_string",
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      }
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "round" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "codegenstyle" : "ignore"
-        },
-        "decimals" : {
-          "type" : "number"
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "required" : [
-        "column",
-        "decimals"
-      ],
-      "title" : "[Series] Round column",
-      "type" : "object",
-      "callerObject" : "DataFrame[Series]",
-      "function" : "round",
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      }
-    },
-    "uischema" : {
-      "New column name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "fillna" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "method" : {
-          "type" : "string",
-          "enum" : [
-            "\"ffill\"",
-            "\"bfill\""
-          ],
-          "enumNames" : [
-            "forward fill (take the one above)",
-            "backward fill (take the one below)"
-          ],
-          "codegenstyle" : "variable"
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column"
-      ],
-      "title" : "[Series] Fill empty values",
-      "type" : "object",
-      "callerObject" : "DataFrame[Series]",
-      "function" : "fillna"
-    },
-    "uischema" : {
-      "New column name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "contains" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "pat" : {
-          "title" : "pattern",
-          "description" : "Find this patter in the column (includes partial matches)",
-          "type" : "string"
-        },
-        "case" : {
-          "type" : "string",
-          "title" : "case sensitive",
-          "enum" : [
-            "True",
-            "False"
-          ],
-          "default" : "True",
-          "codegenstyle" : "variable"
-        },
-        "regex" : {
-          "type" : "string",
-          "enum" : [
-            "True",
-            "False"
-          ],
-          "default" : "False",
-          "title" : "",
-          "description" : "[Advanced] extraction using a regular expression."
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column",
-        "pat"
-      ],
-      "title" : "[Series] Contains text",
-      "type" : "object",
-      "callerObject" : "DataFrame[Series].str",
-      "function" : "contains"
-    },
-    "uischema" : {
-      "New column name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "replace" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "pat" : {
-          "type" : "string",
-          "title" : "text to replace"
-        },
-        "repl" : {
-          "type" : "string",
-          "title" : "replacement text"
-        },
-        "case" : {
-          "type" : "string",
-          "title" : "case sensitive",
-          "enum" : [
-            "True",
-            "False"
-          ],
-          "default" : "True",
-          "codegenstyle" : "variable"
-        },
-        "n" : {
-          "title" : "Number of replacements",
-          "type" : "number",
-          "description" : "Number of replacements to perform if there is more than 1 match. To replace all leave as -1.",
-          "default" : -1
-        },
-        "regex" : {
-          "type" : "string",
-          "enum" : [
-            "True",
-            "False"
-          ],
-          "default" : "False",
-          "title" : "",
-          "description" : "[Advanced] extraction using a regular expression."
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "required" : [
-        "column",
-        "pat",
-        "repl"
-      ],
-      "type" : "object",
-      "title" : "[Series] Replace text",
-      "callerObject" : "DataFrame[Series].str",
-      "function" : "replace",
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      }
-    },
-    "uischema" : {
-      "New column name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "find" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "sub" : {
-          "type" : "string",
-          "title" : "Text being searched"
-        },
-        "start" : {
-          "type" : "number"
-        },
-        "end" : {
-          "type" : "number"
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column",
-        "sub"
-      ],
-      "title" : "[Series] Find text",
-      "callerObject" : "DataFrame[Series].str",
-      "function" : "find",
-      "type" : "object"
-    },
-    "uischema" : {
-      "New column name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "split" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "pat" : {
-          "title" : "pattern",
-          "description" : "Find this patter in the column (includes partial matches)",
-          "type" : "string"
-        },
-        "n" : {
-          "title" : "Number of replacements",
-          "type" : "number",
-          "description" : "Number of replacements to perform if there is more than 1 match. To replace all leave as -1.",
-          "default" : -1
-        },
-        "expand" : {
-          "type" : "string",
-          "description" : "Expand into separate columns",
-          "codegenstyle" : "variable",
-          "enum" : [
-            "True",
-            "False"
-          ],
-          "default" : "False"
-        },
-        "New column name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column",
-        "pat"
-      ],
-      "title" : "[Series] Split text",
-      "callerObject" : "DataFrame[Series].str",
-      "function" : "split",
-      "type" : "object"
-    },
-    "uischema" : {
-      "New column name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "mean" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
+      "uischema" : {
         "New variable name" : {
-          "type" : "string"
+          "ui:placeholder" : "Leave blank to modify selected column"
         }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column"
-      ],
-      "title" : "[Series] Mean of a column",
-      "callerObject" : "DataFrame[Series]",
-      "function" : "mean",
-      "type" : "object"
-    },
-    "uischema" : {
-      "New variable name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "sum" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "New variable name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column"
-      ],
-      "title" : "[Series] Sum of a column",
-      "callerObject" : "DataFrame[Series]",
-      "function" : "sum",
-      "type" : "object"
-    },
-    "uischema" : {
-      "New variable name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "var" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "New variable name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column"
-      ],
-      "title" : "[Series] Variance",
-      "callerObject" : "DataFrame[Series]",
-      "function" : "var",
-      "type" : "object"
-    },
-    "uischema" : {
-      "New variable name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
-      }
-    }
-  },
-  "std" : {
-    "form" : {
-      "properties" : {
-        "column" : {
-          "$ref" : "#/definitions/column",
-          "title" : "column",
-          "codegenstyle" : "ignore"
-        },
-        "New variable name" : {
-          "type" : "string"
-        }
-      },
-      "definitions" : {
-        "column" : {
-          "type" : "string",
-          "enum" : []
-        }
-      },
-      "required" : [
-        "column"
-      ],
-      "title" : "[Series] Standard deviation",
-      "callerObject" : "DataFrame[Series]",
-      "function" : "std",
-      "type" : "object"
-    },
-    "uischema" : {
-      "New variable name" : {
-        "ui:placeholder" : "Leave blank to modify selected column"
       }
     }
   }
