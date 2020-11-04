@@ -73,8 +73,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   let logic = props.logic;
 
   // Defaults for form and UI schema
-  let transformationForm: JSONSchema7 = _transformationsConfig['read_csv']['form'] as JSONSchema7;
-  let defaultUISchema: JSONSchema7 = _transformationsConfig['read_csv']['uischema'] as JSONSchema7;
+  let transformationForm: JSONSchema7 = logic._transformationsConfig['read_csv']['form'] as JSONSchema7;
+  let defaultUISchema: JSONSchema7 = logic._transformationsConfig['read_csv']['uischema'] as JSONSchema7;
 
 
   /* State of the component:
@@ -633,7 +633,7 @@ export class Backend {
     Configurations
   ----------------------------------*/
   // Custom data transformationsList defined in JSON file
-  private _transformationsConfig: any;
+  public _transformationsConfig: any;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -648,11 +648,14 @@ export class Backend {
     this._notebookTracker.currentChanged.connect(this.updateCurrentNotebook, this);
 
     // Read the transformation config
-    this._transformationsConfig = _transformationsConfig;
+    this._transformationsConfig = _transformationsConfig["transformations"];
+
+    console.log('TRANSFORMATIONS VERSION:', _transformationsConfig["version"]);
 
     let transformationList = [];
-    for (var transformation in _transformationsConfig){
-      transformationList.push({"value": transformation, "label": _transformationsConfig[transformation]['form']['title']} );
+    for (var transformation in _transformationsConfig["transformations"]){
+      console.log('type', transformation);
+      transformationList.push({"value": transformation, "label": _transformationsConfig["transformations"][transformation]['form']['title']} );
     };
 
     // Add a transformation for queries. Currently for development purposes
