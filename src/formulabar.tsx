@@ -654,7 +654,7 @@ export class Backend {
 
     let transformationList = [];
     for (var transformation in _transformationsConfig["transformations"]){
-      console.log('type', transformation);
+      //console.log('type', transformation);
       transformationList.push({"value": transformation, "label": _transformationsConfig["transformations"][transformation]['form']['title']} );
     };
 
