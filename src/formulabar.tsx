@@ -91,7 +91,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null,
-      queryConfig: null
+      formData: {},
+      queryConfig: null,
     });
 
   console.log('State:', state);
@@ -166,7 +167,11 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
        let new_state = _.cloneDeep(state.transformationForm);
        // Add the queried columns to the state
        new_state["definitions"]["right_columns"]['items']['enum'] = columns;
-       setState(state => ({...state,transformationForm : new_state}));
+       setState(state => ({
+         ...state,
+         transformationForm: new_state,
+         formData: data.formData
+       }));
      }
    }
 
@@ -188,8 +193,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      if(state.dataframeSelection){
        console.log('all defined');
        getTransformationFormToState(state.dataframeSelection, input.value);
-     }else{
-       setState(state => ({...state,transformationSelection:input.value}));
+     } else {
+       setState(state => ({
+         ...state,
+         transformationSelection:input.value,
+         formData: {}
+       }));
      }
   }
 
@@ -204,6 +213,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: false,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
+        formData: {}
       }));
     }else{
     // STANDARD behavior
@@ -215,7 +225,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: true,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
-        queryConfig: null
+        queryConfig: null,
+        formData: {}
       });
     }
 
@@ -229,7 +240,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: null,
         dataframeSelection: null,
         transformationSelection: null,
-        queryConfig: null
+        formData: {},
+        queryConfig: null,
       });
   }
 
@@ -534,9 +546,10 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
           <Form
+            formData={state.formData}
             schema={state.transformationForm}
             onSubmit={generatePythonCode}
-            onChange={handleFormChange.bind(this)}
+            onChange={handleFormChange}
             widgets={widgets}
             uiSchema={state.transformationUI}
           />
