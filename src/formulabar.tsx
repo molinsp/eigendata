@@ -266,7 +266,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     else if(typeof(fieldSchema['$ref']) !== 'undefined'){
       // Specific hardcoded cases
       console.log('2. REF detected');
-      if(fieldSchema['$ref'].localeCompare('#/definitions/columns') == 0){    
+      if(fieldSchema['$ref'].includes('columns')){    
         console.log('2.1 Column multi-select detected');
         return JSON.stringify(fieldInput);
       }else if(fieldSchema['$ref'].localeCompare('#/definitions/column') == 0){
@@ -666,14 +666,12 @@ export class Backend {
 
     console.log('TRANSFORMATIONS VERSION:', _transformationsConfig["version"]);
 
-    let transformationList = [];
+    let transformationList = [{"value": 'query', "label": 'Filter/Query dataframe'}];
     for (var transformation in _transformationsConfig["transformations"]){
       //console.log('type', transformation);
       transformationList.push({"value": transformation, "label": _transformationsConfig["transformations"][transformation]['form']['title']} );
     };
 
-    // Add a transformation for queries. Currently for development purposes
-    transformationList.push({"value": 'query', "label": '[DEV] Querybuilder'});
     console.log('Transformation list', transformationList);
 
     this.transformationsList = transformationList;

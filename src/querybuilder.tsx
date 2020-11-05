@@ -13,6 +13,7 @@ import 'react-awesome-query-builder/lib/css/styles.css';
 //import 'react-awesome-query-builder/lib/css/compact_styles.css'; //optional, for more compact styles
 import {Backend} from './formulabar'
 import customConfig from './querybuilder_config';
+import Select from 'react-select';
 //const InitialConfig = BasicConfig; // or BasicConfig
 
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
@@ -30,9 +31,25 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
             tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
             config: config,
             dataframeSelection : props.dataframeSelection,
-            logic : props.backend
+            logic : props.backend,
+            queryType: "query",
+            newTableName: '',
         };
     }
+
+    private options = [
+      { value: 'query', label: 'Filter the dataframe' },
+      { value: 'eval', label: 'Create true/false indicators' }];
+
+
+    setQueryType = (input: any) => {
+      //console.log('Dropdown changed', input);
+      this.setState(state => ({...state,queryType: input.value}));
+    }
+
+    handleChange = (event) => {
+      this.setState({...this.state, newTableName: event.target.value});
+    };
 
     render = () => (
       <div>
@@ -42,7 +59,12 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
             onChange={this.onChange}
             renderBuilder={this.renderBuilder}
         />
-        <button onClick={this.onSubmit}> Filter </button>
+      <form>
+        <label>New table name</label>
+        <input value={this.state.newTableName} type="text" name="newTableName" onChange={this.handleChange}/>
+        <Select options={this.options} onChange={this.setQueryType} defaultValue={{ value: 'query', label: 'Filter the dataframe' }}/>
+        <button onClick={this.onSubmit}> Submit </button>
+       </form>
       </div>
     )
 
@@ -59,6 +81,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
     -> Writes: Notebook
     -----------------------------------------------------------------------------------------------------*/
     onSubmit = () => {
+      console.log('State', this.state);
       let sql_query = JSON.stringify(QbUtils.sqlFormat(this.state.tree, this.state.config), undefined, 2);
       console.log('SQL query', sql_query);
       sql_query = sql_query.replace(/ = /g,'==');
@@ -70,7 +93,16 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/ IS EMPTY/g,'.isnull()');
       sql_query = sql_query.replace(/ IS NOT EMPTY/g,'.notnull()');
 
-      const formula = this.state.dataframeSelection + ' = ' + this.state.dataframeSelection + '.query(' + sql_query + ')';
+      let variable = '';
+      if(this.state.newTableName !== ''){
+        variable = this.state.newTableName;
+      }else{
+        variable = this.state.dataframeSelection ;
+      }
+      
+      let formula =  variable + ' = ' + this.state.dataframeSelection;
+      formula = formula + '.' + this.state.queryType;
+      formula = formula + '(' + sql_query + ')';   
       console.log('Formula', formula);
       this.state.logic.writeToNotebookAndExecute(formula);  
     }
@@ -101,4 +133,6 @@ interface DemoQueryBuilderState {
     config: Config;
     logic: Backend;
     dataframeSelection: string;
+    queryType:string;
+    newTableName: string;
 }

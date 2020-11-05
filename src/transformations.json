@@ -251,41 +251,25 @@
               "enum" : []
             }
           }
-        }
-      },
-      "required" : [
-        "right",
-        "how",
-        "left_on",
-        "right_on"
-      ],
-      "title" : "Join",
-      "type" : "object",
-      "callerObject" : "DataFrame",
-      "function" : "merge"
-    },
-    "uischema" : {
-      "New table name" : {
-        "ui:placeholder" : "Leave blank to modify selected table"
-      },
-      "left_on" : {
-        "ui:widget" : "checkboxes"
-      },
-      "right_on" : {
-        "ui:widget" : "checkboxes"
-      }
-    }
-  },
-  "append" : {
-    "form" : {
-      "properties" : {
-        "other" : {
-          "type" : "string",
-          "codegenstyle" : "variable",
-          "$ref" : "#/definitions/dataframes"
-        }
+        },
+        "required" : [
+          "right",
+          "how",
+          "left_on",
+          "right_on"
+        ],
+        "function" : "merge",
+        "callerObject" : "DataFrame",
+        "type" : "object",
+        "title" : "Join"
       },
       "uischema" : {
+        "right_on" : {
+          "ui:widget" : "checkboxes"
+        },
+        "left_on" : {
+          "ui:widget" : "checkboxes"
+        },
         "New table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
         }
@@ -298,6 +282,9 @@
             "type" : "string",
             "codegenstyle" : "variable",
             "$ref" : "#/definitions/dataframes"
+          },
+          "New table name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
