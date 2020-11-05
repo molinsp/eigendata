@@ -112,13 +112,13 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: () => 'ed'
     });
 
-    // Track and restore the formulawidget state
+    // Track and restore the data visualizer state
     let viztracker = new WidgetTracker<MainAreaWidget<DataVisualizerWidget>>({
-      namespace: 'ed'
+      namespace: 'dv'
     });
     restorer.restore(viztracker, {
       command: datavizcommand,
-      name: () => 'ed'
+      name: () => 'dv'
     });
 
 

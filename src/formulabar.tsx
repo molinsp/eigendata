@@ -73,8 +73,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   let logic = props.logic;
 
   // Defaults for form and UI schema
-  let transformationForm: JSONSchema7 = _transformationsConfig['read_csv']['form'] as JSONSchema7;
-  let defaultUISchema: JSONSchema7 = _transformationsConfig['read_csv']['uischema'] as JSONSchema7;
+  let transformationForm: JSONSchema7 = logic._transformationsConfig['read_csv']['form'] as JSONSchema7;
+  let defaultUISchema: JSONSchema7 = logic._transformationsConfig['read_csv']['uischema'] as JSONSchema7;
 
 
   /* State of the component:
@@ -91,7 +91,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null,
-      formData: {},
+      formData: null,
       queryConfig: null,
     });
 
@@ -118,7 +118,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         //console.log('Return null');
         return [];
       }
-      console.log
+
       const result = selection.map((item: any) => item.value);
       //console.log('Result from selection',result);
       return result;
@@ -127,7 +127,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     // If defined as array, use the multi-select
     if(props.schema.type === "array"){
        return (
-        <Select options={props.options.enumOptions} 
+        <Select options={props.options.enumOptions}
           onChange= {selection => props.onChange(processMultiSelect(selection))}
           isMulti={true}
         />
@@ -135,7 +135,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     }else{
       return (
-        <Select options={props.options.enumOptions} 
+        <Select options={props.options.enumOptions}
           onChange= {selection => props.onChange(processSingleSelect(selection))}
           //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
           //defaultValue={props.value}
@@ -197,7 +197,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
        setState(state => ({
          ...state,
          transformationSelection:input.value,
-         formData: {}
+         formData: null
        }));
      }
   }
@@ -213,7 +213,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: false,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
-        formData: {}
+        formData: null
+
       }));
     }else{
     // STANDARD behavior
@@ -226,7 +227,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         queryConfig: null,
-        formData: {}
+        formData: null
       });
     }
 
@@ -240,7 +241,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: null,
         dataframeSelection: null,
         transformationSelection: null,
-        formData: {},
+        formData: null,
         queryConfig: null,
       });
   }
@@ -462,7 +463,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
 
     /*-------------------------------------------------------------------
-      3. PAssign to result to variable
+      3. Assign to result to variable
     --------------------------------------------------------------------*/  
 
     // Determine the type of the result variable
@@ -554,7 +555,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
             uiSchema={state.transformationUI}
           />
         }
-        {state.queryConfig && <Demo queryConfig={state.queryConfig} />}
+        {state.queryConfig && <Demo queryConfig={state.queryConfig} dataframeSelection={state.dataframeSelection} backend={logic} />}
         </div>
        );
   }
@@ -646,7 +647,7 @@ export class Backend {
     Configurations
   ----------------------------------*/
   // Custom data transformationsList defined in JSON file
-  private _transformationsConfig: any;
+  public _transformationsConfig: any;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -661,11 +662,14 @@ export class Backend {
     this._notebookTracker.currentChanged.connect(this.updateCurrentNotebook, this);
 
     // Read the transformation config
-    this._transformationsConfig = _transformationsConfig;
+    this._transformationsConfig = _transformationsConfig["transformations"];
+
+    console.log('TRANSFORMATIONS VERSION:', _transformationsConfig["version"]);
 
     let transformationList = [];
-    for (var transformation in _transformationsConfig){
-      transformationList.push({"value": transformation, "label": _transformationsConfig[transformation]['form']['title']} );
+    for (var transformation in _transformationsConfig["transformations"]){
+      //console.log('type', transformation);
+      transformationList.push({"value": transformation, "label": _transformationsConfig["transformations"][transformation]['form']['title']} );
     };
 
     // Add a transformation for queries. Currently for development purposes

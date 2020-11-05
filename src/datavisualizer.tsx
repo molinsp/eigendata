@@ -22,6 +22,7 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
         onClick={(): void => {
           setCounter(counter + 1);
           const dfs = logic.dataframesLoaded;
+          console.log("Dataframes", dfs);
           logic.pythonGetDataForVisualization(dfs[dfs.length-1].value);
         }}
       >
