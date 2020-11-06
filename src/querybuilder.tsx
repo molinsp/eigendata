@@ -63,28 +63,54 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
     }
 
     render = () => (
-      <div>
-        <Query
-            {...this.state.config}
-            value={this.state.tree}
-            onChange={this.onChange}
-            renderBuilder={this.renderBuilder}
-        />
-
-        <label>New table name</label>
-        <input 
-          id="newTableNameTextInput" 
-          value={this.state.newTableName} 
-          type="text" name="newTableName" 
-          onChange={this.handleChange}/>
-        <Select options={this.options} onChange={this.setQueryType} defaultValue={{ value: 'query', label: 'Filter the dataframe' }}/>
-        <button onClick={this.onSubmit}> Submit </button>
-
-      </div>
+      <form id="query-form">
+          <div className="form-group">
+              <fieldset>
+                  <legend>
+                      Filter/Query dataframe
+                  </legend>
+                  <Query
+                      {...this.state.config}
+                      value={this.state.tree}
+                      onChange={this.onChange}
+                      renderBuilder={this.renderBuilder}
+                  />
+                  <div className="form-group">
+                      <label
+                          htmlFor="newTableNameTextInput"
+                          className="control-label">New table name
+                      </label>
+                      <input
+                          id="newTableNameTextInput"
+                          value={this.state.newTableName}
+                          type="text" name="newTableName"
+                          onChange={this.handleChange}
+                          className="form-control"
+                          placeholder="Leave blank to modify selected table"
+                      />
+                  </div>
+                  <div className="form-group">
+                      <label
+                          htmlFor="filterDataFrame"
+                          className="control-label">Filter type
+                      </label>
+                      <Select
+                          id="filterDataFrame"
+                          options={this.options}
+                          onChange={this.setQueryType}
+                          defaultValue={{ value: 'query', label: 'Filter the dataframe' }}
+                      />
+                  </div>
+              </fieldset>
+          </div>
+        <button onClick={this.onSubmit} className="btn btn-info">
+            Submit
+        </button>
+      </form>
     )
 
     renderBuilder = (props: BuilderProps) => (
-      <div className="query-builder-container" style={{padding: '10px'}}>
+      <div className="query-builder-container">
         <div className="query-builder qb-lite">
             <Builder {...props} />
         </div>

@@ -36,3 +36,16 @@
 .data-transformation-form .right-field {
   width: 66%;
 }
+
+#query-form .group-or-rule-container {
+  padding-right: 0;
+}
+
+#query-form .query-builder {
+  margin: 0;
+}
+
+#query-form .query-builder-container {
+  padding: 10px 0;
+  margin-bottom: 20px;
+}
