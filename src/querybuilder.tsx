@@ -77,6 +77,18 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
                   />
                   <div className="form-group">
                       <label
+                          htmlFor="filterDataFrame"
+                          className="control-label">Filter type
+                      </label>
+                      <Select
+                          id="filterDataFrame"
+                          options={this.options}
+                          onChange={this.setQueryType}
+                          defaultValue={{ value: 'query', label: 'Filter the dataframe' }}
+                      />
+                  </div>
+                   <div className="form-group">
+                      <label
                           htmlFor="newTableNameTextInput"
                           className="control-label">New table name
                       </label>
@@ -89,21 +101,9 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
                           placeholder="Leave blank to modify selected table"
                       />
                   </div>
-                  <div className="form-group">
-                      <label
-                          htmlFor="filterDataFrame"
-                          className="control-label">Filter type
-                      </label>
-                      <Select
-                          id="filterDataFrame"
-                          options={this.options}
-                          onChange={this.setQueryType}
-                          defaultValue={{ value: 'query', label: 'Filter the dataframe' }}
-                      />
-                  </div>
               </fieldset>
           </div>
-        <button onClick={this.onSubmit} className="btn btn-info">
+        <button type="button" onClick={this.generateCode} className="btn btn-info">
             Submit
         </button>
       </form>
@@ -121,7 +121,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
     [FUNCTION] Take query input ange generate code in the notebook
     -> Writes: Notebook
     -----------------------------------------------------------------------------------------------------*/
-    onSubmit = () => {
+    generateCode = () => {
       let sql_query = JSON.stringify(QbUtils.sqlFormat(this.state.tree, this.state.config), undefined, 2);
       console.log('SQL query', sql_query);
       sql_query = sql_query.replace(/ = /g,'==');
