@@ -59,12 +59,16 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
             onChange={this.onChange}
             renderBuilder={this.renderBuilder}
         />
-      <form>
+
         <label>New table name</label>
-        <input value={this.state.newTableName} type="text" name="newTableName" onChange={this.handleChange}/>
+        <input 
+          id="newTableNameTextInput" 
+          value={this.state.newTableName} 
+          type="text" name="newTableName" 
+          onChange={this.handleChange}/>
         <Select options={this.options} onChange={this.setQueryType} defaultValue={{ value: 'query', label: 'Filter the dataframe' }}/>
         <button onClick={this.onSubmit}> Submit </button>
-       </form>
+
       </div>
     )
 
@@ -81,7 +85,6 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
     -> Writes: Notebook
     -----------------------------------------------------------------------------------------------------*/
     onSubmit = () => {
-      console.log('State', this.state);
       let sql_query = JSON.stringify(QbUtils.sqlFormat(this.state.tree, this.state.config), undefined, 2);
       console.log('SQL query', sql_query);
       sql_query = sql_query.replace(/ = /g,'==');
@@ -92,14 +95,32 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/false/g,'False');
       sql_query = sql_query.replace(/ IS EMPTY/g,'.isnull()');
       sql_query = sql_query.replace(/ IS NOT EMPTY/g,'.notnull()');
+      
 
+      // To-do: add backticks for fields with blanks
+      console.log('Config fields', this.state.config.fields);
+      for(var i in this.state.config.fields){
+        let col_name = String(i);
+
+        // Check if there is any blank space in the column names
+        if (/\s/.test(col_name)) {
+          // It has any kind of whitespace
+          // Replace with backticks to ensure pandas does not generate an error
+          const re = new RegExp(col_name, 'g');
+          const replace_to = '`' + col_name + '`';
+          sql_query = sql_query.replace(re,replace_to);
+        }
+      }
+
+      // If no variable defined, use this dataframe selection
       let variable = '';
       if(this.state.newTableName !== ''){
         variable = this.state.newTableName;
       }else{
         variable = this.state.dataframeSelection ;
       }
-      
+
+      //  Compose formula: variable = dataframe . query/eval (query)
       let formula =  variable + ' = ' + this.state.dataframeSelection;
       formula = formula + '.' + this.state.queryType;
       formula = formula + '(' + sql_query + ')';   
