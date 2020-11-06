@@ -1,6 +1,6 @@
 {
   "version" : "0.0.1",
-  "transformations": {
+  "transformations" : {
     "read_csv" : {
       "form" : {
         "properties" : {
@@ -258,12 +258,18 @@
           "left_on",
           "right_on"
         ],
-        "title" : "Join",
-        "type" : "object",
+        "function" : "merge",
         "callerObject" : "DataFrame",
-        "function" : "merge"
+        "type" : "object",
+        "title" : "Join"
       },
       "uischema" : {
+        "right_on" : {
+          "ui:widget" : "checkboxes"
+        },
+        "left_on" : {
+          "ui:widget" : "checkboxes"
+        },
         "New table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
         }
@@ -276,6 +282,9 @@
             "type" : "string",
             "codegenstyle" : "variable",
             "$ref" : "#/definitions/dataframes"
+          },
+          "New table name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -1033,7 +1042,8 @@
               "Number of bins",
               "Quantiles (e.g. quartiles)",
               "Custom interval ranges"
-            ]
+            ],
+            "default" : "size"
           }
         },
         "definitions" : {
@@ -1127,6 +1137,87 @@
         "title" : "[Series] Bin/Bucket columns",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "bin_column",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New variable name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "fill_empty" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "function",
+              "value"
+            ],
+            "default" : "function"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "title" : "Size of bins",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "function"
+                    ]
+                  },
+                  "function" : {
+                    "type" : "string",
+                    "enum" : [
+                      "ffill",
+                      "bfill",
+                      "most_frequent",
+                      "mean"
+                    ],
+                    "enumNames" : [
+                      "forward fill (take the one above)",
+                      "backward fill (take the one below)",
+                      "most frequent",
+                      "average/mean"
+                    ]
+                  }
+                }
+              },
+              {
+                "title" : "Number of bins",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "value"
+                    ]
+                  },
+                  "value" : {
+                    "type" : "number"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "title" : "[Series] Fill empty",
+        "callerObject" : "DataFrame[Series].fdt",
+        "function" : "fill_empty",
         "type" : "object"
       },
       "uischema" : {

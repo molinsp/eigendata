@@ -5,6 +5,7 @@ import {
   Types
   //Operators, Widgets, Fields, Config, Types, Conjunctions, Settings, LocaleSettings, Funcs,
 } from "react-awesome-query-builder";
+//import AntdConfig from 'react-awesome-query-builder/lib/config/antd';
 const InitialConfig = BasicConfig; // or BasicConfig or MaterialConfig
 
 

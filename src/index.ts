@@ -6,8 +6,9 @@ import {
 
 import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
 import { FormWidget, Backend } from './formulabar';
-import { DataVisualizerWidget } from './datavisualizer';
-import { reactIcon } from '@jupyterlab/ui-components';
+//import { DataVisualizerWidget } from './datavisualizer';
+//import { reactIcon } from '@jupyterlab/ui-components';
+import { searchIcon } from '@jupyterlab/ui-components';
 
 import {
     INotebookTracker
@@ -36,11 +37,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab Eigendata is activated!');
     
     let formulawidget : MainAreaWidget<FormWidget>;
-    let datavizwidget : MainAreaWidget<DataVisualizerWidget>;
+    //let datavizwidget : MainAreaWidget<DataVisualizerWidget>;
 
     const { commands } = app;
     const command = CommandIDs.create;
-    const datavizcommand = CommandIDs.dataviz;
+    //const datavizcommand = CommandIDs.dataviz;
 
     // Create class that manages the backend behavior
     const backend = new Backend(notebook_tracker);
@@ -48,7 +49,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(command, {
       caption: 'Create a new React Widget',
       label: 'Magic Formula Bar',
-      icon: args => (args['isPalette'] ? null : reactIcon),
+      icon: args => (args['isPalette'] ? null : searchIcon),
       execute: () => {
         if (!formulawidget || formulawidget.isDisposed) {
           // Create form component and pass backend behavior
@@ -74,6 +75,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
     });
 
+    /*
     commands.addCommand(datavizcommand, {
       caption: 'Create a new Data Data Visualizer',
       label: 'Data Visualizer',
@@ -102,6 +104,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.activateById(datavizwidget.id);
         }
     });
+    */
 
     // Track and restore the formulawidget state
     let tracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
@@ -113,6 +116,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     // Track and restore the data visualizer state
+    /*
     let viztracker = new WidgetTracker<MainAreaWidget<DataVisualizerWidget>>({
       namespace: 'dv'
     });
@@ -120,16 +124,17 @@ const extension: JupyterFrontEndPlugin<void> = {
       command: datavizcommand,
       name: () => 'dv'
     });
+    */
 
 
     // Create a menu
     const tutorialMenu: Menu = new Menu({ commands });
     tutorialMenu.title.label = 'Eigendata';
-    mainMenu.addMenu(tutorialMenu, { rank: 80 });
+    mainMenu.addMenu(tutorialMenu, { rank: 2000 });
 
     // Add the command to the menu
     tutorialMenu.addItem({ command, args: { origin: 'from the menu' } });
-    tutorialMenu.addItem({ command: datavizcommand, args: { origin: 'from the menu' } });
+    //tutorialMenu.addItem({ command: datavizcommand, args: { origin: 'from the menu' } });
 
   }
 };

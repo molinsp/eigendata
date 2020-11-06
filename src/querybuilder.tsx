@@ -13,6 +13,7 @@ import 'react-awesome-query-builder/lib/css/styles.css';
 //import 'react-awesome-query-builder/lib/css/compact_styles.css'; //optional, for more compact styles
 import {Backend} from './formulabar'
 import customConfig from './querybuilder_config';
+import Select from 'react-select';
 //const InitialConfig = BasicConfig; // or BasicConfig
 
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
@@ -20,7 +21,6 @@ import customConfig from './querybuilder_config';
 const queryValue = {"id": QbUtils.uuid(), "type": "group"};
 
 export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, DemoQueryBuilderState> {
-
     constructor(props: DemoQueryBuilderProps) {
         super(props);
         console.log('CUSTOM CONFIG', customConfig );
@@ -30,24 +30,87 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
             tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
             config: config,
             dataframeSelection : props.dataframeSelection,
-            logic : props.backend
+            logic : props.backend,
+            queryType: "query",
+            newTableName: '',
         };
     }
 
+    private options = [
+      { value: 'query', label: 'Filter the dataframe' },
+      { value: 'eval', label: 'Create true/false indicators' }];
+
+
+    setQueryType = (input: any) => {
+      //console.log('Dropdown changed', input);
+      this.setState(state => ({...state,queryType: input.value}));
+    }
+
+    handleChange = (event) => {
+      this.setState({...this.state, newTableName: event.target.value});
+    };
+
+    componentDidUpdate(prevProps: Readonly<DemoQueryBuilderProps>) {
+        if (this.props.queryConfig !== prevProps.queryConfig){
+            const config = {...customConfig, fields: {...this.props.queryConfig}};
+            this.setState(state=>({
+                ...this.state,
+                // @ts-ignore
+                tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
+                config: config,
+            }));
+        }
+    }
+
     render = () => (
-      <div>
-        <Query
-            {...this.state.config}
-            value={this.state.tree}
-            onChange={this.onChange}
-            renderBuilder={this.renderBuilder}
-        />
-        <button onClick={this.onSubmit}> Filter </button>
-      </div>
+      <form id="query-form">
+          <div className="form-group">
+              <fieldset>
+                  <legend>
+                      Filter/Query dataframe
+                  </legend>
+                  <Query
+                      {...this.state.config}
+                      value={this.state.tree}
+                      onChange={this.onChange}
+                      renderBuilder={this.renderBuilder}
+                  />
+                  <div className="form-group">
+                      <label
+                          htmlFor="filterDataFrame"
+                          className="control-label">Filter type
+                      </label>
+                      <Select
+                          id="filterDataFrame"
+                          options={this.options}
+                          onChange={this.setQueryType}
+                          defaultValue={{ value: 'query', label: 'Filter the dataframe' }}
+                      />
+                  </div>
+                   <div className="form-group">
+                      <label
+                          htmlFor="newTableNameTextInput"
+                          className="control-label">New table name
+                      </label>
+                      <input
+                          id="newTableNameTextInput"
+                          value={this.state.newTableName}
+                          type="text" name="newTableName"
+                          onChange={this.handleChange}
+                          className="form-control"
+                          placeholder="Leave blank to modify selected table"
+                      />
+                  </div>
+              </fieldset>
+          </div>
+        <button type="button" onClick={this.generateCode} className="btn btn-info">
+            Submit
+        </button>
+      </form>
     )
 
     renderBuilder = (props: BuilderProps) => (
-      <div className="query-builder-container" style={{padding: '10px'}}>
+      <div className="query-builder-container">
         <div className="query-builder qb-lite">
             <Builder {...props} />
         </div>
@@ -58,7 +121,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
     [FUNCTION] Take query input ange generate code in the notebook
     -> Writes: Notebook
     -----------------------------------------------------------------------------------------------------*/
-    onSubmit = () => {
+    generateCode = () => {
       let sql_query = JSON.stringify(QbUtils.sqlFormat(this.state.tree, this.state.config), undefined, 2);
       console.log('SQL query', sql_query);
       sql_query = sql_query.replace(/ = /g,'==');
@@ -69,8 +132,35 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/false/g,'False');
       sql_query = sql_query.replace(/ IS EMPTY/g,'.isnull()');
       sql_query = sql_query.replace(/ IS NOT EMPTY/g,'.notnull()');
+      
 
-      const formula = this.state.dataframeSelection + ' = ' + this.state.dataframeSelection + '.query(' + sql_query + ')';
+      // To-do: add backticks for fields with blanks
+      console.log('Config fields', this.state.config.fields);
+      for(var i in this.state.config.fields){
+        let col_name = String(i);
+
+        // Check if there is any blank space in the column names
+        if (/\s/.test(col_name)) {
+          // It has any kind of whitespace
+          // Replace with backticks to ensure pandas does not generate an error
+          const re = new RegExp(col_name, 'g');
+          const replace_to = '`' + col_name + '`';
+          sql_query = sql_query.replace(re,replace_to);
+        }
+      }
+
+      // If no variable defined, use this dataframe selection
+      let variable = '';
+      if(this.state.newTableName !== ''){
+        variable = this.state.newTableName;
+      }else{
+        variable = this.state.dataframeSelection ;
+      }
+
+      //  Compose formula: variable = dataframe . query/eval (query)
+      let formula =  variable + ' = ' + this.state.dataframeSelection;
+      formula = formula + '.' + this.state.queryType;
+      formula = formula + '(' + sql_query + ')';   
       console.log('Formula', formula);
       this.state.logic.writeToNotebookAndExecute(formula);  
     }
@@ -101,4 +191,6 @@ interface DemoQueryBuilderState {
     config: Config;
     logic: Backend;
     dataframeSelection: string;
+    queryType:string;
+    newTableName: string;
 }

@@ -91,8 +91,28 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null,
-      queryConfig: null
+      formData: null,
+      queryConfig: null,
     });
+
+
+  /*-----------------------------------
+  RESET STATE LOGIC: Backend triggers FE reset
+  -----------------------------------*/
+  if(logic._resetStateFlag == true){
+    console.log('RESETING FRONTEND')
+    setState({
+      transformationForm: transformationForm,
+      transformationUI: defaultUISchema,
+      showForm: null,
+      dataframeSelection: null,
+      transformationSelection: null,
+      formData: null,
+      queryConfig: null,
+    });
+
+    logic._resetStateFlag = false;
+  }
 
   console.log('State:', state);
   console.log('------> Rendering Formulabar UI');
@@ -117,7 +137,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         //console.log('Return null');
         return [];
       }
-      console.log
+
       const result = selection.map((item: any) => item.value);
       //console.log('Result from selection',result);
       return result;
@@ -126,7 +146,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     // If defined as array, use the multi-select
     if(props.schema.type === "array"){
        return (
-        <Select options={props.options.enumOptions} 
+        <Select options={props.options.enumOptions}
           onChange= {selection => props.onChange(processMultiSelect(selection))}
           isMulti={true}
         />
@@ -134,7 +154,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     }else{
       return (
-        <Select options={props.options.enumOptions} 
+        <Select options={props.options.enumOptions}
           onChange= {selection => props.onChange(processSingleSelect(selection))}
           //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
           //defaultValue={props.value}
@@ -166,7 +186,11 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
        let new_state = _.cloneDeep(state.transformationForm);
        // Add the queried columns to the state
        new_state["definitions"]["right_columns"]['items']['enum'] = columns;
-       setState(state => ({...state,transformationForm : new_state}));
+       setState(state => ({
+         ...state,
+         transformationForm: new_state,
+         formData: data.formData
+       }));
      }
    }
 
@@ -188,8 +212,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      if(state.dataframeSelection){
        console.log('all defined');
        getTransformationFormToState(state.dataframeSelection, input.value);
-     }else{
-       setState(state => ({...state,transformationSelection:input.value}));
+     } else {
+       setState(state => ({
+         ...state,
+         transformationSelection:input.value,
+         formData: null
+       }));
      }
   }
 
@@ -204,6 +232,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: false,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
+        formData: null
       }));
     }else{
     // STANDARD behavior
@@ -215,7 +244,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: true,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
-        queryConfig: null
+        queryConfig: null,
+        formData: null
       });
     }
 
@@ -229,7 +259,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: null,
         dataframeSelection: null,
         transformationSelection: null,
-        queryConfig: null
+        formData: null,
+        queryConfig: null,
       });
   }
 
@@ -253,7 +284,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     else if(typeof(fieldSchema['$ref']) !== 'undefined'){
       // Specific hardcoded cases
       console.log('2. REF detected');
-      if(fieldSchema['$ref'].localeCompare('#/definitions/columns') == 0){    
+      if(fieldSchema['$ref'].includes('columns')){    
         console.log('2.1 Column multi-select detected');
         return JSON.stringify(fieldInput);
       }else if(fieldSchema['$ref'].localeCompare('#/definitions/column') == 0){
@@ -515,7 +546,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
               placeholder='select data table'
               options={logic.dataframesLoaded}
               label="Select data"
-              onChange={handleDataframeSelectionChange.bind(this)}
+              onChange={handleDataframeSelectionChange}
               className="left-field"
             />
             <Select
@@ -534,14 +565,21 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         <button onClick={goToLoadDataScreen}> Load data </button>
         {state.showForm &&
           <Form
+            formData={state.formData}
             schema={state.transformationForm}
             onSubmit={generatePythonCode}
-            onChange={handleFormChange.bind(this)}
+            onChange={handleFormChange}
             widgets={widgets}
             uiSchema={state.transformationUI}
           />
         }
-        {state.queryConfig && <Demo queryConfig={state.queryConfig} dataframeSelection={state.dataframeSelection} backend={logic} />}
+        {state.queryConfig &&
+          <Demo
+            queryConfig={state.queryConfig}
+            dataframeSelection={state.dataframeSelection}
+            backend={logic}
+          />
+        }
         </div>
        );
   }
@@ -635,6 +673,9 @@ export class Backend {
   // Custom data transformationsList defined in JSON file
   public _transformationsConfig: any;
 
+  // Flag to reset the state of the frontend
+  public _resetStateFlag: boolean = false;
+
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
@@ -652,14 +693,12 @@ export class Backend {
 
     console.log('TRANSFORMATIONS VERSION:', _transformationsConfig["version"]);
 
-    let transformationList = [];
+    let transformationList = [{"value": 'query', "label": 'Filter/Query dataframe'}];
     for (var transformation in _transformationsConfig["transformations"]){
       //console.log('type', transformation);
       transformationList.push({"value": transformation, "label": _transformationsConfig["transformations"][transformation]['form']['title']} );
     };
 
-    // Add a transformation for queries. Currently for development purposes
-    transformationList.push({"value": 'query', "label": '[DEV] Querybuilder'});
     console.log('Transformation list', transformationList);
 
     this.transformationsList = transformationList;
@@ -781,7 +820,7 @@ export class Backend {
       /*-------------------------------------------
         Read form from custom configuration
       -------------------------------------------*/
-      let custom_transformation = this._transformationsConfig[transformationSelection].form;
+      let custom_transformation = _.cloneDeep(this._transformationsConfig[transformationSelection].form);
       console.log('Custom transformation ',transformationSelection);
 
       // Check if there is a definitions object
@@ -1033,6 +1072,33 @@ export class Backend {
 
     // Connect to changes running in the code
     this._connector.iopubMessage.connect( this.codeRunningOnNotebook );
+
+    /*----------------------------------------------
+    Handle the case where the Kernel is restarted
+    -----------------------------------------------*/
+    this._connector.kernelRestarted.connect(( sender, kernelReady: Promise<void> ) => {
+      this._connector.ready.then(() => {
+        // Reset imported libraries
+        this._importedLibraries = false;
+        // Flag to reset the frontend
+        this._resetStateFlag = true;
+        // Reset screen
+        this.screen = 'load csv';
+        // Reset dataframes
+        this.dataframesLoaded = [];
+
+        // Restart init scripts
+        let content: KernelMessage.IExecuteRequestMsg['content'] = {
+          code: this._initScripts,
+          stop_on_error: false,
+          store_history: false
+        };    
+        this._connector.fetch( content, ( () => { } ) ).then(() => {
+          // Emit signal to re-render the component
+          this.signal.emit();
+        });
+      });
+    });
 
     // Need to re-render so that the output function in the button has the latest version of 
     // the current notebook. Probably there is a better way of doing this.

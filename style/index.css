@@ -6,6 +6,7 @@
   padding-right: 20px;
   padding-bottom: 10px;
   padding-left: 20px;
+  overflow: auto;
 }
 
 .side-by-side-fields > fieldset {
@@ -34,4 +35,17 @@
 
 .data-transformation-form .right-field {
   width: 66%;
+}
+
+#query-form .group-or-rule-container {
+  padding-right: 0;
+}
+
+#query-form .query-builder {
+  margin: 0;
+}
+
+#query-form .query-builder-container {
+  padding: 10px 0;
+  margin-bottom: 20px;
 }

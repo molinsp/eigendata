@@ -1,7 +1,7 @@
 {
   "name": "@molinsp/eigendata",
-  "version": "0.1.0",
-  "description": "Test",
+  "version": "0.1.1",
+  "description": "Eigendata is jupyter for people that want to get things done.",
   "keywords": [
     "jupyter",
     "jupyterlab",
@@ -45,7 +45,6 @@
     "loadash": "^1.0.0",
     "posthog-js": "^1.5.2",
     "react-awesome-query-builder": "^2.2.1",
-    "react-querybuilder": "^3.7.1",
     "react-select": "^3.1.0"
   },
   "devDependencies": {
