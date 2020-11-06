@@ -233,7 +233,6 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         formData: null
-
       }));
     }else{
     // STANDARD behavior
@@ -574,7 +573,13 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
             uiSchema={state.transformationUI}
           />
         }
-        {state.queryConfig && <Demo queryConfig={state.queryConfig} dataframeSelection={state.dataframeSelection} backend={logic} />}
+        {state.queryConfig &&
+          <Demo
+            queryConfig={state.queryConfig}
+            dataframeSelection={state.dataframeSelection}
+            backend={logic}
+          />
+        }
         </div>
        );
   }
