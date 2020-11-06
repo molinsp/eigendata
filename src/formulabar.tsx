@@ -95,6 +95,25 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       queryConfig: null,
     });
 
+
+  /*-----------------------------------
+  RESET STATE LOGIC: Backend triggers FE reset
+  -----------------------------------*/
+  if(logic._resetStateFlag == true){
+    console.log('RESETING FRONTEND')
+    setState({
+      transformationForm: transformationForm,
+      transformationUI: defaultUISchema,
+      showForm: null,
+      dataframeSelection: null,
+      transformationSelection: null,
+      formData: null,
+      queryConfig: null,
+    });
+
+    logic._resetStateFlag = false;
+  }
+
   console.log('State:', state);
   console.log('------> Rendering Formulabar UI');
 
@@ -649,6 +668,9 @@ export class Backend {
   // Custom data transformationsList defined in JSON file
   public _transformationsConfig: any;
 
+  // Flag to reset the state of the frontend
+  public _resetStateFlag: boolean = false;
+
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
@@ -1045,6 +1067,33 @@ export class Backend {
 
     // Connect to changes running in the code
     this._connector.iopubMessage.connect( this.codeRunningOnNotebook );
+
+    /*----------------------------------------------
+    Handle the case where the Kernel is restarted
+    -----------------------------------------------*/
+    this._connector.kernelRestarted.connect(( sender, kernelReady: Promise<void> ) => {
+      this._connector.ready.then(() => {
+        // Reset imported libraries
+        this._importedLibraries = false;
+        // Flag to reset the frontend
+        this._resetStateFlag = true;
+        // Reset screen
+        this.screen = 'load csv';
+        // Reset dataframes
+        this.dataframesLoaded = [];
+
+        // Restart init scripts
+        let content: KernelMessage.IExecuteRequestMsg['content'] = {
+          code: this._initScripts,
+          stop_on_error: false,
+          store_history: false
+        };    
+        this._connector.fetch( content, ( () => { } ) ).then(() => {
+          // Emit signal to re-render the component
+          this.signal.emit();
+        });
+      });
+    });
 
     // Need to re-render so that the output function in the button has the latest version of 
     // the current notebook. Probably there is a better way of doing this.
