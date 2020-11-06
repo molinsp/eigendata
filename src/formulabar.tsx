@@ -547,7 +547,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
               placeholder='select data table'
               options={logic.dataframesLoaded}
               label="Select data"
-              onChange={handleDataframeSelectionChange.bind(this)}
+              onChange={handleDataframeSelectionChange}
               className="left-field"
             />
             <Select
@@ -815,7 +815,7 @@ export class Backend {
       /*-------------------------------------------
         Read form from custom configuration
       -------------------------------------------*/
-      let custom_transformation = this._transformationsConfig[transformationSelection].form;
+      let custom_transformation = _.cloneDeep(this._transformationsConfig[transformationSelection].form);
       console.log('Custom transformation ',transformationSelection);
 
       // Check if there is a definitions object
