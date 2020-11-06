@@ -1,7 +1,7 @@
 {
   "name": "@molinsp/eigendata",
-  "version": "0.1.0",
-  "description": "Test",
+  "version": "0.1.1",
+  "description": "Eigendata is jupyter for people that want to get things done.",
   "keywords": [
     "jupyter",
     "jupyterlab",
