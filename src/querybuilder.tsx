@@ -21,7 +21,6 @@ import Select from 'react-select';
 const queryValue = {"id": QbUtils.uuid(), "type": "group"};
 
 export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, DemoQueryBuilderState> {
-
     constructor(props: DemoQueryBuilderProps) {
         super(props);
         console.log('CUSTOM CONFIG', customConfig );
@@ -50,6 +49,18 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
     handleChange = (event) => {
       this.setState({...this.state, newTableName: event.target.value});
     };
+
+    componentDidUpdate(prevProps: Readonly<DemoQueryBuilderProps>) {
+        if (this.props.queryConfig !== prevProps.queryConfig){
+            const config = {...customConfig, fields: {...this.props.queryConfig}};
+            this.setState(state=>({
+                ...this.state,
+                // @ts-ignore
+                tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
+                config: config,
+            }));
+        }
+    }
 
     render = () => (
       <div>
