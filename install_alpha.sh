@@ -1,10 +1,28 @@
-# 1. Install required packages
-conda env create -f environment.yaml
+# Check the systme type
+#!/usr/bin/env bash
+# 1. Determine configuration based on OS
+if [ "$(uname)" == "Darwin" ]; then
+    # Do something under Mac OS X platform   
+    echo "$(uname)" 
+    conda env create -f default_environment.yaml    
+elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+    # Do something under GNU/Linux platform
+    echo "$(uname)"
+    conda env create -f default_environment.yaml
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
+    # Do something under 32 bits Windows NT platform
+    echo "$(uname)"
+    conda env create -f windows_environment.yaml  
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
+    # Do something under 64 bits Windows NT platform
+    echo "$(uname)"
+    conda env create -f windows_environment.yaml
+fi
 # 2. Source anaconda path
 conda_path=$(conda info --base)
 source "$conda_path/etc/profile.d/conda.sh"
 # 3. Activate the environment
-conda activate test
+conda activate eigendata
 conda info | grep -i 'active environment'
 # 4. Request login to npm
 npm login
