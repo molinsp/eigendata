@@ -1,0 +1,16 @@
+name: eigendata
+channels:
+ - defaults
+ - fastai
+ - conda-forge
+dependencies:
+ - python=3.7
+ - pandas
+ - numpydoc
+ - fastcore
+ - nodejs>=10.14.0
+ - jupyterlab
+ - pip
+ - pip:
+    - --index-url https://test.pypi.org/simple/
+    - fastdata
