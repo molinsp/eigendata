@@ -23,7 +23,8 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
           setCounter(counter + 1);
           const dfs = logic.dataframesLoaded;
           console.log("Dataframes", dfs);
-          logic.pythonGetDataForVisualization(dfs[dfs.length-1].value);
+          let result = logic.pythonGetDataForVisualization(dfs[dfs.length-1].value);
+          console.log('Backend result', result);
         }}
       >
         Increment

@@ -440,5 +440,7 @@ def prepare_multiindex_df(dfmi,index=False):
     
     new_columnDefs = columnDefs_row + columnDefs_col
     
+    new_columnDefs = json.dumps(new_columnDefs, ensure_ascii=False)
+    
     return df_data.to_json(orient='records'), new_columnDefs
 `;

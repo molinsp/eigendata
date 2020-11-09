@@ -972,11 +972,37 @@ export class Backend {
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);
+      let result_object = {};
       
        // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
       const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
         codeToRun, {'data' : '_visualizer_data', 'columns':'_visualizer_columns'});
-      console.log('Result', result);
+
+      let content = result.columns.data["text/plain"];
+
+      console.log('content', content);
+      
+      // Clean the JSON result that python returns
+      if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+        console.log('Cleaning content');
+        content = content.slice(1,-1);
+        content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+      }
+
+      result_object['columns'] = JSON.parse(content);
+
+      
+      content = result.data.data["text/plain"];
+      
+      // Clean the JSON result that python returns
+      if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+        content = content.slice(1,-1);
+        content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+      }
+
+      result_object['data'] = JSON.parse(content);
+     
+      return result_object;
   }
 
   /*---------------------------------------------------------------------------------------------------- 
