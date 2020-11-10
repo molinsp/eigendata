@@ -412,6 +412,11 @@ def is_multiindex_row_df(df):
             return True
     return False
 
+def check_if_default_index(df):
+    # Check if the index is the same as the default index
+    check_index = pd.Index(np.arange(0, len(df))).equals(df.index)
+    return check_index
+
 def prepare_multiindex_df(dfmi,index=False):
     """
     Prepare multiindex dataframe (data) and options
@@ -423,24 +428,43 @@ def prepare_multiindex_df(dfmi,index=False):
     """
 
     df_data = dfmi.copy()
+    
+    # Abreviations: mi is multi index
 
+    # 1. Handle multi-level columns
+    # Check it ther are multi-level columns
     if is_multiindex_col_df(df_data):
+        # Build multi-level column definitions to be used by the frontend grid
         columnDefs_col = build_colDefs_for_mi_cols(df_data)
+        # Create a unique name for each column by composing the names of all the levels
         df_data = flatten_mi_col_df(df_data)
     else:
+        # Generate column definitions for the frontend
         columnDefs_col = build_colDefs_for_si_cols(df_data)
-
+    
+        # 2. Check if it has a multi-index row (does not seem to matter gith now)
     if is_multiindex_row_df(df_data):
+        # Build multi-level column definitions to be used by the frontend grid
         columnDefs_row = build_colDefs_for_mi_rows(df_data)
+        # Flatten the multi-level index so that each row has a unique number
         df_data = df_data.reset_index()
     else:
-        columnDefs_row = []
-        if index:
+        # If it is the default index
+        if check_if_default_index(df_data):
+            columnDefs_row = []
+        else:
+            # Single index
+            columnDefs_row = build_colDefs_for_mi_rows(df_data)
             df_data = df_data.reset_index()
+            
+
+
     
+    
+    # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
-    
     new_columnDefs = json.dumps(new_columnDefs, ensure_ascii=False)
     
+    # 3. Return as JSON
     return df_data.to_json(orient='records'), new_columnDefs
 `;
