@@ -38,63 +38,6 @@
         }
       }
     },
-    "get_dummies" : {
-      "form" : {
-        "required" : [
-          "data",
-          "columns"
-        ],
-        "definitions" : {
-          "columns" : {
-            "type" : "array",
-            "uniqueItems" : true,
-            "items" : {
-              "type" : "string",
-              "enum" : []
-            }
-          },
-          "dataframes" : {
-            "type" : "string",
-            "enum" : []
-          }
-        },
-        "properties" : {
-          "data" : {
-            "type" : "string",
-            "codegenstyle" : "variable",
-            "$ref" : "#/definitions/dataframes"
-          },
-          "dummy_na" : {
-            "title" : "Column for NA values",
-            "description" : "Include category for empty values",
-            "default" : "False",
-            "type" : "string",
-            "codegenstyle" : "variable",
-            "enum" : [
-              "True",
-              "False"
-            ]
-          },
-          "columns" : {
-            "$ref" : "#/definitions/columns",
-            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
-          },
-          "New table name" : {
-            "type" : "string"
-          }
-        },
-        "title" : "Pivot Dummies",
-        "description" : "Pivot column values into multiple columns, with 1 and 0 indicators",
-        "type" : "object",
-        "callerObject" : "pd",
-        "function" : "get_dummies"
-      },
-      "uischema" : {
-        "New table name" : {
-          "ui:placeholder" : "Leave blank to modify selected table"
-        }
-      }
-    },
     "pivot_table" : {
       "form" : {
         "properties" : {
@@ -199,6 +142,63 @@
               "classNames" : "right-field"
             }
           }
+        }
+      }
+    },
+    "get_dummies" : {
+      "form" : {
+        "required" : [
+          "data",
+          "columns"
+        ],
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          },
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "properties" : {
+          "data" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes"
+          },
+          "dummy_na" : {
+            "title" : "Column for NA values",
+            "description" : "Include category for empty values",
+            "default" : "False",
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "True",
+              "False"
+            ]
+          },
+          "columns" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Pivot Dummies",
+        "description" : "Pivot column values into multiple columns, with 1 and 0 indicators",
+        "type" : "object",
+        "callerObject" : "pd",
+        "function" : "get_dummies"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
         }
       }
     },
@@ -828,10 +828,11 @@
           "column",
           "sub"
         ],
-        "title" : "[Series] Find text",
+        "title" : "[Series] Find text position",
         "callerObject" : "DataFrame[Series].str",
         "function" : "find",
-        "type" : "object"
+        "type" : "object",
+        "description" : "Find the position of a text fragment within a column. Return a position number."
       },
       "uischema" : {
         "New column name" : {
