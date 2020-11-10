@@ -1290,6 +1290,52 @@
           "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
+    },
+    "extract" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "pat" : {
+            "type" : "array",
+            "title" : "Pattern",
+            "uniqueitems" : "true",
+            "Object" : {
+              "type" : "string",
+              "enum" : [
+                ""
+              ],
+              "enumNames" : []
+            }
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "sub"
+        ],
+        "title" : "[Series] Extract pattern from text",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "extract",
+        "type" : "object",
+        "description" : "Define a pattern in text and extract it"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
     }
   }
 }

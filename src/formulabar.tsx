@@ -979,29 +979,30 @@ export class Backend {
         codeToRun, {'data' : '_visualizer_data', 'columns':'_visualizer_columns'});
 
       let content = result.columns.data["text/plain"];
-
-      console.log('content', content);
       
       // Clean the JSON result that python returns
       if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
-        console.log('Cleaning content');
         content = content.slice(1,-1);
         content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
       }
 
       result_object['columns'] = JSON.parse(content);
-
       
-      content = result.data.data["text/plain"];
+      let content2 = result.data.data["text/plain"];
       
       // Clean the JSON result that python returns
-      if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
-        content = content.slice(1,-1);
-        content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+      if (content2.slice(0, 1) == "'" || content2.slice(0, 1) == "\""){
+        console.log('Cleaning 2');
+        content2 = content2.slice(1,-1);
+        content2 = content2.replace(/\\\\/g,'');
+        content2 = content2.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
       }
+      //console.log('Cleaned content 2', content2);
+      let parsed_data = JSON.parse(content2);
 
-      result_object['data'] = JSON.parse(content);
-     
+      result_object['data'] = parsed_data;
+      console.log('Backend visualizer object', result_object);
+      
       return result_object;
   }
 
