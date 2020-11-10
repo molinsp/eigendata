@@ -1226,6 +1226,70 @@
           "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
+    },
+    "uppercase" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Series] Set text to upper case",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "upper",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "lowercase" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Series] Set text to lower case",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "lower",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
     }
   }
 }
