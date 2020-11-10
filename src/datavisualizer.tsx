@@ -13,52 +13,73 @@ import { Backend } from './formulabar';
  *
  * @returns The React component
  */
-const DataVisualizerComponent = (props: {logic: Backend, columns: object[], data: object[], showTable: boolean}): JSX.Element => {
+const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
   console.log('------> Rendering Data Visualizer UI');
+  const [columns, setColumns] = useState([]);
+  const [data, setData] = useState([]);
+  const [showTable, setShowTable] = useState(false);
 
-  const {columns, data, showTable} = props;
+  useEffect(() => {
+    const getDataForVisualization = async () => {
+      try {
+        const dfs = props.logic.dataframesLoaded;
+        console.log("Dataframes", dfs);
+        if (dfs.length !== 0) {
+          const result = await props.logic.pythonGetDataForVisualization(dfs[dfs.length-1].value);
+          setShowTable(true);
+          setColumns([...result['columns']]);
+          setData([...result['data']]);
+          console.log('Backend result', result);
+        }
+      } catch (e) {
+        setShowTable(false);
+      }
+    };
+    getDataForVisualization();
+  }, [props.logic.dataframesLoaded]);
+
   const {
-      getTableProps,
-      getTableBodyProps,
-      headerGroups,
-      rows,
-      prepareRow,
+    getTableProps,
+    getTableBodyProps,
+    headerGroups,
+    rows,
+    prepareRow,
   } = useTable({columns, data});
 
   return (
     <div>
-        {showTable ?
-        <table {...getTableProps()} className="table table-striped table-hover">
-            <thead className="thead-dark">
-            {headerGroups.map(headerGroup => (
-                <tr {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map(column => (
-                        <th {...column.getHeaderProps() }>
-                            {column.render('Header')}
-                        </th>
-                    ))}
-                </tr>
+      {showTable ?
+      <table {...getTableProps()} className="table table-striped table-hover">
+        <thead className="thead-dark">
+        {headerGroups.map(headerGroup => (
+          <tr {...headerGroup.getHeaderGroupProps()}>
+            {headerGroup.headers.map(column => (
+              <th {...column.getHeaderProps() }>
+                {column.render('Header')}
+              </th>
             ))}
-            </thead>
-            <tbody {...getTableBodyProps()}>
-            {rows.map(row => {
-                prepareRow(row);
+          </tr>
+        ))}
+        </thead>
+        <tbody {...getTableBodyProps()}>
+        {rows.map(row => {
+          prepareRow(row);
+          return(
+            <tr {...row.getRowProps()}>
+              {row.cells.map(cell => {
                 return(
-                    <tr {...row.getRowProps()}>
-                        {row.cells.map(cell => {
-                            return(
-                                <td {...cell.getCellProps()}>
-                                    {cell.render('Cell')}
-                                </td>
-                            )
-                        })}
-                    </tr>
+                  <td {...cell.getCellProps()}>
+                    {cell.render('Cell')}
+                  </td>
                 )
-            })}
-            </tbody>
-        </table>
-        : <p>No data available</p>
-        }
+              })}
+            </tr>
+          )
+        })}
+        </tbody>
+      </table>
+      : <p>No data available</p>
+      }
     </div>
   );
 }
@@ -68,37 +89,7 @@ const DataVisualizerComponent = (props: {logic: Backend, columns: object[], data
 // Inspired by this example: https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/developer/virtualdom.usesignal.tsx
 // ...and this example: https://github.com/jupyterlab/jupyterlab/blob/f2e0cde0e7c960dc82fd9b010fcd3dbd9e9b43d0/packages/running/src/index.tsx#L157-L159
 function UseSignalComponent(props: { signal: ISignal<Backend, void>, logic: Backend}) {
-    const [columns, setColumns] = useState([]);
-    const [data, setData] = useState([]);
-    const [showTable, setShowTable] = useState(false);
-
-    useEffect(() => {
-        const getDataForVisualization = async () => {
-            try {
-                const dfs = props.logic.dataframesLoaded;
-                console.log("Dataframes", dfs);
-                if (dfs.length !== 0) {
-                    const result = await props.logic.pythonGetDataForVisualization(dfs[dfs.length-1].value);
-                    setShowTable(true);
-                    setColumns([...result['columns']]);
-                    setData([...result['data']]);
-                    console.log('Backend result', result);
-                }
-            } catch (e) {
-                setShowTable(false);
-            }
-        };
-        getDataForVisualization();
-    }, [props.logic.dataframesLoaded]);
-
-  return <UseSignal signal={props.signal}>{() =>
-      <DataVisualizerComponent
-          columns={columns}
-          data={data}
-          showTable={showTable}
-          logic={props.logic}
-      />}
-  </UseSignal>;
+  return <UseSignal signal={props.signal}>{() => <DataVisualizerComponent logic={props.logic}/>}</UseSignal>;
 }
 
 /**
