@@ -18,14 +18,15 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
   const [showTable, setShowTable] = useState(false);
+  const [activeTab, setActiveTab] = useState(0);
 
   useEffect(() => {
     const getDataForVisualization = async () => {
       try {
         const dfs = props.logic.dataframesLoaded;
         console.log("Dataframes", dfs);
-        if (dfs.length !== 0) {
-          const result = await props.logic.pythonGetDataForVisualization(dfs[dfs.length-1].value);
+        if (dfs[activeTab]) {
+          const result = await props.logic.pythonGetDataForVisualization(dfs[activeTab].value);
           setShowTable(true);
           setColumns([...result['columns']]);
           setData([...result['data']]);
@@ -36,7 +37,7 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
       }
     };
     getDataForVisualization();
-  }, [props.logic.dataframesLoaded]);
+  }, [props.logic.dataframesLoaded, activeTab]);
 
   const {
     getTableProps,
@@ -46,38 +47,61 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
     prepareRow,
   } = useTable({columns, data});
 
+  const cutString = (string, requiredLength) => {
+    return string.length > requiredLength ? `${string.slice(0, requiredLength)}...` : string;
+  }
+
   return (
-    <div>
+    <div className="full-height-container">
       {showTable ?
-      <table {...getTableProps()} className="table table-striped table-hover">
-        <thead className="thead-dark">
-        {headerGroups.map(headerGroup => (
-          <tr {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map(column => (
-              <th {...column.getHeaderProps() }>
-                {column.render('Header')}
-              </th>
-            ))}
-          </tr>
-        ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-        {rows.map(row => {
-          prepareRow(row);
-          return(
-            <tr {...row.getRowProps()}>
-              {row.cells.map(cell => {
-                return(
-                  <td {...cell.getCellProps()}>
-                    {cell.render('Cell')}
-                  </td>
+        <div className="full-height-container">
+          <nav className="scroll-nav">
+            <div>
+              {props.logic.dataframesLoaded.map((dataframe, index) => {
+                return (
+                  <button
+                    className={`tab-button ${activeTab === index ? 'tab-button_active' : 'tab-button_inactive'}`}
+                    onClick={() => setActiveTab(index)}
+                    key={index}
+                  >
+                    {cutString(dataframe.label, 20)}
+                  </button>
                 )
               })}
-            </tr>
-          )
-        })}
-        </tbody>
-      </table>
+            </div>
+          </nav>
+          <div className={'tab-item'}>
+            <table {...getTableProps()} className="table table-striped table-hover">
+              <thead className="thead-dark">
+              {headerGroups.map(headerGroup => (
+                <tr {...headerGroup.getHeaderGroupProps()}>
+                  {headerGroup.headers.map(column => (
+                    <th {...column.getHeaderProps() }>
+                      {column.render('Header')}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+              </thead>
+              <tbody {...getTableBodyProps()}>
+              {rows.map(row => {
+                prepareRow(row);
+                return(
+                  <tr {...row.getRowProps()}>
+                    {row.cells.map(cell => {
+                      return(
+                        <td {...cell.getCellProps()}>
+                          {cell.render('Cell')}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+              </tbody>
+            </table>
+          </div>
+        </div>
       : <p>No data available</p>
       }
     </div>
