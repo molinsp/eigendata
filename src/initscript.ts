@@ -302,6 +302,25 @@ def generate_querybuilder_config(df):
                     'label' : col_name,
                     'type' : 'text'
                 }
+        elif col_type == 'datetime64[ns]':
+            # Check if it contains only dates
+            if ((df[col_name].dt.floor('d') == df[col_name]) | (df[col_name].isnull())).all():
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'date'
+                }
+            # Check if it contains only times
+            elif ( (df[col_name].dt.date == pd.Timestamp('now').date()) | (df[col_name].isnull()) ).all():
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'time'
+                }
+            else:
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'datetime'
+                }
+   
     return json.dumps(queryprops, ensure_ascii=False)
 
 # ---------------- DATA VISUALIZER ----------------
