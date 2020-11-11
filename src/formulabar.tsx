@@ -995,11 +995,16 @@ export class Backend {
       if (content2.slice(0, 1) == "'" || content2.slice(0, 1) == "\""){
         console.log('Cleaning 2');
         content2 = content2.slice(1,-1);
-        content2 = content2.replace(/\\\\/g,'');
+        //content2 = content2.replace(/\\\\/g,'');
         content2 = content2.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
       }
       //console.log('Cleaned content 2', content2);
-      let parsed_data = JSON.parse(content2);
+      var parsed_data = {};
+      try{
+       parsed_data = JSON.parse(content2);
+      }catch(e){
+        console.error('(!) Cannot parse data');
+      }
 
       result_object['data'] = parsed_data;
       console.log('Backend visualizer object', result_object);

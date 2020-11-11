@@ -105,3 +105,9 @@
   height: 92%;
 }
 
+table td, table th {
+    font-size: 12px;
+}
+
+
+

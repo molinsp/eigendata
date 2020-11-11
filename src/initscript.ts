@@ -464,7 +464,9 @@ def prepare_multiindex_df(dfmi,index=False):
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
     new_columnDefs = json.dumps(new_columnDefs, ensure_ascii=False)
+    out = df_data.to_json(orient='records')
+    formatted_data = json.dumps(json.loads(out))
     
     # 3. Return as JSON
-    return df_data.to_json(orient='records'), new_columnDefs
+    return formatted_data, new_columnDefs
 `;
