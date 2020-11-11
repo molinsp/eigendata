@@ -626,50 +626,6 @@
         }
       }
     },
-    "fillna" : {
-      "form" : {
-        "properties" : {
-          "column" : {
-            "$ref" : "#/definitions/column",
-            "title" : "column",
-            "codegenstyle" : "ignore"
-          },
-          "method" : {
-            "type" : "string",
-            "enum" : [
-              "\"ffill\"",
-              "\"bfill\""
-            ],
-            "enumNames" : [
-              "forward fill (take the one above)",
-              "backward fill (take the one below)"
-            ],
-            "codegenstyle" : "variable"
-          },
-          "New column name" : {
-            "type" : "string"
-          }
-        },
-        "definitions" : {
-          "column" : {
-            "type" : "string",
-            "enum" : []
-          }
-        },
-        "required" : [
-          "column"
-        ],
-        "title" : "[Series] Fill empty values",
-        "type" : "object",
-        "callerObject" : "DataFrame[Series]",
-        "function" : "fillna"
-      },
-      "uischema" : {
-        "New column name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      }
-    },
     "contains" : {
       "form" : {
         "properties" : {
@@ -1045,6 +1001,9 @@
               "Custom interval ranges"
             ],
             "default" : "size"
+          },
+          "New column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -1159,8 +1118,10 @@
             "enum" : [
               "function",
               "value"
-            ],
-            "default" : "function"
+            ]
+          },
+          "New column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -1216,7 +1177,7 @@
             ]
           }
         },
-        "title" : "[Series] Fill empty",
+        "title" : "[Series] Fill empty values",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "fill_empty",
         "type" : "object"
@@ -1284,52 +1245,6 @@
         "callerObject" : "DataFrame[Series].str",
         "function" : "lower",
         "type" : "object"
-      },
-      "uischema" : {
-        "New column name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      }
-    },
-    "extract" : {
-      "form" : {
-        "properties" : {
-          "column" : {
-            "$ref" : "#/definitions/column",
-            "title" : "column",
-            "codegenstyle" : "ignore"
-          },
-          "pat" : {
-            "type" : "array",
-            "title" : "Pattern",
-            "uniqueitems" : "true",
-            "Object" : {
-              "type" : "string",
-              "enum" : [
-                ""
-              ],
-              "enumNames" : []
-            }
-          },
-          "New column name" : {
-            "type" : "string"
-          }
-        },
-        "definitions" : {
-          "column" : {
-            "type" : "string",
-            "enum" : []
-          }
-        },
-        "required" : [
-          "column",
-          "sub"
-        ],
-        "title" : "[Series] Extract pattern from text",
-        "callerObject" : "DataFrame[Series].str",
-        "function" : "extract",
-        "type" : "object",
-        "description" : "Define a pattern in text and extract it"
       },
       "uischema" : {
         "New column name" : {

@@ -91,7 +91,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null,
-      formData: null,
+      formData: {},
       queryConfig: null,
     });
 
@@ -107,7 +107,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null,
-      formData: null,
+      formData: {},
       queryConfig: null,
     });
 
@@ -216,7 +216,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
        setState(state => ({
          ...state,
          transformationSelection:input.value,
-         formData: null
+         formData: {}
        }));
      }
   }
@@ -232,7 +232,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: false,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
-        formData: null
+        formData: {}
       }));
     }else{
     // STANDARD behavior
@@ -245,7 +245,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         queryConfig: null,
-        formData: null
+        formData: {}
       });
     }
 
@@ -259,7 +259,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: null,
         dataframeSelection: null,
         transformationSelection: null,
-        formData: null,
+        formData: {},
         queryConfig: null,
       });
   }
