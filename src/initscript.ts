@@ -413,8 +413,8 @@ def is_multiindex_row_df(df):
     return False
 
 def check_if_default_index(df):
-    # Check if the index is the same as the default index
-    check_index = pd.Index(np.arange(0, len(df))).equals(df.index)
+    # Check if the index is the same as the default index. We use the name as a proxy
+    check_index = (df.index.name == None)
     return check_index
 
 def prepare_multiindex_df(dfmi,index=False):

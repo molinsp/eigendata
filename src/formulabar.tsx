@@ -99,8 +99,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
   -----------------------------------*/
-  if(logic._resetStateFlag == true){
-    console.log('RESETING FRONTEND')
+  if(logic._resetStateFormulabarFlag == true){
+    console.log('RESETING FORMULABAR STATE');
     setState({
       transformationForm: transformationForm,
       transformationUI: defaultUISchema,
@@ -111,7 +111,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       queryConfig: null,
     });
 
-    logic._resetStateFlag = false;
+    logic._resetStateFormulabarFlag = false;
   }
 
   console.log('State:', state);
@@ -674,7 +674,8 @@ export class Backend {
   public _transformationsConfig: any;
 
   // Flag to reset the state of the frontend
-  public _resetStateFlag: boolean = false;
+  public _resetStateFormulabarFlag: boolean = false;
+  public _resetStateDatavisualizerFlag: boolean = false;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -1108,7 +1109,8 @@ export class Backend {
         // Reset imported libraries
         this._importedLibraries = false;
         // Flag to reset the frontend
-        this._resetStateFlag = true;
+        this._resetStateFormulabarFlag = true;
+        this._resetStateDatavisualizerFlag = true;
         // Reset screen
         this.screen = 'load csv';
         // Reset dataframes

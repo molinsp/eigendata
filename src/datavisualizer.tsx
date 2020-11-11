@@ -20,6 +20,15 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
   const [showTable, setShowTable] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
 
+  if(props.logic._resetStateDatavisualizerFlag == true){
+    console.log('RESETING DATA VISUALIZER STATE');
+    setColumns([]);
+    setData([]);
+    setShowTable(false);
+    setActiveTab(0);
+    props.logic._resetStateDatavisualizerFlag = false;
+  }
+
   useEffect(() => {
     const getDataForVisualization = async () => {
       try {

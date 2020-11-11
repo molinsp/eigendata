@@ -87,11 +87,13 @@
 }
 
 .tab-button_active {
-  background-color: #DDDDDD;
+  background-color: #ffffff;
+  color: #353EFF;
 }
 
 .tab-button_inactive {
-  color: #0275D8;
+  color: #959494;
+  background-color: #f6f6f6;
 }
 
 .tab-item {
