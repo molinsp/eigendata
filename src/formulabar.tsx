@@ -91,7 +91,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null,
-      formData: null,
+      formData: {},
       queryConfig: null,
     });
 
@@ -99,19 +99,19 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
   -----------------------------------*/
-  if(logic._resetStateFlag == true){
-    console.log('RESETING FRONTEND')
+  if(logic._resetStateFormulabarFlag == true){
+    console.log('RESETING FORMULABAR STATE');
     setState({
       transformationForm: transformationForm,
       transformationUI: defaultUISchema,
       showForm: null,
       dataframeSelection: null,
       transformationSelection: null,
-      formData: null,
+      formData: {},
       queryConfig: null,
     });
 
-    logic._resetStateFlag = false;
+    logic._resetStateFormulabarFlag = false;
   }
 
   console.log('State:', state);
@@ -216,7 +216,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
        setState(state => ({
          ...state,
          transformationSelection:input.value,
-         formData: null
+         formData: {}
        }));
      }
   }
@@ -232,7 +232,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: false,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
-        formData: null
+        formData: {}
       }));
     }else{
     // STANDARD behavior
@@ -245,7 +245,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         queryConfig: null,
-        formData: null
+        formData: {}
       });
     }
 
@@ -259,7 +259,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         showForm: null,
         dataframeSelection: null,
         transformationSelection: null,
-        formData: null,
+        formData: {},
         queryConfig: null,
       });
   }
@@ -674,7 +674,8 @@ export class Backend {
   public _transformationsConfig: any;
 
   // Flag to reset the state of the frontend
-  public _resetStateFlag: boolean = false;
+  public _resetStateFormulabarFlag: boolean = false;
+  public _resetStateDatavisualizerFlag: boolean = false;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -972,11 +973,43 @@ export class Backend {
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);
+      let result_object = {};
       
        // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
       const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
         codeToRun, {'data' : '_visualizer_data', 'columns':'_visualizer_columns'});
-      console.log('Result', result);
+
+      let content = result.columns.data["text/plain"];
+      
+      // Clean the JSON result that python returns
+      if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
+        content = content.slice(1,-1);
+        content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+      }
+
+      result_object['columns'] = JSON.parse(content);
+      
+      let content2 = result.data.data["text/plain"];
+      
+      // Clean the JSON result that python returns
+      if (content2.slice(0, 1) == "'" || content2.slice(0, 1) == "\""){
+        console.log('Cleaning 2');
+        content2 = content2.slice(1,-1);
+        //content2 = content2.replace(/\\\\/g,'');
+        content2 = content2.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
+      }
+      //console.log('Cleaned content 2', content2);
+      var parsed_data = {};
+      try{
+       parsed_data = JSON.parse(content2);
+      }catch(e){
+        console.error('(!) Cannot parse data');
+      }
+
+      result_object['data'] = parsed_data;
+      console.log('Backend visualizer object', result_object);
+      
+      return result_object;
   }
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -1081,7 +1114,8 @@ export class Backend {
         // Reset imported libraries
         this._importedLibraries = false;
         // Flag to reset the frontend
-        this._resetStateFlag = true;
+        this._resetStateFormulabarFlag = true;
+        this._resetStateDatavisualizerFlag = true;
         // Reset screen
         this.screen = 'load csv';
         // Reset dataframes

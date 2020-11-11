@@ -48,6 +48,66 @@ const types: Types = {
         },
       },
     },
+  date: {
+      defaultOperator: "equal",
+      //mainWidget: "number",
+      widgets: {
+        date: {
+          operators: [
+            "equal",
+            "not_equal",
+            "less",
+            "less_or_equal",
+            "greater",
+            "greater_or_equal",
+            //"between",
+            //"not_between",
+            //"is_empty",
+            //"is_not_empty",
+          ],
+        },
+      },
+    },
+  time: {
+      defaultOperator: "equal",
+      //mainWidget: "number",
+      widgets: {
+        time: {
+          operators: [
+            "equal",
+            "not_equal",
+            "less",
+            "less_or_equal",
+            "greater",
+            "greater_or_equal",
+            //"between",
+            //"not_between",
+            //"is_empty",
+            //"is_not_empty",
+          ],
+        },
+      },
+    },
+  datetime: {
+      defaultOperator: "equal",
+      //mainWidget: "number",
+      widgets: {
+        datetime: {
+          operators: [
+            "equal",
+            "not_equal",
+            "less",
+            "less_or_equal",
+            "greater",
+            "greater_or_equal",
+            //"between",
+            //"not_between",
+            //"is_empty",
+            //"is_not_empty",
+          ],
+        },
+      },
+    },
 };
 
 const customConfig: any = {

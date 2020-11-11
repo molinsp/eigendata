@@ -302,6 +302,25 @@ def generate_querybuilder_config(df):
                     'label' : col_name,
                     'type' : 'text'
                 }
+        elif col_type == 'datetime64[ns]':
+            # Check if it contains only dates
+            if ((df[col_name].dt.floor('d') == df[col_name]) | (df[col_name].isnull())).all():
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'date'
+                }
+            # Check if it contains only times
+            elif ( (df[col_name].dt.date == pd.Timestamp('now').date()) | (df[col_name].isnull()) ).all():
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'time'
+                }
+            else:
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'datetime'
+                }
+   
     return json.dumps(queryprops, ensure_ascii=False)
 
 # ---------------- DATA VISUALIZER ----------------
@@ -412,6 +431,23 @@ def is_multiindex_row_df(df):
             return True
     return False
 
+def check_if_default_index(df):
+    # Check if the index is the same as the default index. We use the name as a proxy
+    check_index = (df.index.name == None)
+    return check_index
+
+def _process_date_data(df_data):
+    for col in df_data:
+        # 1. Check if date column
+        if df_data[col].dtype == 'datetime64[ns]':
+            # Check if it contains only dates
+            if ( (df_data[col].dt.floor('d') == df_data[col]) | (df_data[col].isnull()) ).all():
+                df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y')
+            elif ( (df_data[col].dt.date == pd.Timestamp('now').date()) | (df_data[col].isnull()) ).all():
+                df_data[col] =  df_data[col].dt.strftime('%H:%M:%S')
+            else:
+                df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y %H:%M:%S')
+
 def prepare_multiindex_df(dfmi,index=False):
     """
     Prepare multiindex dataframe (data) and options
@@ -423,22 +459,46 @@ def prepare_multiindex_df(dfmi,index=False):
     """
 
     df_data = dfmi.copy()
+    
+    # Abreviations: mi is multi index
 
+    # 1. Handle multi-level columns
+    # Check it ther are multi-level columns
     if is_multiindex_col_df(df_data):
+        # Build multi-level column definitions to be used by the frontend grid
         columnDefs_col = build_colDefs_for_mi_cols(df_data)
+        # Create a unique name for each column by composing the names of all the levels
         df_data = flatten_mi_col_df(df_data)
     else:
+        # Generate column definitions for the frontend
         columnDefs_col = build_colDefs_for_si_cols(df_data)
-
+    
+        # 2. Check if it has a multi-index row (does not seem to matter gith now)
     if is_multiindex_row_df(df_data):
+        # Build multi-level column definitions to be used by the frontend grid
         columnDefs_row = build_colDefs_for_mi_rows(df_data)
+        # Flatten the multi-level index so that each row has a unique number
         df_data = df_data.reset_index()
     else:
-        columnDefs_row = []
-        if index:
+        # If it is the default index
+        if check_if_default_index(df_data):
+            columnDefs_row = []
+        else:
+            # Single index
+            columnDefs_row = build_colDefs_for_mi_rows(df_data)
             df_data = df_data.reset_index()
+            
+
+    # This guarantees that the dates are shown like we want
+    _process_date_data(df_data)
     
+    
+    # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
+    new_columnDefs = json.dumps(new_columnDefs, ensure_ascii=False)
+    out = df_data.to_json(orient='records')
+    formatted_data = json.dumps(json.loads(out))
     
-    return df_data.to_json(orient='records'), new_columnDefs
+    # 3. Return as JSON
+    return formatted_data, new_columnDefs
 `;
