@@ -417,6 +417,18 @@ def check_if_default_index(df):
     check_index = (df.index.name == None)
     return check_index
 
+def _process_date_data(df_data):
+    for col in df_data:
+        # 1. Check if date column
+        if df_data[col].dtype == 'datetime64[ns]':
+            # Check if it contains only dates
+            if ( (df_data[col].dt.floor('d') == df_data[col]) | (df_data[col].isnull()) ).all():
+                df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y')
+            elif ( (df_data[col].dt.date == pd.Timestamp('now').date()) | (df_data[col].isnull()) ).all():
+                df_data[col] =  df_data[col].dt.strftime('%H:%M:%S')
+            else:
+                df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y %H:%M:%S')
+
 def prepare_multiindex_df(dfmi,index=False):
     """
     Prepare multiindex dataframe (data) and options
@@ -458,7 +470,8 @@ def prepare_multiindex_df(dfmi,index=False):
             df_data = df_data.reset_index()
             
 
-
+    # This guarantees that the dates are shown like we want
+    _process_date_data(df_data)
     
     
     # Put together the columns from flattening rows and from flattinging columns
