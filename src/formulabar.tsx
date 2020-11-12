@@ -870,7 +870,7 @@ export class Backend {
         // Check if column or columns defined
         if((typeof(definitions['columns']) !== 'undefined' ) || (typeof(definitions['column']) !== 'undefined')){
           console.log("Transformation needs columns");
-          let request_expression = 'form = get_json_column_values(' + dataFrameSelection + ')';      
+          let request_expression = 'form = ed_get_json_column_values(' + dataFrameSelection + ')';      
           // Save it so that we can avoid triggering the pythonRequestDataframes function
           this._codeToIgnore = request_expression;
           console.log('Form request expression',request_expression);
@@ -950,7 +950,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataframeColumns(rightParameter: string){
-    let codeToRun = 'form = get_json_column_values(' + rightParameter + ')';      
+    let codeToRun = 'form = ed_get_json_column_values(' + rightParameter + ')';      
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('Request expression',codeToRun);

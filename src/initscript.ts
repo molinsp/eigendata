@@ -1,34 +1,4 @@
 export const python_initialization_script = `
-# ---------------- VARIABLE INSPECTOR ----------------
-import json
-import sys
-from IPython import get_ipython
-from IPython.core.magics.namespace import NamespaceMagics
-
-_jupyterlab_variableinspector_nms = NamespaceMagics()
-_jupyterlab_variableinspector_Jupyter = get_ipython()
-_jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
-
-def ed_keep_dataframes(v):
-    try:
-        obj = eval(v)
-        # Check if datadrame
-        if isinstance(obj, pd.core.frame.DataFrame) or isinstance(obj,pd.core.series.Series):
-            return True
-        return False
-    except:
-        return False
-
-def ed_variableinspector_dict_list():
-    values = _jupyterlab_variableinspector_nms.who_ls()
-    vardic = [{'varName': _v} for _v in values if ed_keep_dataframes(_v)]
-    return json.dumps(vardic, ensure_ascii=False)
-
-def ed_variableinspector_array():
-    values = _jupyterlab_variableinspector_nms.who_ls()
-    vararray = [_v for _v in values if ed_keep_dataframes(_v)]
-    return vararray
-
 # ---------------- TRANSFORMATIONS ----------------
 
 custom_config = {
@@ -255,10 +225,39 @@ def get_multi_select_values(function, caller=None, debug=False):
     res = json.dumps(parameter_configuration, ensure_ascii=False) 
     return json.dumps(parameter_configuration, ensure_ascii=False) 
 
-# ---------------- JSON COLUMNS ----------------
+# ---------------- VARIABLE INSPECTOR ----------------
+import json
+import sys
+from IPython import get_ipython
+from IPython.core.magics.namespace import NamespaceMagics
 
-def get_json_column_values(caller):
-    return json.dumps(caller.columns.tolist(), ensure_ascii=False)
+_jupyterlab_variableinspector_nms = NamespaceMagics()
+_jupyterlab_variableinspector_Jupyter = get_ipython()
+_jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
+
+def ed_keep_dataframes(v):
+    try:
+        obj = eval(v)
+        # Check if datadrame
+        if isinstance(obj, pd.core.frame.DataFrame) or isinstance(obj,pd.core.series.Series):
+            return True
+        return False
+    except:
+        return False
+
+def ed_variableinspector_dict_list():
+    values = _jupyterlab_variableinspector_nms.who_ls()
+    vardic = [{'varName': _v} for _v in values if ed_keep_dataframes(_v)]
+    return json.dumps(vardic, ensure_ascii=False)
+
+def ed_variableinspector_array():
+    values = _jupyterlab_variableinspector_nms.who_ls()
+    vararray = [_v for _v in values if ed_keep_dataframes(_v)]
+    return vararray
+
+# ---------------- GET DF COLUMNS AS JSON ----------------
+def ed_get_json_column_values(df):
+    return json.dumps(df.columns.tolist(), ensure_ascii=False)
 
 # ---------------- QUERYBUILDER BACKEND ----------------
 
