@@ -306,7 +306,7 @@ def ed_generate_querybuilder_config(df):
                     'type' : 'date'
                 }
             # Check if it contains only times
-            elif ( (df_data[col].dt.date == pd.Timestamp('now').date()) | (df_data[col].isnull()) ).all():
+            elif ( (df[col_name].dt.date == pd.Timestamp('now').date()) | (df[col_name].isnull()) ).all():
                 queryprops[col_name] = {
                     'label' : col_name,
                     'type' : 'time'
