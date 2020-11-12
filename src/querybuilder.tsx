@@ -160,7 +160,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       //  Compose formula: variable = dataframe . query/eval (query)
       let formula =  variable + ' = ' + this.state.dataframeSelection;
       formula = formula + '.' + this.state.queryType;
-      formula = formula + '(' + sql_query + ')';   
+      formula = formula + '(' + sql_query + ', engine="python"' + ')';   
       console.log('Formula', formula);
       this.state.logic.writeToNotebookAndExecute(formula);  
     }

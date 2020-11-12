@@ -277,6 +277,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       if(codegenstyle.localeCompare('variable') == 0){
         console.log('1.1 Variable codegenstyle')
         return fieldInput;
+      }else if (codegenstyle.localeCompare('seriesColumn') == 0){
+        console.log('1.2 Column as series');
+        return state.dataframeSelection + '["' + fieldInput + '"]';
       }
       console.log('WARNING: No codegenstyle');
     }
@@ -484,10 +487,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       3. Assign to result to variable
     --------------------------------------------------------------------*/  
 
-    // Determine the type of the result variable
+    // Determine the type of the result variable. Default is dataframe
     let returnType = 'dataframe';
     if(typeof(formReponse.schema.properties['New variable name']) !== 'undefined'){
       returnType = 'variable';
+    }else if(typeof(formReponse.schema.properties['New column name']) !== 'undefined'){
+      returnType = 'series';
     }
 
     // ------------ HANDLE DEFAULTS FOR RESULT VARIABLE (i.e. if not specified in the form)
@@ -501,7 +506,35 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       else if ((variable === '') && (dataframeSelection === null)){
         variable = 'data';
       }
-    }else if (returnType.localeCompare('variable') == 0){
+    }
+    else if(returnType.localeCompare('series') == 0){
+      console.log('Return type is series');
+      // This covers both df->series and series->series
+      variable = dataframeSelection;
+      // This handle the case pandasObject -> series
+      var column_name = 'new_column';
+      if(series === ''){
+       console.log('No new series specified');
+       // Find the column that has a column definition to use
+       for (var key in formReponse.schema.properties) {
+         let col_schema = formReponse.schema.properties[key];
+         console.log('Key', col_schema); 
+         if(typeof(col_schema['$ref']) !== 'undefined'){
+            console.log('Ref found', col_schema['$ref']);
+            if(col_schema['$ref'].localeCompare('#/definitions/column') == 0){ 
+              console.log('Found property with column definition');
+              column_name = formData[key];
+              break;               
+            }
+         }
+       }
+       series = '["' + column_name + '"]';
+       console.log('Series', series);
+      }
+      
+
+    }
+    else if (returnType.localeCompare('variable') == 0){
       if(variable === ''){
         variable = 'var';
       }
@@ -509,9 +542,14 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      
     // Assign transformation to result variable
     if(returnType.localeCompare('dataframe') == 0){
+      console.log('Generating DF formula');
+      formula = variable + ' = ' + formula; 
+    }else if(returnType.localeCompare('series') == 0){
+      console.log('Generating series formula');
       formula = variable + series + ' = ' + formula; 
     }
     else if(returnType.localeCompare('variable') == 0){
+      console.log('Generating variable formula');
       formula = variable + ' = ' + formula;
     }
     console.log('FORMULA: ', formula);
