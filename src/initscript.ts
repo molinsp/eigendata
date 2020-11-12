@@ -1,37 +1,32 @@
 export const python_initialization_script = `
 # ---------------- VARIABLE INSPECTOR ----------------
-
 import json
 import sys
 from IPython import get_ipython
 from IPython.core.magics.namespace import NamespaceMagics
 
-
 _jupyterlab_variableinspector_nms = NamespaceMagics()
 _jupyterlab_variableinspector_Jupyter = get_ipython()
 _jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
 
-
-def _get_allowed_types(v):
+def ed_keep_dataframes(v):
     try:
         obj = eval(v)
-        # Check if datadrame or series
-        if isinstance(obj, pd.core.frame.DataFrame): 
-            return '[Dataframe] ' + str(v)
-        #elif isinstance(obj,pd.core.series.Series):
-        #    return '[Series] ' + str(v)
+        # Check if datadrame
+        if isinstance(obj, pd.core.frame.DataFrame) or isinstance(obj,pd.core.series.Series):
+            return True
         return False
     except:
         return False
 
-def _jupyterlab_variableinspector_dict_list():
+def ed_variableinspector_dict_list():
     values = _jupyterlab_variableinspector_nms.who_ls()
-    vardic = [{'varName': _v, 'label': _get_allowed_types(_v)} for _v in values if _get_allowed_types(_v) != False]
+    vardic = [{'varName': _v} for _v in values if ed_keep_dataframes(_v)]
     return json.dumps(vardic, ensure_ascii=False)
 
-def _jupyterlab_variableinspector_array():
+def ed_variableinspector_array():
     values = _jupyterlab_variableinspector_nms.who_ls()
-    vararray = [_v for _v in values if _jupyterlab_variableinspector_keep_dataframes(_v)]
+    vararray = [_v for _v in values if ed_keep_dataframes(_v)]
     return vararray
 
 # ---------------- TRANSFORMATIONS ----------------

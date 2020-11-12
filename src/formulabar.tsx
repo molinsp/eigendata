@@ -760,7 +760,7 @@ export class Backend {
   private _initScripts: string;
 
   // Returns a json object with all the dataframes
-  private _inspectorScript = `_jupyterlab_variableinspector_dict_list()`;
+  private _inspectorScript = `ed_variableinspector_dict_list()`;
 
   // -------------------------------------------------------------------------------------------------------------
   // INTERNAL UTILITIES
