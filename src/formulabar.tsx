@@ -1007,7 +1007,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataForVisualization(dataframe: string){
-     let codeToRun = '_visualizer_data, _visualizer_columns = prepare_multiindex_df(' + dataframe + ')';        
+     let codeToRun = '_visualizer_data, _visualizer_columns = ed_prep_data_for_visualization(' + dataframe + ')';        
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);
