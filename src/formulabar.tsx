@@ -979,7 +979,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGenerateQuerybuilderConfig(dataframe: string){
-     let codeToRun = 'queryconfig = generate_querybuilder_config(' + dataframe + ')';        
+     let codeToRun = 'queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';        
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);

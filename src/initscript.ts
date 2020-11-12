@@ -260,8 +260,10 @@ def ed_get_json_column_values(df):
     return json.dumps(df.columns.tolist(), ensure_ascii=False)
 
 # ---------------- QUERYBUILDER BACKEND ----------------
+def ed_get_percentage_unique_column(df, col_name):
+    return df[col_name].nunique() / df[col_name].count() * 100.0 
 
-def generate_querybuilder_config(df):
+def ed_generate_querybuilder_config(df):
     queryprops = {}
     for i,col_type in enumerate(df.dtypes):
         col_name = df.columns[i]
@@ -283,12 +285,12 @@ def generate_querybuilder_config(df):
             }
         elif col_type == 'object':
             # Categorical if less than 10% of values are unique
-            if (df[col_name].nunique() / df[col_name].count() * 100.0 < 10):
+            if (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'select',
                 'fieldSettings' : {
-                    'listValues' : [{'value': i, 'title': i} for i in df[col_name].unique()]
+                    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
                     }
                 }
             else:
@@ -304,7 +306,7 @@ def generate_querybuilder_config(df):
                     'type' : 'date'
                 }
             # Check if it contains only times
-            elif ( (df[col_name].dt.date == pd.Timestamp('now').date()) | (df[col_name].isnull()) ).all():
+            elif ( (df_data[col].dt.date == pd.Timestamp('now').date()) | (df_data[col].isnull()) ).all():
                 queryprops[col_name] = {
                     'label' : col_name,
                     'type' : 'time'
@@ -314,7 +316,7 @@ def generate_querybuilder_config(df):
                     'label' : col_name,
                     'type' : 'datetime'
                 }
-   
+            
     return json.dumps(queryprops, ensure_ascii=False)
 
 # ---------------- DATA VISUALIZER ----------------
