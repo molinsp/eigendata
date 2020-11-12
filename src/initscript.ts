@@ -491,7 +491,9 @@ def prepare_multiindex_df(dfmi,index=False):
 
     # This guarantees that the dates are shown like we want
     _process_date_data(df_data)
-    
+
+    # Check if it is too large, return the first 1000 rows
+    df_data = df_data.head(100)
     
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col

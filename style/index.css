@@ -69,12 +69,12 @@
 
 .tab-button {
   min-width: 77px;
-  height: 42px;
+  height: 30px;
   background: #FFFFFF;
   border: 1px solid #DDDDDD;
   box-sizing: border-box;
   border-radius: 4px 4px 0 0;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 21px;
   margin-right: 3px;
   margin-bottom: -1px;
@@ -103,6 +103,11 @@
   overflow: auto;
   border: 1px solid #ddd;
   height: 92%;
+}
+
+.disclaimer {
+    font-size: 10px;
+    color: #2d2d2d;
 }
 
 table td, table th {
