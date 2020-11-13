@@ -268,16 +268,10 @@ def ed_generate_querybuilder_config(df):
     for i,col_type in enumerate(df.dtypes):
         col_name = df.columns[i]
         if col_type == 'int64':      
-            if set(df[col_name].unique()) == {0,1}:
-                queryprops[col_name] = {
-                    'label' : col_name,
-                    'type' : 'boolean'
-                }
-            else:
-                queryprops[col_name] = {
-                    'label' : col_name,
-                    'type' : 'number'
-                }
+            queryprops[col_name] = {
+                'label' : col_name,
+                'type' : 'number'
+            }
         elif col_type == 'float64':
             queryprops[col_name] = {
                 'label' : col_name,
