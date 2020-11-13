@@ -211,7 +211,14 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      if(state.dataframeSelection){
        console.log('all defined');
        getTransformationFormToState(state.dataframeSelection, input);
-     } else {
+     }else if (input.value.localeCompare('read_csv') == 0){
+        setState(state => ({
+         ...state,
+         transformationSelection:input,
+         showForm: true,
+         formData: {}
+       }));
+     }else{
        setState(state => ({
          ...state,
          transformationSelection:input,
