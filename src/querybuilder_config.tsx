@@ -19,6 +19,7 @@ const types: Types = {
   number: {
       defaultOperator: "equal",
       //mainWidget: "number",
+      valueSources: ['value'],
       widgets: {
         number: {
           operators: [
@@ -51,6 +52,7 @@ const types: Types = {
   date: {
       defaultOperator: "equal",
       //mainWidget: "number",
+      valueSources: ['value'],
       widgets: {
         date: {
           operators: [
@@ -71,6 +73,7 @@ const types: Types = {
   time: {
       defaultOperator: "equal",
       //mainWidget: "number",
+      valueSources: ['value'],
       widgets: {
         time: {
           operators: [
@@ -91,6 +94,7 @@ const types: Types = {
   datetime: {
       defaultOperator: "equal",
       //mainWidget: "number",
+      valueSources: ['value'],
       widgets: {
         datetime: {
           operators: [

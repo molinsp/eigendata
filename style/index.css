@@ -11,6 +11,7 @@
 
 .side-by-side-fields > fieldset {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   width: 100%;
 }
@@ -18,6 +19,10 @@
 .side-by-side-fields .left-field,
 .side-by-side-fields .right-field {
   width: 49%;
+}
+
+.side-by-side-fields .full-width {
+  width: 100%;
 }
 
 #root_aggfunc .array-item {
