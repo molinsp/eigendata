@@ -1133,7 +1133,7 @@ export class Backend {
     this._connector.ready.then(() => {
       let content: KernelMessage.IExecuteRequestMsg['content'] = {
         code: this._initScripts,
-        stop_on_error: false,
+        stop_on_error: true,
         store_history: false
       };
       this._connector.fetch( content, ( () => { } ) ).then(() => {
