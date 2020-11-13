@@ -80,7 +80,7 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
             </div>
           </nav>
           <div className={'tab-item'}>
-            <p className={'disclaimer'}> Showing first 100 rows </p>
+            <p className={'disclaimer'}> Showing first 50 rows </p>
             <table {...getTableProps()} className="table table-striped table-hover">
               <thead className="thead-dark">
               {headerGroups.map(headerGroup => (
