@@ -268,20 +268,19 @@ def ed_generate_querybuilder_config(df):
     for i,col_type in enumerate(df.dtypes):
         col_name = df.columns[i]
         if col_type == 'int64':      
-            if set(df[col_name].unique()) == {0,1}:
-                queryprops[col_name] = {
-                    'label' : col_name,
-                    'type' : 'boolean'
-                }
-            else:
-                queryprops[col_name] = {
-                    'label' : col_name,
-                    'type' : 'number'
-                }
+            queryprops[col_name] = {
+                'label' : col_name,
+                'type' : 'number'
+            }
         elif col_type == 'float64':
             queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'number'
+            }
+        elif col_type == 'bool':
+            queryprops[col_name] = {
+                'label' : col_name,
+                'type' : 'boolean'
             }
         elif col_type == 'object':
             # Categorical if less than 10% of values are unique
@@ -322,7 +321,7 @@ def ed_generate_querybuilder_config(df):
 # ---------------- DATA VISUALIZER ----------------
 def ed_build_colDefs_for_mi_cols(df):
     """
-    create agGrid columnDefs dict for column grouping
+    create columnDefs dict for column grouping
     from multiindex dataframe columns
     """
     # utility
@@ -364,25 +363,15 @@ def ed_build_colDefs_for_mi_cols(df):
                 s2.append(new_index_name)
     return s
 
-def ed_build_colDefs_for_si_cols(df, verbose=False):
+def ed_build_colDefs_for_si_cols(df, verbose=True):
     colDefs = []
     for c in df.columns:
         dic = {}
         col = df[c]
         field = col.name
         header_name = field.title()
-        if col.dtype.kind in 'O':
-            # string
-            dic['accessor'] = field
-            dic['Header'] = header_name
-        if col.dtype.kind in 'ifc':
-            # number
-            dic['accessor'] = field
-            dic['Header'] = header_name
-        if col.dtype.kind in 'M':
-            # date
-            dic['accessor'] = field
-            dic['Header'] = header_name
+        dic['accessor'] = field
+        dic['Header'] = field
         colDefs.append(dic)
     return colDefs
 
