@@ -402,6 +402,11 @@
               "all",
               "index",
               "columns"
+            ],
+            "enumNames" : [
+              "Rows and columns",
+              "Rows",
+              "Columns"
             ]
           },
           "New table name" : {
@@ -546,6 +551,51 @@
       "uischema" : {
         "New table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "dropna" : {
+      "form" : {
+        "required" : [],
+        "properties" : {
+          "axis" : {
+            "type" : "string",
+            "enum" : [
+              "index",
+              "columns"
+            ],
+            "enumNames" : [
+              "Rows",
+              "Columns"
+            ],
+            "description" : "Drop rows or columns",
+            "default" : "index"
+          },
+          "how" : {
+            "type" : "string",
+            "enum" : [
+              "any",
+              "all"
+            ],
+            "description" : "Elements that need to be blank to drop the column",
+            "default" : "any"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Drop blanks / NAs",
+        "description" : "Drop rows or columns that contain blanks",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "dropna"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "columns" : {
+          "ui:widget" : "checkboxes"
         }
       }
     },
@@ -1249,6 +1299,40 @@
       "uischema" : {
         "New column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "to_datetime" : {
+      "form" : {
+        "properties" : {
+          "arg" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "seriesColumn"
+          },
+          "format" : {
+            "type" : "string",
+            "description" : "Examples: %d/%m/%Y (day/month/year), %H:%M:%S (hour:minute:second)"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [],
+        "title" : "[Series] Convert column to datetime",
+        "type" : "object",
+        "callerObject" : "pd",
+        "function" : "to_datetime",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
         }
       }
     }

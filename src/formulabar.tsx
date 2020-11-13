@@ -277,6 +277,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       if(codegenstyle.localeCompare('variable') == 0){
         console.log('1.1 Variable codegenstyle')
         return fieldInput;
+      }else if (codegenstyle.localeCompare('seriesColumn') == 0){
+        console.log('1.2 Column as series');
+        return state.dataframeSelection + '["' + fieldInput + '"]';
       }
       console.log('WARNING: No codegenstyle');
     }
@@ -484,10 +487,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       3. Assign to result to variable
     --------------------------------------------------------------------*/  
 
-    // Determine the type of the result variable
+    // Determine the type of the result variable. Default is dataframe
     let returnType = 'dataframe';
     if(typeof(formReponse.schema.properties['New variable name']) !== 'undefined'){
       returnType = 'variable';
+    }else if(typeof(formReponse.schema.properties['New column name']) !== 'undefined'){
+      returnType = 'series';
     }
 
     // ------------ HANDLE DEFAULTS FOR RESULT VARIABLE (i.e. if not specified in the form)
@@ -501,7 +506,35 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       else if ((variable === '') && (dataframeSelection === null)){
         variable = 'data';
       }
-    }else if (returnType.localeCompare('variable') == 0){
+    }
+    else if(returnType.localeCompare('series') == 0){
+      console.log('Return type is series');
+      // This covers both df->series and series->series
+      variable = dataframeSelection;
+      // This handle the case pandasObject -> series
+      var column_name = 'new_column';
+      if(series === ''){
+       console.log('No new series specified');
+       // Find the column that has a column definition to use
+       for (var key in formReponse.schema.properties) {
+         let col_schema = formReponse.schema.properties[key];
+         console.log('Key', col_schema); 
+         if(typeof(col_schema['$ref']) !== 'undefined'){
+            console.log('Ref found', col_schema['$ref']);
+            if(col_schema['$ref'].localeCompare('#/definitions/column') == 0){ 
+              console.log('Found property with column definition');
+              column_name = formData[key];
+              break;               
+            }
+         }
+       }
+       series = '["' + column_name + '"]';
+       console.log('Series', series);
+      }
+      
+
+    }
+    else if (returnType.localeCompare('variable') == 0){
       if(variable === ''){
         variable = 'var';
       }
@@ -509,9 +542,14 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      
     // Assign transformation to result variable
     if(returnType.localeCompare('dataframe') == 0){
+      console.log('Generating DF formula');
+      formula = variable + ' = ' + formula; 
+    }else if(returnType.localeCompare('series') == 0){
+      console.log('Generating series formula');
       formula = variable + series + ' = ' + formula; 
     }
     else if(returnType.localeCompare('variable') == 0){
+      console.log('Generating variable formula');
       formula = variable + ' = ' + formula;
     }
     console.log('FORMULA: ', formula);
@@ -722,7 +760,7 @@ export class Backend {
   private _initScripts: string;
 
   // Returns a json object with all the dataframes
-  private _inspectorScript = `_jupyterlab_variableinspector_dict_list()`;
+  private _inspectorScript = `ed_variableinspector_dict_list()`;
 
   // -------------------------------------------------------------------------------------------------------------
   // INTERNAL UTILITIES
@@ -832,7 +870,7 @@ export class Backend {
         // Check if column or columns defined
         if((typeof(definitions['columns']) !== 'undefined' ) || (typeof(definitions['column']) !== 'undefined')){
           console.log("Transformation needs columns");
-          let request_expression = 'form = get_json_column_values(' + dataFrameSelection + ')';      
+          let request_expression = 'form = ed_get_json_column_values(' + dataFrameSelection + ')';      
           // Save it so that we can avoid triggering the pythonRequestDataframes function
           this._codeToIgnore = request_expression;
           console.log('Form request expression',request_expression);
@@ -912,7 +950,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataframeColumns(rightParameter: string){
-    let codeToRun = 'form = get_json_column_values(' + rightParameter + ')';      
+    let codeToRun = 'form = ed_get_json_column_values(' + rightParameter + ')';      
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('Request expression',codeToRun);
@@ -941,7 +979,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGenerateQuerybuilderConfig(dataframe: string){
-     let codeToRun = 'queryconfig = generate_querybuilder_config(' + dataframe + ')';        
+     let codeToRun = 'queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';        
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);
@@ -969,7 +1007,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataForVisualization(dataframe: string){
-     let codeToRun = '_visualizer_data, _visualizer_columns = prepare_multiindex_df(' + dataframe + ')';        
+     let codeToRun = '_visualizer_data, _visualizer_columns = ed_prep_data_for_visualization(' + dataframe + ')';        
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);

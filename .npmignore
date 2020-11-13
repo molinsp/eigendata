@@ -1,2 +1,5 @@
 Transformation_documentation.ipynb
 contribution-guide.md
+installers/
+*.sh
+*.ipynb

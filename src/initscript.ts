@@ -1,39 +1,4 @@
 export const python_initialization_script = `
-# ---------------- VARIABLE INSPECTOR ----------------
-
-import json
-import sys
-from IPython import get_ipython
-from IPython.core.magics.namespace import NamespaceMagics
-
-
-_jupyterlab_variableinspector_nms = NamespaceMagics()
-_jupyterlab_variableinspector_Jupyter = get_ipython()
-_jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
-
-
-def _get_allowed_types(v):
-    try:
-        obj = eval(v)
-        # Check if datadrame or series
-        if isinstance(obj, pd.core.frame.DataFrame): 
-            return '[Dataframe] ' + str(v)
-        #elif isinstance(obj,pd.core.series.Series):
-        #    return '[Series] ' + str(v)
-        return False
-    except:
-        return False
-
-def _jupyterlab_variableinspector_dict_list():
-    values = _jupyterlab_variableinspector_nms.who_ls()
-    vardic = [{'varName': _v, 'label': _get_allowed_types(_v)} for _v in values if _get_allowed_types(_v) != False]
-    return json.dumps(vardic, ensure_ascii=False)
-
-def _jupyterlab_variableinspector_array():
-    values = _jupyterlab_variableinspector_nms.who_ls()
-    vararray = [_v for _v in values if _jupyterlab_variableinspector_keep_dataframes(_v)]
-    return vararray
-
 # ---------------- TRANSFORMATIONS ----------------
 
 custom_config = {
@@ -260,14 +225,45 @@ def get_multi_select_values(function, caller=None, debug=False):
     res = json.dumps(parameter_configuration, ensure_ascii=False) 
     return json.dumps(parameter_configuration, ensure_ascii=False) 
 
-# ---------------- JSON COLUMNS ----------------
+# ---------------- VARIABLE INSPECTOR ----------------
+import json
+import sys
+from IPython import get_ipython
+from IPython.core.magics.namespace import NamespaceMagics
 
-def get_json_column_values(caller):
-    return json.dumps(caller.columns.tolist(), ensure_ascii=False)
+_jupyterlab_variableinspector_nms = NamespaceMagics()
+_jupyterlab_variableinspector_Jupyter = get_ipython()
+_jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
+
+def ed_keep_dataframes(v):
+    try:
+        obj = eval(v)
+        # Check if datadrame
+        if isinstance(obj, pd.core.frame.DataFrame) or isinstance(obj,pd.core.series.Series):
+            return True
+        return False
+    except:
+        return False
+
+def ed_variableinspector_dict_list():
+    values = _jupyterlab_variableinspector_nms.who_ls()
+    vardic = [{'varName': _v} for _v in values if ed_keep_dataframes(_v)]
+    return json.dumps(vardic, ensure_ascii=False)
+
+def ed_variableinspector_array():
+    values = _jupyterlab_variableinspector_nms.who_ls()
+    vararray = [_v for _v in values if ed_keep_dataframes(_v)]
+    return vararray
+
+# ---------------- GET DF COLUMNS AS JSON ----------------
+def ed_get_json_column_values(df):
+    return json.dumps(df.columns.tolist(), ensure_ascii=False)
 
 # ---------------- QUERYBUILDER BACKEND ----------------
+def ed_get_percentage_unique_column(df, col_name):
+    return df[col_name].nunique() / df[col_name].count() * 100.0 
 
-def generate_querybuilder_config(df):
+def ed_generate_querybuilder_config(df):
     queryprops = {}
     for i,col_type in enumerate(df.dtypes):
         col_name = df.columns[i]
@@ -289,12 +285,12 @@ def generate_querybuilder_config(df):
             }
         elif col_type == 'object':
             # Categorical if less than 10% of values are unique
-            if (df[col_name].nunique() / df[col_name].count() * 100.0 < 10):
+            if (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'select',
                 'fieldSettings' : {
-                    'listValues' : [{'value': i, 'title': i} for i in df[col_name].unique()]
+                    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
                     }
                 }
             else:
@@ -320,12 +316,11 @@ def generate_querybuilder_config(df):
                     'label' : col_name,
                     'type' : 'datetime'
                 }
-   
+            
     return json.dumps(queryprops, ensure_ascii=False)
 
 # ---------------- DATA VISUALIZER ----------------
-
-def build_colDefs_for_mi_cols(df):
+def ed_build_colDefs_for_mi_cols(df):
     """
     create agGrid columnDefs dict for column grouping
     from multiindex dataframe columns
@@ -369,7 +364,7 @@ def build_colDefs_for_mi_cols(df):
                 s2.append(new_index_name)
     return s
 
-def build_colDefs_for_si_cols(df, verbose=False):
+def ed_build_colDefs_for_si_cols(df, verbose=False):
     colDefs = []
     for c in df.columns:
         dic = {}
@@ -391,7 +386,7 @@ def build_colDefs_for_si_cols(df, verbose=False):
         colDefs.append(dic)
     return colDefs
 
-def build_colDefs_for_mi_rows(df):
+def ed_build_colDefs_for_mi_rows(df):
     """
     create agGrid columnDefs dict for column grouping
     from multiindex dataframe columns
@@ -404,7 +399,7 @@ def build_colDefs_for_mi_rows(df):
         s.append(new_e)
     return s
 
-def flatten_mi_col_df(dfmi):
+def ed_flatten_mi_col_df(dfmi):
     """
     create flattend dataframe
     multi index col ('a', 'b', 'c') turned to 'a-b-c'
@@ -414,24 +409,24 @@ def flatten_mi_col_df(dfmi):
     df.columns = cols
     return df
 
-def is_multiindex_col_df(df):
+def ed_is_multiindex_col_df(df):
     if isinstance(df, pd.core.frame.DataFrame):
         if isinstance(df.columns, pd.core.indexes.multi.MultiIndex):
             return True
     return False
 
-def is_df(data):
+def ed_is_df(data):
     if isinstance(data, pd.core.frame.DataFrame):
         return True
     return False
 
-def is_multiindex_row_df(df):
-    if is_df(df):
+def ed_is_multiindex_row_df(df):
+    if ed_is_df(df):
         if isinstance(df.index, pd.core.indexes.multi.MultiIndex):
             return True
     return False
 
-def check_if_default_index(df):
+def ed_check_if_default_index(df):
     # Check if the index is the same as the default index. We use the name as a proxy
     check_index = (df.index.name == None)
     return check_index
@@ -441,14 +436,21 @@ def _process_date_data(df_data):
         # 1. Check if date column
         if df_data[col].dtype == 'datetime64[ns]':
             # Check if it contains only dates
-            if ( (df_data[col].dt.floor('d') == df_data[col]) | (df_data[col].isnull()) ).all():
+            if ((df_data[col].dt.floor('d') == df_data[col]) | (df_data[col].isnull())).all():
                 df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y')
+            # Check if it contains only times
             elif ( (df_data[col].dt.date == pd.Timestamp('now').date()) | (df_data[col].isnull()) ).all():
                 df_data[col] =  df_data[col].dt.strftime('%H:%M:%S')
             else:
                 df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y %H:%M:%S')
 
-def prepare_multiindex_df(dfmi,index=False):
+def _process_string_data(df_data):
+    for col in df_data:
+        # 1. Check if date column
+        if df_data[col].dtype == 'object':
+            df_data[col] = df_data[col].astype('str')
+
+def ed_prep_data_for_visualization(dfmi,index=False):
     """
     Prepare multiindex dataframe (data) and options
     to display it with corresponding row grouping and
@@ -464,40 +466,47 @@ def prepare_multiindex_df(dfmi,index=False):
 
     # 1. Handle multi-level columns
     # Check it ther are multi-level columns
-    if is_multiindex_col_df(df_data):
+    if ed_is_multiindex_col_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
-        columnDefs_col = build_colDefs_for_mi_cols(df_data)
+        columnDefs_col = ed_build_colDefs_for_mi_cols(df_data)
         # Create a unique name for each column by composing the names of all the levels
-        df_data = flatten_mi_col_df(df_data)
+        df_data = ed_flatten_mi_col_df(df_data)
     else:
         # Generate column definitions for the frontend
-        columnDefs_col = build_colDefs_for_si_cols(df_data)
+        columnDefs_col = ed_build_colDefs_for_si_cols(df_data)
     
-        # 2. Check if it has a multi-index row (does not seem to matter gith now)
-    if is_multiindex_row_df(df_data):
+    
+    # 2. Handle multi-index rows (does not seem to matter gith now)
+    if ed_is_multiindex_row_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
-        columnDefs_row = build_colDefs_for_mi_rows(df_data)
+        columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
         # Flatten the multi-level index so that each row has a unique number
         df_data = df_data.reset_index()
     else:
         # If it is the default index
-        if check_if_default_index(df_data):
+        if ed_check_if_default_index(df_data):
             columnDefs_row = []
         else:
             # Single index
-            columnDefs_row = build_colDefs_for_mi_rows(df_data)
+            columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
             df_data = df_data.reset_index()
             
 
-    # This guarantees that the dates are shown like we want
-    _process_date_data(df_data)
-
-    # Check if it is too large, return the first 1000 rows
+    # 3. Show only preview of 100 rows
     df_data = df_data.head(100)
     
+    
+    # 4. This guarantees that the data are always strings
+    _process_date_data(df_data)
+    _process_string_data(df_data)
+    
+    # 5.Prepare output
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
     new_columnDefs = json.dumps(new_columnDefs, ensure_ascii=False)
+    
+    # Set the json format. We use to_json because of performance and json.dumps to avoid issues with forward
+    # slashes
     out = df_data.to_json(orient='records')
     formatted_data = json.dumps(json.loads(out))
     
