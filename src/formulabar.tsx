@@ -65,7 +65,6 @@ import posthog from 'posthog-js'
    Properties:
      - dataframesLoaded: Available dataframes
      - transformationsList: Available transformationsList
-     - screen: Screen to show to the user
  */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
 const FormComponent = (props: {logic: Backend}): JSX.Element => {
@@ -75,7 +74,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   // Defaults for form and UI schema
   let transformationForm: JSONSchema7 = logic._transformationsConfig['read_csv']['form'] as JSONSchema7;
   let defaultUISchema: JSONSchema7 = logic._transformationsConfig['read_csv']['uischema'] as JSONSchema7;
-
+  let defaultTransformationSelection = {'value': 'read_csv', 'label': 'Read CSV'};
 
   /* State of the component:
       - Transformation form
@@ -88,7 +87,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   const [state, setState] = useState({
       transformationForm: transformationForm,
       transformationUI: defaultUISchema,
-      showForm: null,
+      showForm: false,
       dataframeSelection: null,
       transformationSelection: null,
       formData: {},
@@ -104,9 +103,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     setState({
       transformationForm: transformationForm,
       transformationUI: defaultUISchema,
-      showForm: null,
+      showForm: true,
       dataframeSelection: null,
-      transformationSelection: null,
+      transformationSelection: defaultTransformationSelection,
       formData: {},
       queryConfig: null,
     });
@@ -114,8 +113,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     logic._resetStateFormulabarFlag = false;
   }
 
-  console.log('State:', state);
-  console.log('------> Rendering Formulabar UI');
+  console.log('FB: State:', state);
+  console.log('------> FB: Rendering Formulabar UI');
 
   /*-----------------------------------
   CUSTOM SELECT: Use React select with JSONschema form
@@ -199,9 +198,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      //console.log(this);
      if(state.transformationSelection){
        console.log('all defined');
-       getTransformationFormToState(input.value, state.transformationSelection);
+       getTransformationFormToState(input, state.transformationSelection);
      }else{
-       setState(state => ({...state,dataframeSelection:input.value}));
+       setState(state => ({...state,dataframeSelection:input}));
      }
   }
 
@@ -211,22 +210,22 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
      posthog.capture('TransformationSelection', { property: input.value });
      if(state.dataframeSelection){
        console.log('all defined');
-       getTransformationFormToState(state.dataframeSelection, input.value);
+       getTransformationFormToState(state.dataframeSelection, input);
      } else {
        setState(state => ({
          ...state,
-         transformationSelection:input.value,
+         transformationSelection:input,
          formData: {}
        }));
      }
   }
 
   // Pupulates the transformation form into the state 
-  const getTransformationFormToState = async (dataframeSelection: string, transformationSelection: string) => {  
+  const getTransformationFormToState = async (dataframeSelection: any, transformationSelection: any) => {  
     // Querybuilder placeholder
-    if(transformationSelection.localeCompare('query') == 0){
+    if(transformationSelection.value.localeCompare('query') == 0){
       console.log('Querybuilder');
-      const queryConfig = await logic.pythonGenerateQuerybuilderConfig(dataframeSelection);
+      const queryConfig = await logic.pythonGenerateQuerybuilderConfig(dataframeSelection.value);
       setState(state => ({...state,
         queryConfig: queryConfig,
         showForm: false,
@@ -236,8 +235,8 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       }));
     }else{
     // STANDARD behavior
-      let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection, transformationSelection);
-      let newUISchema = logic.getTransfromationUISchema(transformationSelection);
+      let newFormSchema = await logic.getTransformationFormSchema(dataframeSelection.value, transformationSelection.value);
+      let newUISchema = logic.getTransfromationUISchema(transformationSelection.value);
       setState({
         transformationForm: newFormSchema,
         transformationUI: newUISchema,
@@ -245,25 +244,11 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         queryConfig: null,
-        formData: {}
+        formData: {},
       });
     }
 
   }
-
-  const goToLoadDataScreen = () => {
-    logic.setScreen('load csv');
-    setState({
-        transformationForm: transformationForm,
-        transformationUI: defaultUISchema,
-        showForm: null,
-        dataframeSelection: null,
-        transformationSelection: null,
-        formData: {},
-        queryConfig: null,
-      });
-  }
-
 
   const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any) => {
     console.log('field fieldInput', fieldInput);
@@ -279,7 +264,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         return fieldInput;
       }else if (codegenstyle.localeCompare('seriesColumn') == 0){
         console.log('1.2 Column as series');
-        return state.dataframeSelection + '["' + fieldInput + '"]';
+        return state.dataframeSelection.value + '["' + fieldInput + '"]';
       }
       console.log('WARNING: No codegenstyle');
     }
@@ -340,7 +325,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     //logic.pythonGenerateCodeAndRun(formReponse, state.dataframeSelection); 
     // COMMENTED OUT CODE IS REPLACED BY PYTHON FUNCTION TO MAKE DEVELOPMENT FASTER
     console.log('------------------- Generating form code -------------------');
-    console.log("Data submitted: ", formReponse);
+    console.log("CG: State: ", state);
+    console.log("CG: DF selection type: ", typeof(state.dataframeSelection));
+    console.log("CG: Data submitted: ", formReponse);
 
     /*-------------------------------------------------------------------
     Process formula with this pattern:
@@ -352,7 +339,12 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
     const formData = formReponse.formData;
     let transformationSelection: string = formReponse.schema.function;
-    let dataframeSelection: string = state.dataframeSelection; 
+    let dataframeSelection: string; 
+    if(state.dataframeSelection){
+      dataframeSelection = state.dataframeSelection.value;
+    }else{
+      dataframeSelection = null;
+    }
     let callerObject: string =  formReponse.schema.callerObject;
     let series:string = '';
 
@@ -555,72 +547,67 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     console.log('FORMULA: ', formula);
 
     // Write and execute the formula in the notebook
+    setState(state => ({
+         ...state,
+         transformationSelection:null,
+         showForm: false,
+       }));
     logic.writeToNotebookAndExecute(formula);  
-
 
    };
 
 
-  /*-----------------------------------
-  NO DATA LOADED: Show a load data form
-  -----------------------------------*/
-  if(logic.screen.localeCompare('load csv') == 0){
-    console.log('------------- DATA LOADING -------------');
-    return(
-      <Form schema={state.transformationForm} onSubmit={generatePythonCode} uiSchema={state.transformationUI} />
-      )
-  }
   /*--------------------------------------
   SELECT TRANSFORMATION: When data loaded
   ---------------------------------------*/
   // To-do: Add button to load data even in this case
-  else if(logic.screen.localeCompare('transformationsList') == 0){
-    console.log('------------- DATA TRANSFORMATION -------------');
-      return (
-        <div className="side-by-side-fields">
-          <fieldset className="data-transformation-form">
-            <Select
-              name='Select dataframe'
-              placeholder='select data table'
-              options={logic.dataframesLoaded}
-              label="Select data"
-              onChange={handleDataframeSelectionChange}
-              className="left-field"
-            />
-            <Select
-              name='Select transformation'
-              placeholder='select transformation'
-              options={logic.transformationsList}
-              label="Select transformation"
-              onChange={handleTransformationSelectionChange}
-              className="right-field"
-              components={{
-                DropdownIndicator: () => null,
-                IndicatorSeparator: () => null
-              }}
-            />
-          </fieldset>
-        <button onClick={goToLoadDataScreen}> Load data </button>
-        {state.showForm &&
-          <Form
-            formData={state.formData}
-            schema={state.transformationForm}
-            onSubmit={generatePythonCode}
-            onChange={handleFormChange}
-            widgets={widgets}
-            uiSchema={state.transformationUI}
-          />
-        }
-        {state.queryConfig &&
-          <Demo
-            queryConfig={state.queryConfig}
-            dataframeSelection={state.dataframeSelection}
-            backend={logic}
-          />
-        }
-        </div>
-       );
-  }
+
+  return (
+    <div className="side-by-side-fields">
+      <fieldset className="data-transformation-form">
+        <Select
+          name='Select dataframe'
+          placeholder='No data loaded'
+          options={logic.dataframesLoaded}
+          value={state.dataframeSelection}
+          label="Select data"
+          onChange={handleDataframeSelectionChange}
+          className="left-field"
+        />
+        <Select
+          name='Select transformation'
+          placeholder='select data loading transformation'
+          options={logic.transformationsList}
+          value={state.transformationSelection}
+          label="Select transformation"
+          onChange={handleTransformationSelectionChange}
+          className="right-field"
+          components={{
+            DropdownIndicator: () => null,
+            IndicatorSeparator: () => null
+          }}
+        />
+      </fieldset>
+    {state.showForm &&
+      <Form
+        formData={state.formData}
+        schema={state.transformationForm}
+        onSubmit={generatePythonCode}
+        onChange={handleFormChange}
+        widgets={widgets}
+        uiSchema={state.transformationUI}
+      />
+    }
+    {state.queryConfig &&
+      <Demo
+        queryConfig={state.queryConfig}
+        dataframeSelection={state.dataframeSelection.value}
+        backend={logic}
+      />
+    }
+    </div>
+   );
+  
 };
 
 
@@ -682,9 +669,6 @@ export class Backend {
   ----------------------------------*/
   // Signal that triggers the update of the react component 
   public signal = new Signal<this, void>(this);
-
-  // GUI screen
-  public screen: string = 'load csv';
 
   // Keeps track of dataframes that can be transformed through the UI
   // Used to display forms
@@ -941,7 +925,6 @@ export class Backend {
     // Run and insert using cell utilities
     CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, code, false);
 
-    this.screen = 'transformationsList';
   };
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -1050,14 +1033,6 @@ export class Backend {
       return result_object;
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Get 
-  -> Writes: _codeToIgnore
-  -----------------------------------------------------------------------------------------------------*/
-  public setScreen(screen: string){
-    this.screen = screen;
-    this.signal.emit();
-  }
 
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Request function from Python: Call python to generate code from form & write+execute
@@ -1133,7 +1108,7 @@ export class Backend {
     this._connector.ready.then(() => {
       let content: KernelMessage.IExecuteRequestMsg['content'] = {
         code: this._initScripts,
-        stop_on_error: true,
+        stop_on_error: false,
         store_history: false
       };
       this._connector.fetch( content, ( () => { } ) ).then(() => {
@@ -1154,8 +1129,6 @@ export class Backend {
         // Flag to reset the frontend
         this._resetStateFormulabarFlag = true;
         this._resetStateDatavisualizerFlag = true;
-        // Reset screen
-        this.screen = 'load csv';
         // Reset dataframes
         this.dataframesLoaded = [];
 
@@ -1220,7 +1193,7 @@ export class Backend {
 
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Send request to the Kernel to get dataframes, processed with handleGetDataframesResponse
-  -> Writes: screen, dataframesLoaded
+  -> Writes: dataframesLoaded
   -----------------------------------------------------------------------------------------------------*/
   private handleGetDataframesResponse = ( response: KernelMessage.IIOPubMessage ): void => {
     console.log('------> Handle inspector request');
@@ -1237,8 +1210,8 @@ export class Backend {
       const dataframes = JSON.parse( content );
       console.log('Number of dataframes:', dataframes.length);
       if(dataframes.length == 0){
-        // TEMP: Disable for testing
-        this.screen = 'load csv';
+        // If there is no data loaded, reset frontend component
+        this._resetStateFormulabarFlag = true;
       }else{
         console.log('Refreshing dataframes'); 
         let dataframe_list: Array<any> = [];
@@ -1251,8 +1224,6 @@ export class Backend {
 
         this.dataframesLoaded = dataframe_list;
 
-        // TEMP: Disable for testing
-        this.screen = 'transformationsList';
       }
       // Emit signal to re-render the component
       this.signal.emit();
