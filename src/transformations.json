@@ -732,10 +732,55 @@
           "column",
           "pat"
         ],
-        "title" : "[Column] Contains text",
+        "title" : "[Column] Find contained text -> Trure/False",
         "type" : "object",
         "callerObject" : "DataFrame[Series].str",
-        "function" : "contains"
+        "function" : "contains",
+        "description" : "Check if the given pattern is contained in a text column."
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "find" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "sub" : {
+            "type" : "string",
+            "title" : "Text being searched"
+          },
+          "start" : {
+            "type" : "number"
+          },
+          "end" : {
+            "type" : "number"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "sub"
+        ],
+        "title" : "[Column] Find text position -> Number",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "find",
+        "type" : "object",
+        "description" : "Find the position of a text fragment within a column. Return a position number."
       },
       "uischema" : {
         "New column name" : {
@@ -804,50 +849,6 @@
             "enum" : []
           }
         }
-      },
-      "uischema" : {
-        "New column name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      }
-    },
-    "find" : {
-      "form" : {
-        "properties" : {
-          "column" : {
-            "$ref" : "#/definitions/column",
-            "title" : "column",
-            "codegenstyle" : "ignore"
-          },
-          "sub" : {
-            "type" : "string",
-            "title" : "Text being searched"
-          },
-          "start" : {
-            "type" : "number"
-          },
-          "end" : {
-            "type" : "number"
-          },
-          "New column name" : {
-            "type" : "string"
-          }
-        },
-        "definitions" : {
-          "column" : {
-            "type" : "string",
-            "enum" : []
-          }
-        },
-        "required" : [
-          "column",
-          "sub"
-        ],
-        "title" : "[Column] Find text position",
-        "callerObject" : "DataFrame[Series].str",
-        "function" : "find",
-        "type" : "object",
-        "description" : "Find the position of a text fragment within a column. Return a position number."
       },
       "uischema" : {
         "New column name" : {
@@ -1323,11 +1324,32 @@
             "type" : "string",
             "description" : "Examples: %d/%m/%Y (day/month/year), %H:%M:%S (hour:minute:second)"
           },
+          "unit" : {
+            "type" : "string",
+            "enum" : [
+              "D",
+              "s",
+              "ms",
+              "us",
+              "ns"
+            ],
+            "enumNames" : [
+              "Day",
+              "Second",
+              "Milisecond",
+              "Microsecond",
+              "Nanosecond"
+            ],
+            "default" : "ns",
+            "description" : "Unit of the date column."
+          },
           "New column name" : {
             "type" : "string"
           }
         },
-        "required" : [],
+        "required" : [
+          "arg"
+        ],
         "title" : "[Column] Convert column to datetime",
         "type" : "object",
         "callerObject" : "pd",
@@ -1337,11 +1359,45 @@
             "type" : "string",
             "enum" : []
           }
-        }
+        },
+        "description" : "Converts a column to a date-time format"
       },
       "uischema" : {
         "New table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "month" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get month number",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "month",
+        "type" : "object",
+        "callType" : "property"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
     }
