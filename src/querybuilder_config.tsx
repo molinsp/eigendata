@@ -127,7 +127,7 @@ const types: Types = {
         //"not_like",
         //"starts_with",
         //"ends_with",
-        //"proximity"
+        //"proximity",
         "python_contains"
         ],
         widgetProps: {},
@@ -138,7 +138,7 @@ const types: Types = {
         //unary ops (like `is_empty`) will be excluded anyway, see getWidgetsForFieldOp()
         "equal",
         "not_equal",
-        "proximity", //can exclude if you want
+        //"proximity", 
         ],
       }
     },
