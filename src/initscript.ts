@@ -441,7 +441,7 @@ def _process_date_data(df_data):
 def _process_string_data(df_data):
     for col in df_data:
         # 1. Check if date column
-        if df_data[col].dtype == 'object':
+        if df_data[col].dtype == 'object' or (df_data[col].dtype.type == pd.core.dtypes.dtypes.CategoricalDtypeType):
             df_data[col] = df_data[col].astype('str')
 
 def ed_prep_data_for_visualization(dfmi,index=False):
