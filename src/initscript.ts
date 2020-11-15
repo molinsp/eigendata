@@ -239,7 +239,7 @@ def ed_keep_dataframes(v):
     try:
         obj = eval(v)
         # Check if datadrame
-        if isinstance(obj, pd.core.frame.DataFrame) or isinstance(obj,pd.core.series.Series):
+        if isinstance(obj, pd.core.frame.DataFrame):
             return True
         return False
     except:

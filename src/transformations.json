@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.1",
+  "version" : "0.0.2",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -1061,9 +1061,6 @@
               "Custom interval ranges"
             ],
             "default" : "size"
-          },
-          "New column name" : {
-            "type" : "string"
           }
         },
         "definitions" : {
@@ -1094,6 +1091,9 @@
                   },
                   "end" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1107,6 +1107,9 @@
                   },
                   "bin_number" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1120,6 +1123,9 @@
                   },
                   "quantiles" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1148,6 +1154,9 @@
                     ],
                     "default" : "right",
                     "description" : "For example, breaks of [1, 3, 5 o] closed on the right implies that nubmer 3 will be part of the interval (1-3]. If closed on the let, then 3 would be part of interval [3-5)"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               }
@@ -1157,10 +1166,11 @@
         "title" : "[Column] Bin/Bucket columns",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "bin_column",
-        "type" : "object"
+        "type" : "object",
+        "returnType" : "series"
       },
       "uischema" : {
-        "New variable name" : {
+        "New column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
@@ -1178,10 +1188,8 @@
             "enum" : [
               "function",
               "value"
-            ]
-          },
-          "New column name" : {
-            "type" : "string"
+            ],
+            "default" : "function"
           }
         },
         "definitions" : {
@@ -1218,6 +1226,9 @@
                       "most frequent",
                       "average/mean"
                     ]
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1231,6 +1242,9 @@
                   },
                   "value" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               }
@@ -1240,10 +1254,11 @@
         "title" : "[Column] Fill empty values",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "fill_empty",
-        "type" : "object"
+        "type" : "object",
+        "returnType" : "series"
       },
       "uischema" : {
-        "New variable name" : {
+        "New column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
@@ -1368,6 +1383,39 @@
         }
       }
     },
+    "year" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get year",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "year",
+        "type" : "object",
+        "transformationType" : "property"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
     "month" : {
       "form" : {
         "properties" : {
@@ -1393,7 +1441,106 @@
         "callerObject" : "DataFrame[Series].dt",
         "function" : "month",
         "type" : "object",
-        "callType" : "property"
+        "transformationType" : "property"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "day" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get day number",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "day",
+        "type" : "object",
+        "transformationType" : "property"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "dayofweek" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get weekday number",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "dayofweek",
+        "type" : "object",
+        "transformationType" : "property",
+        "description" : "The day of the week with Monday=0, Sunday=6."
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "day_name" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get weekday name",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "day_name",
+        "type" : "object"
       },
       "uischema" : {
         "New column name" : {

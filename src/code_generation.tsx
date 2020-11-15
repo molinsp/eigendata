@@ -3,7 +3,9 @@ const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any, datafra
   console.log('field schema', fieldSchema);
   console.log('field schema type', typeof(fieldSchema['$ref']));
   
-  // CASE 1: Custom defined
+  /*----------------------------------------------------------------------------------------------------------
+    CASE 1: Custom code generation style 
+  ----------------------------------------------------------------------------------------------------------*/
   if(typeof(fieldSchema['codegenstyle']) !== 'undefined'){
     console.log('1. Codegenstyle detected');
     const codegenstyle = fieldSchema['codegenstyle'];
@@ -18,7 +20,9 @@ const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any, datafra
     }
     console.log('WARNING: No codegenstyle');
   }
-  // CASE 1: Ref to a column definition
+  /*----------------------------------------------------------------------------------------------------------
+    CASE 2: Reference to a column definition
+  ----------------------------------------------------------------------------------------------------------*/
   else if(typeof(fieldSchema['$ref']) !== 'undefined'){
     // Specific hardcoded cases
     console.log('2. REF detected');
@@ -32,6 +36,9 @@ const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any, datafra
     }
     console.log('WARNING: No ref found');
   }
+  /*----------------------------------------------------------------------------------------------------------
+    CASE 3: Array
+  ----------------------------------------------------------------------------------------------------------*/
   else if(fieldSchema['type'].localeCompare('array') == 0){
     console.log('3. Array detected');
     // Array of variables, i.e. no quotation marks
@@ -54,6 +61,9 @@ const mapFormResponseToPythonCode = ( fieldInput: any, fieldSchema: any, datafra
     }
 
   }
+  /*----------------------------------------------------------------------------------------------------------
+    CASE 4: Standard hsonschema form types
+  ----------------------------------------------------------------------------------------------------------*/
   else if(fieldSchema['type'].localeCompare('string') == 0){
     console.log('4. String detected');
     console.log('String detected');
@@ -88,27 +98,25 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
   const formData = formReponse.formData;
   let transformationSelection: string = formReponse.schema.function;
   let callerObject: string =  formReponse.schema.callerObject;
-  let series:string = '';
-
+  
   // The result will be saved in one variable: result_variable = object.transformation(parameters)
   // This variable is of type dataframe by default
-  let variable = '';
+  let result_variable: string = '';
 
   /*-------------------------------------------------------------------
-    1. Generate caller object & transformation selection
+    1. Generate caller object 
   --------------------------------------------------------------------*/
   // Compose the caller object
   if(callerObject.includes('DataFrame') == true){
   // If there is no dataframe selection, calling from pandas
-    console.log('Transforming Dataframe object');
+    console.log('CG: Caller is Dataframe object');
     callerObject = callerObject.replace('DataFrame',dataframeSelection);
   }
   if(callerObject.includes('Series') == true){
   // In case of a series, the formula becomes df[series] = df[series].function(params)
-    console.log('Transforming Series object');
+    console.log('CG: Caller is Series object');
     // Replace the callerobject series placeholder with the value from the column parameter
     const seriesString = '"' + formData['column'] + '"';
-    series = '[' + seriesString + ']';
     callerObject = callerObject.replace('Series',seriesString);
   }
 
@@ -118,8 +126,22 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     transformationSelection = 'read_csv';
   }
 
+  let formula: string;
+  let transformationType: string = 'function';
   // Formula that will be generated in the form of: object.transformation(parameters)
-  let formula = callerObject + '.' + transformationSelection + '(';
+  if(typeof(formReponse.schema.transformationType) !== 'undefined'){
+    console.log('CG: Transformation type defined');
+    transformationType = formReponse.schema.transformationType;
+  }
+
+  if(transformationType.localeCompare('function')==0){
+    formula = callerObject + '.' + transformationSelection + '('; 
+  }
+  else if (transformationType.localeCompare('property')==0){
+    formula = callerObject + '.' + transformationSelection; 
+  }
+
+  
 
   /*-------------------------------------------------------------------
     2. Process every parameter input
@@ -131,6 +153,9 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     const fieldInput = formData[key];
     let fieldSchema = null;
 
+    /*----------------------------------------------------------------------------------------------------------
+    2.1: Find schema for the field
+    ----------------------------------------------------------------------------------------------------------*/
     if(typeof(formReponse.schema.properties[key]) !== 'undefined'){
       fieldSchema = formReponse.schema.properties[key];
     }
@@ -143,30 +168,32 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
       fieldSchema = formReponse.schema.dependencies.mode['oneOf'][selectedModeIndex].properties[key];
     }
 
-
+    /*----------------------------------------------------------------------------------------------------------
+    2.2: Process the result parameters
+    ----------------------------------------------------------------------------------------------------------*/
     // IF specified by the user, set the name of the result
     if (key.localeCompare('New table name') == 0){
-      console.log('Result is series');
-      variable = formData[key].replace(/ /g,"_");
+      console.log('CG: Result is series');
+      result_variable = formData[key].replace(/ /g,"_");
     }
     else if(key.localeCompare('New column name') == 0){
-      console.log('Result is series');
-      series = '["' + formData[key].replace(/ /g,"_") + '"]';
+      console.log('CG: Result is series');
+      result_variable = dataframeSelection + '["' + formData[key].replace(/ /g,"_") + '"]';
     }
     else if(key.localeCompare('New variable name') == 0){
-      console.log('Result is variable');
-      variable = formData[key].replace(/ /g,"_");
+      console.log('CG: Result is variable');
+      result_variable = formData[key].replace(/ /g,"_");
     }
     // IGNORE the fields marked as ignore
     else if((typeof(fieldSchema['codegenstyle']) !== 'undefined')
             && (fieldSchema['codegenstyle'].localeCompare('ignore') == 0)
       ){
       //ignore
-      console.log('Ignore column field');
+      console.log('CG: Ignore column field');
     }
-    /*-------------------
-      Dictionary inputs
-    --------------------*/ 
+    /*----------------------------------------------------------------------------------------------------------
+    2.3: Handle complex arrays
+    ----------------------------------------------------------------------------------------------------------*/ 
     // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
     else if((typeof(fieldSchema['type']) !== 'undefined')
         && (fieldSchema['type'].localeCompare('array') == 0)  
@@ -195,13 +222,11 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
       formula = formula + parameterDict + ', ';
       parameter_counter +=1;
     }
-    /*-------------------
-      Based on JSONSchema
-      definition 
-      + codegenstyle
-    --------------------*/ 
+    /*----------------------------------------------------------------------------------------------------------
+    2.4: Handle individual fields
+    ----------------------------------------------------------------------------------------------------------*/ 
     else{
-       console.log('------- MAP FORM RESPONSE:',key);
+      console.log('------- MAP FORM RESPONSE:',key);
       const mappedFieldResponse = mapFormResponseToPythonCode(fieldInput, fieldSchema, dataframeSelection);
       formula = formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';
       console.log('Mapped field', formula); 
@@ -213,79 +238,85 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     // Remove last comma and space given there are no more parameters
     formula = formula.substring(0, formula.length - 2);
   }
-  formula = formula + ')';
 
-
+  // Close parethenis for functions, leave as is for properties (object.property)
+  if(transformationType.localeCompare('function')==0){
+    formula = formula + ')';
+  }
 
   /*-------------------------------------------------------------------
     3. Assign to result to variable
   --------------------------------------------------------------------*/  
 
+  let returnType = '';
   // Determine the type of the result variable. Default is dataframe
-  let returnType = 'dataframe';
-  if(typeof(formReponse.schema.properties['New variable name']) !== 'undefined'){
-    returnType = 'variable';
-  }else if(typeof(formReponse.schema.properties['New column name']) !== 'undefined'){
-    returnType = 'series';
+  if(typeof(formReponse.schema.returnType) !== 'undefined'){
+    console.log('CG: Defined return type in schema');
+    returnType = formReponse.schema.returnType;
+  }else{
+    if(typeof(formReponse.schema.properties['New variable name']) !== 'undefined'){
+      returnType = 'variable';
+    }else if(typeof(formReponse.schema.properties['New column name']) !== 'undefined'){
+      returnType = 'series';
+    }else{
+      returnType = 'dataframe';
+    }
   }
+
+
+
 
   // ------------ HANDLE DEFAULTS FOR RESULT VARIABLE (i.e. if not specified in the form)
   if(returnType.localeCompare('dataframe') == 0){
+    console.log('CG: 3.1 Return type is dataframe');
     // If no target variable, and calling from a given dataframe apply transformation to this dataframe
-    if((variable === '') && (dataframeSelection !== null)){
-      console.log('DF Selection', dataframeSelection);
-      variable = dataframeSelection;
+    if((result_variable === '') && (dataframeSelection !== null)){
+      console.log('CG: 3.1.1 Result defaults: Use selected dataframe');
+      result_variable = dataframeSelection;
     }
     // else if dataframe not defined (only case is read_csv), name it data
-    else if ((variable === '') && (dataframeSelection === null)){
-      variable = 'data';
+    else if ((result_variable === '') && (dataframeSelection === null)){
+      console.log('CG: 3.1.2 Result defaults: no dataframe selected');
+      result_variable = 'data';
     }
   }
   else if(returnType.localeCompare('series') == 0){
-    console.log('Return type is series');
-    // This covers both df->series and series->series
-    variable = dataframeSelection;
-    // This handle the case pandasObject -> series
-    var column_name = 'new_column';
-    if(series === ''){
-     console.log('No new series specified');
+    console.log('CG: 3.2 Return type is series');
+    // This covers both scenarios df->series and series->series
+        
+    var result_column_name = '';
+
+    // If not defined, change the column that has been selected
+    if(result_variable === ''){
      // Find the column that has a column definition to use
      for (var key in formReponse.schema.properties) {
        let col_schema = formReponse.schema.properties[key];
-       console.log('Key', col_schema); 
        if(typeof(col_schema['$ref']) !== 'undefined'){
           console.log('Ref found', col_schema['$ref']);
           if(col_schema['$ref'].localeCompare('#/definitions/column') == 0){ 
-            console.log('Found property with column definition');
-            column_name = formData[key];
+            console.log('CG: 3.2.1 Result defaults: Using default column');
+            result_column_name = formData[key];
             break;               
           }
        }
      }
-     series = '["' + column_name + '"]';
-     console.log('Series', series);
+     if(result_column_name == ''){
+       // This handle the case pandasObject -> series, where a column definition has not been found
+       console.log('CG: 3.2.2 Result defaults: No column found');
+       result_column_name = 'new column';
+     }
+     result_variable =  dataframeSelection + '["' + result_column_name + '"]';
     }
-    
-
   }
   else if (returnType.localeCompare('variable') == 0){
-    if(variable === ''){
-      variable = 'var';
+    console.log('CG: 3.3 Return type is variable');
+    if(result_variable === ''){
+      console.log('CG: 3.3.1 Result defaults: Using var');
+      result_variable = 'var';
     }
   }
    
-  // Assign transformation to result variable
-  if(returnType.localeCompare('dataframe') == 0){
-    console.log('Generating DF formula');
-    formula = variable + ' = ' + formula; 
-  }else if(returnType.localeCompare('series') == 0){
-    console.log('Generating series formula');
-    formula = variable + series + ' = ' + formula; 
-  }
-  else if(returnType.localeCompare('variable') == 0){
-    console.log('Generating variable formula');
-    formula = variable + ' = ' + formula;
-  }
+  formula = result_variable + ' = ' + formula;
   console.log('FORMULA: ', formula);
 
   return formula;
