@@ -239,7 +239,7 @@ def ed_keep_dataframes(v):
     try:
         obj = eval(v)
         # Check if datadrame
-        if isinstance(obj, pd.core.frame.DataFrame) or isinstance(obj,pd.core.series.Series):
+        if isinstance(obj, pd.core.frame.DataFrame):
             return True
         return False
     except:
@@ -284,7 +284,12 @@ def ed_generate_querybuilder_config(df):
             }
         elif col_type == 'object':
             # Categorical if less than 10% of values are unique
-            if (ed_get_percentage_unique_column(df, col_name) < 10):
+            if df[col_name].dtype == np.object:
+                queryprops[col_name] = {
+                    'label' : col_name,
+                    'type' : 'text'
+                }
+            elif (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'select',
@@ -436,7 +441,7 @@ def _process_date_data(df_data):
 def _process_string_data(df_data):
     for col in df_data:
         # 1. Check if date column
-        if df_data[col].dtype == 'object':
+        if df_data[col].dtype == 'object' or (df_data[col].dtype.type == pd.core.dtypes.dtypes.CategoricalDtypeType):
             df_data[col] = df_data[col].astype('str')
 
 def ed_prep_data_for_visualization(dfmi,index=False):

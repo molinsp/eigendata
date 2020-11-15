@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.1",
+  "version" : "0.0.2",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -732,10 +732,55 @@
           "column",
           "pat"
         ],
-        "title" : "[Column] Contains text",
+        "title" : "[Column] Find contained text -> Trure/False",
         "type" : "object",
         "callerObject" : "DataFrame[Series].str",
-        "function" : "contains"
+        "function" : "contains",
+        "description" : "Check if the given pattern is contained in a text column."
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "find" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "sub" : {
+            "type" : "string",
+            "title" : "Text being searched"
+          },
+          "start" : {
+            "type" : "number"
+          },
+          "end" : {
+            "type" : "number"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "sub"
+        ],
+        "title" : "[Column] Find text position -> Number",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "find",
+        "type" : "object",
+        "description" : "Find the position of a text fragment within a column. Return a position number."
       },
       "uischema" : {
         "New column name" : {
@@ -804,50 +849,6 @@
             "enum" : []
           }
         }
-      },
-      "uischema" : {
-        "New column name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      }
-    },
-    "find" : {
-      "form" : {
-        "properties" : {
-          "column" : {
-            "$ref" : "#/definitions/column",
-            "title" : "column",
-            "codegenstyle" : "ignore"
-          },
-          "sub" : {
-            "type" : "string",
-            "title" : "Text being searched"
-          },
-          "start" : {
-            "type" : "number"
-          },
-          "end" : {
-            "type" : "number"
-          },
-          "New column name" : {
-            "type" : "string"
-          }
-        },
-        "definitions" : {
-          "column" : {
-            "type" : "string",
-            "enum" : []
-          }
-        },
-        "required" : [
-          "column",
-          "sub"
-        ],
-        "title" : "[Column] Find text position",
-        "callerObject" : "DataFrame[Series].str",
-        "function" : "find",
-        "type" : "object",
-        "description" : "Find the position of a text fragment within a column. Return a position number."
       },
       "uischema" : {
         "New column name" : {
@@ -1060,9 +1061,6 @@
               "Custom interval ranges"
             ],
             "default" : "size"
-          },
-          "New column name" : {
-            "type" : "string"
           }
         },
         "definitions" : {
@@ -1093,6 +1091,9 @@
                   },
                   "end" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1106,6 +1107,9 @@
                   },
                   "bin_number" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1119,6 +1123,9 @@
                   },
                   "quantiles" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1147,6 +1154,9 @@
                     ],
                     "default" : "right",
                     "description" : "For example, breaks of [1, 3, 5 o] closed on the right implies that nubmer 3 will be part of the interval (1-3]. If closed on the let, then 3 would be part of interval [3-5)"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               }
@@ -1156,10 +1166,11 @@
         "title" : "[Column] Bin/Bucket columns",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "bin_column",
-        "type" : "object"
+        "type" : "object",
+        "returnType" : "series"
       },
       "uischema" : {
-        "New variable name" : {
+        "New column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
@@ -1177,10 +1188,8 @@
             "enum" : [
               "function",
               "value"
-            ]
-          },
-          "New column name" : {
-            "type" : "string"
+            ],
+            "default" : "function"
           }
         },
         "definitions" : {
@@ -1217,6 +1226,9 @@
                       "most frequent",
                       "average/mean"
                     ]
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               },
@@ -1230,6 +1242,9 @@
                   },
                   "value" : {
                     "type" : "number"
+                  },
+                  "New column name" : {
+                    "type" : "string"
                   }
                 }
               }
@@ -1239,10 +1254,11 @@
         "title" : "[Column] Fill empty values",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "fill_empty",
-        "type" : "object"
+        "type" : "object",
+        "returnType" : "series"
       },
       "uischema" : {
-        "New variable name" : {
+        "New column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
@@ -1323,11 +1339,32 @@
             "type" : "string",
             "description" : "Examples: %d/%m/%Y (day/month/year), %H:%M:%S (hour:minute:second)"
           },
+          "unit" : {
+            "type" : "string",
+            "enum" : [
+              "D",
+              "s",
+              "ms",
+              "us",
+              "ns"
+            ],
+            "enumNames" : [
+              "Day",
+              "Second",
+              "Milisecond",
+              "Microsecond",
+              "Nanosecond"
+            ],
+            "default" : "ns",
+            "description" : "Unit of the date column."
+          },
           "New column name" : {
             "type" : "string"
           }
         },
-        "required" : [],
+        "required" : [
+          "arg"
+        ],
         "title" : "[Column] Convert column to datetime",
         "type" : "object",
         "callerObject" : "pd",
@@ -1337,11 +1374,177 @@
             "type" : "string",
             "enum" : []
           }
-        }
+        },
+        "description" : "Converts a column to a date-time format"
       },
       "uischema" : {
         "New table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "year" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get year",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "year",
+        "type" : "object",
+        "transformationType" : "property"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "month" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get month number",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "month",
+        "type" : "object",
+        "transformationType" : "property"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "day" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get day number",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "day",
+        "type" : "object",
+        "transformationType" : "property"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "dayofweek" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get weekday number",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "dayofweek",
+        "type" : "object",
+        "transformationType" : "property",
+        "description" : "The day of the week with Monday=0, Sunday=6."
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "day_name" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get weekday name",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "day_name",
+        "type" : "object"
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
     }
