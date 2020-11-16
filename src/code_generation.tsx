@@ -134,12 +134,12 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     transformationType = formReponse.schema.transformationType;
   }
 
-  if(transformationType.localeCompare('function')==0){
+  if (transformationType.localeCompare('property')==0){
+    formula = callerObject + '.' + transformationSelection; 
+  }else{
     formula = callerObject + '.' + transformationSelection + '('; 
   }
-  else if (transformationType.localeCompare('property')==0){
-    formula = callerObject + '.' + transformationSelection; 
-  }
+
 
   
 
@@ -173,7 +173,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     ----------------------------------------------------------------------------------------------------------*/
     // IF specified by the user, set the name of the result
     if (key.localeCompare('New table name') == 0){
-      console.log('CG: Result is series');
+      console.log('CG: Result is dataframe');
       result_variable = formData[key].replace(/ /g,"_");
     }
     else if(key.localeCompare('New column name') == 0){
@@ -240,9 +240,12 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
   }
 
   // Close parethenis for functions, leave as is for properties (object.property)
-  if(transformationType.localeCompare('function')==0){
+  if(transformationType.localeCompare('property')==0){
+    formula = formula;
+  }else{
     formula = formula + ')';
   }
+
 
   /*-------------------------------------------------------------------
     3. Assign to result to variable

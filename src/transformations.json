@@ -30,7 +30,8 @@
         "title" : "Read CSV",
         "type" : "object",
         "callerObject" : "pd",
-        "function" : "read_csv"
+        "function" : "read_csv",
+        "transformationType" : "dataLoading"
       },
       "uischema" : {
         "New table name" : {
@@ -1335,51 +1336,91 @@
             "title" : "column",
             "codegenstyle" : "seriesColumn"
           },
-          "format" : {
-            "type" : "string",
-            "description" : "Examples: %d/%m/%Y (day/month/year), %H:%M:%S (hour:minute:second)"
-          },
-          "unit" : {
+          "mode" : {
             "type" : "string",
             "enum" : [
-              "D",
-              "s",
-              "ms",
-              "us",
-              "ns"
+              "string",
+              "number"
             ],
+            "codegenstyle" : "ignore",
             "enumNames" : [
-              "Day",
-              "Second",
-              "Milisecond",
-              "Microsecond",
-              "Nanosecond"
+              "From text (e.g. 20-02-2020)",
+              "From number (e.g. 1605552766)"
             ],
-            "default" : "ns",
-            "description" : "Unit of the date column."
-          },
-          "New column name" : {
-            "type" : "string"
+            "default" : "string"
           }
         },
-        "required" : [
-          "arg"
-        ],
-        "title" : "[Column] Convert column to datetime",
-        "type" : "object",
-        "callerObject" : "pd",
-        "function" : "to_datetime",
         "definitions" : {
           "column" : {
             "type" : "string",
             "enum" : []
           }
         },
-        "description" : "Converts a column to a date-time format"
+        "required" : [
+          "arg"
+        ],
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "title" : "From date text",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "string"
+                    ]
+                  },
+                  "format" : {
+                    "type" : "string",
+                    "description" : "Examples: %d/%m/%Y (day/month/year), %H:%M:%S (hour:minute:second)"
+                  },
+                  "New column name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "String" : "From number",
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "number"
+                    ]
+                  },
+                  "unit" : {
+                    "type" : "string",
+                    "enum" : [
+                      "D",
+                      "s",
+                      "ms",
+                      "us",
+                      "ns"
+                    ],
+                    "enumNames" : [
+                      "Day",
+                      "Second",
+                      "Milisecond",
+                      "Microsecond",
+                      "Nanosecond"
+                    ],
+                    "default" : "ns",
+                    "description" : "Unit of the date column."
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "title" : "[Column] Convert column to datetime",
+        "type" : "object",
+        "callerObject" : "pd",
+        "function" : "to_datetime",
+        "description" : "Converts a column to a date-time format",
+        "returnType" : "series"
       },
       "uischema" : {
-        "New table name" : {
-          "ui:placeholder" : "Leave blank to modify selected table"
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
         }
       }
     },
