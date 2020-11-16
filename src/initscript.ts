@@ -323,6 +323,7 @@ def ed_generate_querybuilder_config(df):
             
     return json.dumps(queryprops, ensure_ascii=False)
 
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
 # ---------------- DATA VISUALIZER ----------------
 def ed_build_colDefs_for_mi_cols(df):
     """
@@ -425,24 +426,22 @@ def ed_check_if_default_index(df):
     check_index = (df.index.name == None)
     return check_index
 
-def _process_date_data(df_data):
-    for col in df_data:
-        # 1. Check if date column
-        if df_data[col].dtype == 'datetime64[ns]':
+def ed_format_data_for_visualization(df_data):
+    for col_name, col in df_data.items():
+        if is_datetime64_any_dtype(col):
             # Check if it contains only dates
-            if ((df_data[col].dt.floor('d') == df_data[col]) | (df_data[col].isnull())).all():
-                df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y')
+            if ((df_data[col_name].dt.floor('d') == df_data[col_name]) | (df_data[col_name].isnull())).all():
+                df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y')
             # Check if it contains only times
-            elif ( (df_data[col].dt.date == pd.Timestamp('now').date()) | (df_data[col].isnull()) ).all():
-                df_data[col] =  df_data[col].dt.strftime('%H:%M:%S')
+            elif ( (df_data[col_name].dt.date == pd.Timestamp('now').date()) | (df_data[col_name].isnull()) ).all():
+                df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
             else:
-                df_data[col] =  df_data[col].dt.strftime('%d/%m/%Y %H:%M:%S')
-
-def _process_string_data(df_data):
-    for col in df_data:
-        # 1. Check if date column
-        if df_data[col].dtype == 'object' or (df_data[col].dtype.type == pd.core.dtypes.dtypes.CategoricalDtypeType):
-            df_data[col] = df_data[col].astype('str')
+                df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y %H:%M:%S')
+        elif is_numeric_dtype(col):
+            pass
+        else:
+            #If not handled, treat as a string
+            df_data[col_name] = df_data[col_name].astype('str')
 
 def ed_prep_data_for_visualization(dfmi,index=False):
     """
@@ -486,13 +485,11 @@ def ed_prep_data_for_visualization(dfmi,index=False):
             df_data = df_data.reset_index()
             
 
-    # 3. Show only preview of 100 rows
-    df_data = df_data.head(100)
+    # 3. Show only preview of 50 rows
+    df_data = df_data.head(50)
     
-    
-    # 4. This guarantees that the data are always strings
-    _process_date_data(df_data)
-    _process_string_data(df_data)
+    # 4. Ensure data can be read in the frontend
+    ed_format_data_for_visualization(df_data)
     
     # 5.Prepare output
     # Put together the columns from flattening rows and from flattinging columns

@@ -152,7 +152,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       // If no variable defined, use this dataframe selection
       let variable = '';
       if(this.state.newTableName !== ''){
-        variable = this.state.newTableName;
+        variable = this.state.newTableName.replace(/ /g,"_");
       }else{
         variable = this.state.dataframeSelection ;
       }
