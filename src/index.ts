@@ -18,6 +18,10 @@ import { IMainMenu } from '@jupyterlab/mainmenu';
 
 import { Menu } from '@lumino/widgets';
 
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
+
+const PLUGIN_ID = '@molinsp/eigendata:plugin';
+
 /**
  * The command IDs used by the react-formulawidget plugin.
  */
@@ -30,10 +34,10 @@ namespace CommandIDs {
  * Initialization data for the hello-world extension.
  */
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'Magic Formulas',
+  id: '@molinsp/eigendata:plugin',
   autoStart: true,
-  requires: [INotebookTracker, IMainMenu, ILayoutRestorer],
-  activate: (app: JupyterFrontEnd, notebook_tracker: INotebookTracker, mainMenu: IMainMenu, restorer: ILayoutRestorer) => {
+  requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry],
+  activate: (app: JupyterFrontEnd, notebook_tracker: INotebookTracker, mainMenu: IMainMenu, restorer: ILayoutRestorer, settingRegistry: ISettingRegistry) => {
     console.log('JupyterLab Eigendata is activated!');
     
     let formulawidget : MainAreaWidget<FormWidget>;
@@ -45,6 +49,19 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Create class that manages the backend behavior
     const backend = new Backend(notebook_tracker);
+    
+
+    settingRegistry.load(PLUGIN_ID).then(
+      (settings: ISettingRegistry.ISettings) => {
+        console.log('Settings', settings);
+        //settings.changed.connect(this._updateSettings.bind(this));
+      },
+      (err: Error) => {
+        console.error(
+          `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+        );
+      }
+    );
 
     commands.addCommand(command, {
       caption: 'Create a new React Widget',
