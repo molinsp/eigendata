@@ -713,7 +713,7 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataForVisualization(dataframe: string){
-     let codeToRun = '_visualizer_data, _visualizer_columns = ed_prep_data_for_visualization(' + dataframe + ')';        
+     let codeToRun = '_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';        
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
       console.log('Request expression',codeToRun);
@@ -723,34 +723,22 @@ export class Backend {
       const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
         codeToRun, {'data' : '_visualizer_data', 'columns':'_visualizer_columns'});
 
-      let content = result.columns.data["text/plain"];
-      
-      // Clean the JSON result that python returns
+      let content = result.data.data["text/plain"];
+      console.log('Content', content.slice(0,100));
+
       if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
         content = content.slice(1,-1);
         content = content.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
       }
-
-      result_object['columns'] = JSON.parse(content);
       
-      let content2 = result.data.data["text/plain"];
-      
-      // Clean the JSON result that python returns
-      if (content2.slice(0, 1) == "'" || content2.slice(0, 1) == "\""){
-        console.log('Cleaning 2');
-        content2 = content2.slice(1,-1);
-        //content2 = content2.replace(/\\\\/g,'');
-        content2 = content2.replace( /\\"/g, "\"" ).replace( /\\'/g, "\'" );
-      }
-      //console.log('Cleaned content 2', content2);
       var parsed_data = {};
       try{
-       parsed_data = JSON.parse(content2);
+       parsed_data = JSON.parse(content);
       }catch(e){
         console.error('(!) Cannot parse data');
       }
 
-      result_object['data'] = parsed_data;
+      result_object = parsed_data;
       console.log('Backend visualizer object', result_object);
       
       return result_object;

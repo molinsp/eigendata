@@ -324,6 +324,11 @@ def ed_generate_querybuilder_config(df):
     return json.dumps(queryprops, ensure_ascii=False)
 
 from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
 # ---------------- DATA VISUALIZER ----------------
 def ed_build_colDefs_for_mi_cols(df):
     """
@@ -437,11 +442,14 @@ def ed_format_data_for_visualization(df_data):
                 df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
             else:
                 df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y %H:%M:%S')
+            
+            df_data[col_name] = df_data[col_name].fillna('')
         elif is_numeric_dtype(col):
+            df_data[col_name] = df_data[col_name].fillna('')
             pass
         else:
             #If not handled, treat as a string
-            df_data[col_name] = df_data[col_name].astype('str')
+            df_data[col_name] = df_data[col_name].astype('str').replace('nan','')
 
 def ed_prep_data_for_visualization(dfmi,index=False):
     """
@@ -494,13 +502,29 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     # 5.Prepare output
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
-    new_columnDefs = json.dumps(new_columnDefs, ensure_ascii=False)
     
-    # Set the json format. We use to_json because of performance and json.dumps to avoid issues with forward
-    # slashes
-    out = df_data.to_json(orient='records')
-    formatted_data = json.dumps(json.loads(out))
+    # 6. Get the shape. ofthe data
+    n_rows =  df_data.shape[0]
+    n_columns =  df_data.shape[1]
+    
+    # 7. Get the col types
+    names = [col for col in df_data.columns]
+    types = [dtype.name for dtype in df_data.dtypes]
+    col_types = [{'name': name, 'type': dtype} for name,dtype in zip(names,types)]
+    
+    # 8. Set the json format. 
+    df_data = df_data.to_dict(orient='records')
+    
+    result = {
+        'data': df_data, 
+        'columns': new_columnDefs,
+        'columnTypes': col_types,
+        'shape' : {
+            'rows': n_rows,
+            'columns': n_columns
+        }  
+    }
     
     # 3. Return as JSON
-    return formatted_data, new_columnDefs
+    return json.dumps(result, ensure_ascii=True, allow_nan=False)
 `;
