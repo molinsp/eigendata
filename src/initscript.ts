@@ -324,11 +324,6 @@ def ed_generate_querybuilder_config(df):
     return json.dumps(queryprops, ensure_ascii=False)
 
 from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
-from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
-from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
-from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
-from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
-from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
 # ---------------- DATA VISUALIZER ----------------
 def ed_build_colDefs_for_mi_cols(df):
     """
