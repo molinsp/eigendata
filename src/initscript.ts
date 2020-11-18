@@ -361,7 +361,7 @@ def ed_build_colDefs_for_mi_cols(df):
                     s2.append(new_index_name)
                     i = len(s2) - 1
                 s2 = s2[i]['columns']
-            # Lowes level
+            # Lowest level
             else:
                 flat_field = flat_field.replace('.', '_')
                 new_index_name = {'accessor': flat_field,
@@ -376,7 +376,8 @@ def ed_build_colDefs_for_si_cols(df, verbose=True):
         col = df[c]
         field = col.name
         header_name = field.title()
-        dic['accessor'] = field
+        # Replace dots with underscores, otherwise react-table cannot handle it (see step 4 last function)
+        dic['accessor'] = field.replace('.','_')
         dic['Header'] = field
         colDefs.append(dic)
     return colDefs
@@ -495,6 +496,9 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     
     # 4. Ensure data can be read in the frontend
     ed_format_data_for_visualization(df_data)
+    # If there are any dots, remove them because react-table can't handle them
+    # Only relevatn for single index columns case. 
+    df_data.columns = df_data.columns.map(lambda x: str(x).replace('.','_'))
     
     # 5.Prepare output
     # Put together the columns from flattening rows and from flattinging columns
