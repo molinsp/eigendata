@@ -19,8 +19,19 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
   const [data, setData] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
+  const [columnTypes, setColumnTypes] = useState([]);
+  const [shape, setShape] = useState({});
 
-  if(props.logic._resetStateDatavisualizerFlag == true){
+  const separateThousands = (number) => {
+    let stringNumber = number + '';
+    const rgx = /(\d+)(\d{3})/;
+    while (rgx.test(stringNumber)) {
+      stringNumber = stringNumber.replace(rgx, '$1' + '.' + '$2');
+    }
+    return stringNumber;
+  }
+
+  if (props.logic._resetStateDatavisualizerFlag == true) {
     console.log('RESETING DATA VISUALIZER STATE');
     setColumns([]);
     setData([]);
@@ -39,6 +50,8 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
           setShowTable(true);
           setColumns([...result['columns']]);
           setData([...result['data']]);
+          setColumnTypes([...result['columnTypes']]);
+          setShape({...result['shape']});
           console.log('Backend result', result);
         }
       } catch (e) {
@@ -80,7 +93,9 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
             </div>
           </nav>
           <div className={'tab-item'}>
-            <p className={'disclaimer'}> Showing first 50 rows </p>
+            <div className={'disclaimer'}>
+              <p>Data shape: {separateThousands(shape['rows'])} rows and {shape['columns']} columns. Preview: first {data.length} rows.</p>
+            </div>
             <table {...getTableProps()} className="table table-striped table-hover">
               <thead className="thead-dark">
               {headerGroups.map(headerGroup => (
@@ -94,6 +109,13 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
               ))}
               </thead>
               <tbody {...getTableBodyProps()}>
+              <tr role='row' className='data-type-info'>
+                {columnTypes.map((columnType, index) => (
+                  <td role='cell' key={index}>
+                    {columnType.type}
+                  </td>
+                ))}
+              </tr>
               {rows.map(row => {
                 prepareRow(row);
                 return(
