@@ -78,6 +78,18 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   let defaultUISchema: JSONSchema7 = logic._transformationsConfig['read_csv']['uischema'] as JSONSchema7;
   let defaultTransformationSelection = {'value': 'read_csv', 'label': 'Read CSV'};
 
+  const loadingTransformations = (() => {
+    const result = [];
+
+    _.forIn(logic._transformationsConfig, ((value, key) => {
+      if (value['form']['transformationType'] === 'dataLoading') {
+        result.push({ value: key, label: value['form']['title']});
+      }
+    }));
+
+    return result;
+  })
+
   /* State of the component:
       - Transformation form
       - UI schema
@@ -300,7 +312,9 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         <Select
           name='Select transformation'
           placeholder='select data loading transformation'
-          options={logic.transformationsList}
+          options={logic.dataframesLoaded.length !== 0
+            ? logic.transformationsList
+            : loadingTransformations()}
           value={state.transformationSelection}
           label="Select transformation"
           onChange={handleTransformationSelectionChange}
