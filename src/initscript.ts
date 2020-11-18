@@ -493,7 +493,9 @@ def ed_prep_data_for_visualization(dfmi,index=False):
             df_data = df_data.reset_index()
             
 
-    # 3. Show only preview of 50 rows
+    # 3. Show only preview of 50 rows, but first get the real size
+    n_rows =  df_data.shape[0]
+    n_columns =  df_data.shape[1]
     df_data = df_data.head(50)
     
     # 4. Ensure data can be read in the frontend
@@ -503,16 +505,12 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
     
-    # 6. Get the shape. ofthe data
-    n_rows =  df_data.shape[0]
-    n_columns =  df_data.shape[1]
-    
-    # 7. Get the col types
+    # 6. Get the col types
     names = [col for col in df_data.columns]
     types = [dtype.name for dtype in df_data.dtypes]
     col_types = [{'name': name, 'type': dtype} for name,dtype in zip(names,types)]
     
-    # 8. Set the json format. 
+    # 7. Set the json format. 
     df_data = df_data.to_dict(orient='records')
     
     result = {
