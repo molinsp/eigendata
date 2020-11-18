@@ -204,6 +204,71 @@
         }
       }
     },
+    "explode_list_to_columns" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column"
+          },
+          "separator" : {
+            "type" : "string",
+            "default" : ",",
+            "description" : "Item that separates the elements. E.g. in [1,2,3] it would be a comma (,), in [1;2;3] a semicolon (;)."
+          },
+          "list_marker" : {
+            "type" : "string",
+            "enum" : [
+              "square_brackets",
+              "parentheses",
+              "na"
+            ],
+            "enumNames" : [
+              "Square brackets []",
+              "Parentheses ()",
+              "No brackets/parentheses"
+            ],
+            "description" : "Item that surounds the elements. E.g. in [1,2,3] it would be a square brackets, in (1;2;3) parentheses.",
+            "default" : "square_brackets",
+            "title" : "list marker"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "separator",
+          "list_marker"
+        ],
+        "title" : "Explode list to columns",
+        "type" : "object",
+        "callerObject" : "DataFrame.fdt",
+        "function" : "explode_list_to_columns",
+        "description" : "Turn a column that has several elements contained into multiple columns, with a 1/0 indicator."
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "aggfunc" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "function" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
+      }
+    },
     "merge" : {
       "form" : {
         "properties" : {
