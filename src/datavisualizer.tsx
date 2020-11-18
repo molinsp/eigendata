@@ -92,10 +92,8 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
               })}
             </div>
           </nav>
-          <div className={'tab-item'}>
-            <div className={'disclaimer'}>
-              <p>Data shape: {separateThousands(shape['rows'])} rows and {shape['columns']} columns. Preview: first {data.length} rows.</p>
-            </div>
+          <div className='fixed-header'>
+            <p className={'disclaimer'}>Data shape: {separateThousands(shape['rows'])} rows and {shape['columns']} columns. Preview: first {data.length} rows.</p>
             <table {...getTableProps()} className="table table-striped table-hover">
               <thead className="thead-dark">
               {headerGroups.map(headerGroup => (
@@ -116,6 +114,12 @@ const DataVisualizerComponent = (props: {logic: Backend}): JSX.Element => {
                   </td>
                 ))}
               </tr>
+              </tbody>
+            </table>
+          </div>
+          <div className='tab-item'>
+            <table {...getTableProps()} className="table table-striped table-hover">
+              <tbody {...getTableBodyProps()}>
               {rows.map(row => {
                 prepareRow(row);
                 return(
