@@ -111,8 +111,10 @@
 }
 
 .disclaimer {
-    font-size: 10px;
-    color: #2d2d2d;
+  font-size: 10px;
+  color: #2d2d2d;
+  padding: 8px;
+  margin: 0
 }
 
 table td, table th {
@@ -149,5 +151,15 @@ table td, table th {
   border-color: #dc2222;
 }
 
+.data-type-info {
+  color: grey;
+  background-color: white !important;
+  border-bottom: 2px solid grey;
 
+}
+
+.data-type-info > * {
+  font-size: 11px;
+  padding-bottom: 0;
+}
 
