@@ -107,7 +107,7 @@
   margin-bottom: 15px;
   overflow: auto;
   border: 1px solid #ddd;
-  height: 92%;
+  height: 83%;
 }
 
 .disclaimer {
@@ -117,8 +117,16 @@
   margin: 0
 }
 
+.fixed-header {
+  border: 1px solid #DDDDDD;
+}
+
+.fixed-header table{
+  margin-bottom: 0;
+}
+
 table td, table th {
-    font-size: 12px;
+  font-size: 12px;
 }
 
 .group--actions.group--actions--tr {
