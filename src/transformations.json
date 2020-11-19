@@ -456,10 +456,46 @@
           }
         },
         "title" : "Drop/exclude columns",
-        "description" : "Drop columns from the data",
+        "description" : "Drop columns from the table.",
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "drop"
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "filter" : {
+      "form" : {
+        "required" : [
+          "items"
+        ],
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "properties" : {
+          "items" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Select the columns that you want to remove"
+          },
+          "New table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Keep columns",
+        "description" : "Keep only specific columns from the table.",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "filter"
       },
       "uischema" : {
         "New table name" : {
