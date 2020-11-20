@@ -78,7 +78,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
                   <div className="form-group">
                       <label
                           htmlFor="filterDataFrame"
-                          className="control-label">Filter type
+                          className="control-label">filter type
                       </label>
                       <Select
                           id="filterDataFrame"
@@ -90,7 +90,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
                    <div className="form-group">
                       <label
                           htmlFor="newTableNameTextInput"
-                          className="control-label">New table name
+                          className="control-label">new table name
                       </label>
                       <input
                           id="newTableNameTextInput"
@@ -134,7 +134,6 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/ IS NOT EMPTY/g,'.notnull()');
       
 
-      // To-do: add backticks for fields with blanks
       console.log('Config fields', this.state.config.fields);
       for(var i in this.state.config.fields){
         let col_name = String(i);
@@ -149,18 +148,41 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
         }
       }
 
+      let returnType = '';
+      if(this.state.queryType.localeCompare('query') == 0){
+        returnType = 'dataframe';
+      }else{
+        // eval case
+        returnType = 'series';
+      }
+
       // If no variable defined, use this dataframe selection
       let variable = '';
-      if(this.state.newTableName !== ''){
-        variable = this.state.newTableName.replace(/ /g,"_");
-      }else{
-        variable = this.state.dataframeSelection ;
+      if(returnType.localeCompare('dataframe') == 0){
+        if(this.state.newTableName === ''){
+          variable = this.state.dataframeSelection ;
+        }else{
+          variable = this.state.newTableName.replace(/ /g,"_");
+        }
+      }
+      else if(returnType.localeCompare('series') == 0){
+        if(this.state.newTableName === ''){
+          variable = this.state.dataframeSelection + '["indicator"]';
+        }else{
+          variable = this.state.dataframeSelection + '["' + this.state.newTableName.replace(/ /g,"_") + '"]';
+        }
       }
 
       //  Compose formula: variable = dataframe . query/eval (query)
       let formula =  variable + ' = ' + this.state.dataframeSelection;
       formula = formula + '.' + this.state.queryType;
-      formula = formula + '(' + sql_query + ', engine="python"' + ')';   
+
+      // Add the copy command to make sure pandas knows we are creating a copy
+      if(returnType.localeCompare('dataframe') == 0){
+        formula = formula + '(' + sql_query + ', engine="python"' + ').copy()';  
+      }else{
+        formula = formula + '(' + sql_query + ', engine="python"' + ')';  
+      } 
       console.log('Formula', formula);
       this.state.logic.writeToNotebookAndExecute(formula);  
     }

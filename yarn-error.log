@@ -1,8 +1,8 @@
 Arguments: 
-  /usr/local/bin/node /Users/peremolinsayuso/opt/anaconda3/envs/dev_react_jupyterlab/lib/python3.7/site-packages/jupyterlab/staging/yarn.js add @types/react-awesome-query-builder
+  /usr/local/bin/node /Users/peremolinsayuso/opt/anaconda3/envs/dev_eigendata/lib/python3.7/site-packages/jupyterlab/staging/yarn.js run build
 
 PATH: 
-  /Users/peremolinsayuso/opt/anaconda3/envs/dev_react_jupyterlab/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+  /Users/peremolinsayuso/opt/anaconda3/envs/dev_eigendata/bin:/Users/peremolinsayuso/opt/anaconda3/condabin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 
 Yarn version: 
   1.21.1
@@ -14,23 +14,18 @@ Platform:
   darwin x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2freact-awesome-query-builder: Not found
-      at Request.params.callback [as _callback] (/Users/peremolinsayuso/opt/anaconda3/envs/dev_react_jupyterlab/lib/python3.7/site-packages/jupyterlab/staging/yarn.js:78477:18)
-      at Request.self.callback (/Users/peremolinsayuso/opt/anaconda3/envs/dev_react_jupyterlab/lib/python3.7/site-packages/jupyterlab/staging/yarn.js:135083:22)
-      at Request.emit (events.js:315:20)
-      at Request.<anonymous> (/Users/peremolinsayuso/opt/anaconda3/envs/dev_react_jupyterlab/lib/python3.7/site-packages/jupyterlab/staging/yarn.js:136055:10)
-      at Request.emit (events.js:315:20)
-      at IncomingMessage.<anonymous> (/Users/peremolinsayuso/opt/anaconda3/envs/dev_react_jupyterlab/lib/python3.7/site-packages/jupyterlab/staging/yarn.js:135977:12)
-      at Object.onceWrapper (events.js:421:28)
-      at IncomingMessage.emit (events.js:327:22)
-      at endReadableNT (_stream_readable.js:1220:12)
-      at processTicksAndRejections (internal/process/task_queues.js:84:21)
+  SyntaxError: /Users/peremolinsayuso/Documents/jupyterlab-extensions/eigendata/package.json: Unexpected token } in JSON at position 1988
+      at JSON.parse (<anonymous>)
+      at /Users/peremolinsayuso/opt/anaconda3/envs/dev_eigendata/lib/python3.7/site-packages/jupyterlab/staging/yarn.js:1098:57
+      at Generator.next (<anonymous>)
+      at step (/Users/peremolinsayuso/opt/anaconda3/envs/dev_eigendata/lib/python3.7/site-packages/jupyterlab/staging/yarn.js:310:30)
+      at /Users/peremolinsayuso/opt/anaconda3/envs/dev_eigendata/lib/python3.7/site-packages/jupyterlab/staging/yarn.js:321:13
 
 npm manifest: 
   {
-    "name": "eigendata-formula-bar",
-    "version": "0.1.0",
-    "description": "Test",
+    "name": "@molinsp/eigendata",
+    "version": "0.1.7",
+    "description": "Eigendata is jupyter for people that want to get things done.",
     "keywords": [
       "jupyter",
       "jupyterlab",
@@ -67,10 +62,16 @@ npm manifest:
       "@jupyterlab/launcher": "^2.0.0",
       "@jupyterlab/mainmenu": "^2.2.3",
       "@jupyterlab/notebook": "^2.0.0",
+      "@jupyterlab/settingregistry": "^2.2.5",
       "@rjsf/core": "^2.4.0",
+      "@types/lodash": "^4.14.161",
       "@types/react-select": "^3.0.20",
+      "bootstrap": "3",
+      "loadash": "^1.0.0",
+      "posthog-js": "^1.5.2",
       "react-awesome-query-builder": "^2.2.1",
-      "react-select": "^3.1.0"
+      "react-select": "^3.1.0",
+      "react-table": "^7.6.1"
     },
     "devDependencies": {
       "@typescript-eslint/eslint-plugin": "^2.25.0",
@@ -87,7 +88,8 @@ npm manifest:
       "style/*.css"
     ],
     "jupyterlab": {
-      "extension": true
+      "extension": true,
+      "schemaDir": "schema",
     }
   }
 
@@ -798,6 +800,19 @@ Lockfile:
       ajv "^6.10.2"
       json5 "^2.1.1"
   
+  "@jupyterlab/settingregistry@^2.2.5":
+    version "2.2.5"
+    resolved "https://registry.npmjs.org/@jupyterlab/settingregistry/-/settingregistry-2.2.5.tgz#665d2f5bfb601acd7020e2868f8bba1513d8c9cf"
+    integrity sha512-LoKa27F1WNmeMT168TYo+MgjsYsVawKCZbmU7OGQS6h6J5dx0xQBQvE38NkhCsjnPYyUv4tYmGIFyHQceCDDaA==
+    dependencies:
+      "@jupyterlab/statedb" "^2.2.5"
+      "@lumino/commands" "^1.10.1"
+      "@lumino/coreutils" "^1.4.2"
+      "@lumino/disposable" "^1.3.5"
+      "@lumino/signaling" "^1.3.5"
+      ajv "^6.10.2"
+      json5 "^2.1.1"
+  
   "@jupyterlab/settingregistry@^3.0.0-beta.8":
     version "3.0.0-beta.8"
     resolved "https://registry.yarnpkg.com/@jupyterlab/settingregistry/-/settingregistry-3.0.0-beta.8.tgz#f4c1a89b37497b14d7edf2175e81ea60964eae87"
@@ -815,6 +830,17 @@ Lockfile:
     version "2.2.4"
     resolved "https://registry.yarnpkg.com/@jupyterlab/statedb/-/statedb-2.2.4.tgz#674d7b59b51c6b2f76e8557eb2ff64797f9a85e9"
     integrity sha512-/JaabUJi0rFXZEYAFV9wVcXHllEgFAo59uqZ9/lU0i6gULSykCFdVw0QZPIaiaScQYKluhsOBMJB7uXOcDikRA==
+    dependencies:
+      "@lumino/commands" "^1.10.1"
+      "@lumino/coreutils" "^1.4.2"
+      "@lumino/disposable" "^1.3.5"
+      "@lumino/properties" "^1.1.6"
+      "@lumino/signaling" "^1.3.5"
+  
+  "@jupyterlab/statedb@^2.2.5":
+    version "2.2.5"
+    resolved "https://registry.npmjs.org/@jupyterlab/statedb/-/statedb-2.2.5.tgz#2df5ff18d7417c342aa9651281860cabeffc8ee9"
+    integrity sha512-+hW1bQ6+p18SNZvjM7hZMPv7odkLWkAp17qoRPtky3j+CFnZW7m49U0XA8QezjLBiX9QdHFYgoUhIZEmrKcPDg==
     dependencies:
       "@lumino/commands" "^1.10.1"
       "@lumino/coreutils" "^1.4.2"
@@ -1110,6 +1136,11 @@ Lockfile:
     version "0.0.29"
     resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
     integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
+  
+  "@types/lodash@^4.14.161":
+    version "4.14.161"
+    resolved "https://registry.yarnpkg.com/@types/lodash/-/lodash-4.14.161.tgz#a21ca0777dabc6e4f44f3d07f37b765f54188b18"
+    integrity sha512-EP6O3Jkr7bXvZZSZYlsgt5DIjiGr0dXP1/jVEwVLTFgg0d+3lWVQkRavYVQszV7dYUwvg0B8R0MBDpcmXg7XIA==
   
   "@types/minimatch@^3.0.3":
     version "3.0.3"
@@ -1407,6 +1438,11 @@ Lockfile:
       isobject "^3.0.1"
       mixin-deep "^1.2.0"
       pascalcase "^0.1.1"
+  
+  bootstrap@3:
+    version "3.4.1"
+    resolved "https://registry.yarnpkg.com/bootstrap/-/bootstrap-3.4.1.tgz#c3a347d419e289ad11f4033e3c4132b87c081d72"
+    integrity sha512-yN5oZVmRCwe5aKwzRj6736nSmKDX7pLYwsXiCj/EYmo16hODaBiT4En5btW/jhBF/seV+XMx3aYwukYC3A49DA==
   
   brace-expansion@^1.1.7:
     version "1.1.11"
@@ -2726,6 +2762,11 @@ Lockfile:
     resolved "https://registry.yarnpkg.com/lines-and-columns/-/lines-and-columns-1.1.6.tgz#1c00c743b433cd0a4e80758f7b64a57440d9ff00"
     integrity sha1-HADHQ7QzzQpOgHWPe2SldEDZ/wA=
   
+  loadash@^1.0.0:
+    version "1.0.0"
+    resolved "https://registry.yarnpkg.com/loadash/-/loadash-1.0.0.tgz#b92e54d809f3c225f4f9a9cfbaeae5b56de1ca9f"
+    integrity sha512-xlX5HBsXB3KG0FJbJJG/3kYWCfsCyCSus3T+uHVu6QL6YxAdggmm3QeyLgn54N2yi5/UE6xxL5ZWJAAiHzHYEg==
+  
   locate-path@^5.0.0:
     version "5.0.0"
     resolved "https://registry.yarnpkg.com/locate-path/-/locate-path-5.0.0.tgz#1afba396afd676a6d42504d0a67a3a7eb9f62aa0"
@@ -3165,6 +3206,11 @@ Lockfile:
       source-map "^0.6.1"
       supports-color "^6.1.0"
   
+  posthog-js@^1.5.2:
+    version "1.5.2"
+    resolved "https://registry.yarnpkg.com/posthog-js/-/posthog-js-1.5.2.tgz#085b49574851dfacf2c204fddf2314d4fb76d9c7"
+    integrity sha512-6HOgues4C9owiiF77ulEm70y2FXIJ5jPhZISZMb4sYIWbijzWnU6ji/W3fQ/w9pj6GrW+IxZrofdX1WCr82c5w==
+  
   prelude-ls@~1.1.2:
     version "1.1.2"
     resolved "https://registry.yarnpkg.com/prelude-ls/-/prelude-ls-1.1.2.tgz#21932a549f5e52ffd9a827f570e04be62a97da54"
@@ -3344,6 +3390,11 @@ Lockfile:
       prop-types "^15.6.0"
       react-input-autosize "^2.2.2"
       react-transition-group "^4.3.0"
+  
+  react-table@^7.6.1:
+    version "7.6.1"
+    resolved "https://registry.yarnpkg.com/react-table/-/react-table-7.6.1.tgz#33ad2bfc58de619678694c5452597544f4864266"
+    integrity sha512-XQyvombPoFbNiDHWAXdxbN78kFpsT1/aJuRSupFfBhO3FJtEVIIq2xbV1NvLzrd1YwfCYRm07ln5OHlfz0SXBg==
   
   react-transition-group@^2.9.0:
     version "2.9.0"

@@ -361,7 +361,7 @@ def ed_build_colDefs_for_mi_cols(df):
                     s2.append(new_index_name)
                     i = len(s2) - 1
                 s2 = s2[i]['columns']
-            # Lowes level
+            # Lowest level
             else:
                 flat_field = flat_field.replace('.', '_')
                 new_index_name = {'accessor': flat_field,
@@ -370,15 +370,7 @@ def ed_build_colDefs_for_mi_cols(df):
     return s
 
 def ed_build_colDefs_for_si_cols(df, verbose=True):
-    colDefs = []
-    for c in df.columns:
-        dic = {}
-        col = df[c]
-        field = col.name
-        header_name = field.title()
-        dic['accessor'] = field
-        dic['Header'] = field
-        colDefs.append(dic)
+    colDefs = [{'accessor': str(col).replace('.','_'), 'Header': col} for col in df.columns]
     return colDefs
 
 def ed_build_colDefs_for_mi_rows(df):
@@ -437,11 +429,14 @@ def ed_format_data_for_visualization(df_data):
                 df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
             else:
                 df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y %H:%M:%S')
+            
+            df_data[col_name] = df_data[col_name].fillna('')
         elif is_numeric_dtype(col):
+            df_data[col_name] = df_data[col_name].fillna('')
             pass
         else:
             #If not handled, treat as a string
-            df_data[col_name] = df_data[col_name].astype('str')
+            df_data[col_name] = df_data[col_name].astype('str').replace('nan','')
 
 def ed_prep_data_for_visualization(dfmi,index=False):
     """
@@ -457,7 +452,18 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     
     # Abreviations: mi is multi index
 
-    # 1. Handle multi-level columns
+    # 1. Show only preview of 50 rows, but first get the real size
+    n_rows =  df_data.shape[0]
+    n_columns =  df_data.shape[1]
+    # Handle very wide dataframes
+    displayed_columns = n_columns
+    if n_columns > 100:
+        df_data = df_data.iloc[:,:100]
+        displayed_columns = 100
+    df_data = df_data.head(50)
+
+
+    # 2. Handle multi-level columns
     # Check it ther are multi-level columns
     if ed_is_multiindex_col_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
@@ -469,7 +475,7 @@ def ed_prep_data_for_visualization(dfmi,index=False):
         columnDefs_col = ed_build_colDefs_for_si_cols(df_data)
     
     
-    # 2. Handle multi-index rows (does not seem to matter gith now)
+    # 3. Handle multi-index rows (does not seem to matter gith now)
     if ed_is_multiindex_row_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
         columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
@@ -483,24 +489,36 @@ def ed_prep_data_for_visualization(dfmi,index=False):
             # Single index
             columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
             df_data = df_data.reset_index()
-            
-
-    # 3. Show only preview of 50 rows
-    df_data = df_data.head(50)
     
     # 4. Ensure data can be read in the frontend
     ed_format_data_for_visualization(df_data)
+    # If there are any dots, remove them because react-table can't handle them
+    # Only relevatn for single index columns case. 
+    df_data.columns = df_data.columns.map(lambda x: str(x).replace('.','_'))
     
     # 5.Prepare output
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
-    new_columnDefs = json.dumps(new_columnDefs, ensure_ascii=False)
     
-    # Set the json format. We use to_json because of performance and json.dumps to avoid issues with forward
-    # slashes
-    out = df_data.to_json(orient='records')
-    formatted_data = json.dumps(json.loads(out))
+    # 6. Get the col types
+    names = [col for col in df_data.columns]
+    types = [dtype.name for dtype in df_data.dtypes]
+    col_types = [{'name': name, 'type': dtype} for name,dtype in zip(names,types)]
+    
+    # 7. Set the json format. 
+    df_data = df_data.to_dict(orient='records')
+    
+    result = {
+        'data': df_data, 
+        'columns': new_columnDefs,
+        'columnTypes': col_types,
+        'shape' : {
+            'rows': n_rows,
+            'columns': n_columns,
+            'displayedColumns' : displayed_columns
+        }  
+    }
     
     # 3. Return as JSON
-    return formatted_data, new_columnDefs
+    return json.dumps(result, ensure_ascii=True, allow_nan=False)
 `;

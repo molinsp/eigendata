@@ -102,22 +102,88 @@
 }
 
 .tab-item {
-  padding-top: 2px;
   width: 100%;
   margin-bottom: 15px;
   overflow: auto;
   border: 1px solid #ddd;
-  height: 92%;
+  height: 83%;
 }
 
 .disclaimer {
-    font-size: 10px;
-    color: #2d2d2d;
+  font-size: 11px;
+  color: #2d2d2d;
+  padding: 8px;
+  margin: 0
 }
 
 table td, table th {
-    font-size: 12px;
+  font-size: 12px;
 }
 
+.group--actions.group--actions--tr {
+  opacity: 1 !important;
+}
 
+.group--actions.group--actions--tr > button {
+  margin-right: 5px;
+}
 
+.group--actions.group--actions--tr > button:last-child {
+  margin-right: 0;
+}
+
+.query-builder-container button {
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #337ab7;
+  display: inline-block;
+  cursor: pointer;
+  padding: 2px 9px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  border-radius: 4px;
+}
+
+.rule--header > button,
+.group--actions.group--actions--tr > button:nth-child(3) {
+  background: #dc2222;
+  border-color: #dc2222;
+}
+
+.data-type-info {
+  color: grey;
+  background-color: white !important;
+  border-bottom: 2px solid grey;
+
+}
+
+.data-type-info > * {
+  font-size: 11px;
+  padding-bottom: 0;
+  margin-top: -2px;
+}
+
+thead th {
+  background-color: #212529;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 50%;
+}
+thead {
+  background-color: white;
+}
+.sticky {
+  position: sticky;
+  top: 0;
+}
+
+thead td {
+  background-color: white;
+  position: sticky;
+  z-index: 1;
+}
+
+tbody {
+  z-index: 0;
+}

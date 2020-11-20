@@ -140,11 +140,27 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     formula = callerObject + '.' + transformationSelection + '('; 
   }
 
+  /*-------------------------------------------------------------------
+    2. Determine what the return type will be
+  --------------------------------------------------------------------*/  
 
-  
+  let returnType = '';
+  // Determine the type of the result variable. Default is dataframe
+  if(typeof(formReponse.schema.returnType) !== 'undefined'){
+    console.log('CG: Defined return type in schema');
+    returnType = formReponse.schema.returnType;
+  }else{
+    if(typeof(formReponse.schema.properties['new variable name']) !== 'undefined'){
+      returnType = 'variable';
+    }else if(typeof(formReponse.schema.properties['new column name']) !== 'undefined'){
+      returnType = 'series';
+    }else{
+      returnType = 'dataframe';
+    }
+  } 
 
   /*-------------------------------------------------------------------
-    2. Process every parameter input
+    3. Process every parameter input
   --------------------------------------------------------------------*/
   // Process every input
   let parameter_counter = 0;
@@ -154,7 +170,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     let fieldSchema = null;
 
     /*----------------------------------------------------------------------------------------------------------
-    2.1: Find schema for the field
+    3.1: Find schema for the field
     ----------------------------------------------------------------------------------------------------------*/
     if(typeof(formReponse.schema.properties[key]) !== 'undefined'){
       fieldSchema = formReponse.schema.properties[key];
@@ -169,18 +185,19 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     }
 
     /*----------------------------------------------------------------------------------------------------------
-    2.2: Process the result parameters
+    3.2: Process the result parameters
     ----------------------------------------------------------------------------------------------------------*/
+    // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
-    if (key.localeCompare('New table name') == 0){
+    if (key.localeCompare('new table name') == 0 && returnType.localeCompare('print') != 0){
       console.log('CG: Result is dataframe');
       result_variable = formData[key].replace(/ /g,"_");
     }
-    else if(key.localeCompare('New column name') == 0){
+    else if(key.localeCompare('new column name') == 0 && returnType.localeCompare('print') != 0){
       console.log('CG: Result is series');
       result_variable = dataframeSelection + '["' + formData[key].replace(/ /g,"_") + '"]';
     }
-    else if(key.localeCompare('New variable name') == 0){
+    else if(key.localeCompare('new variable name') == 0 && returnType.localeCompare('print') != 0){
       console.log('CG: Result is variable');
       result_variable = formData[key].replace(/ /g,"_");
     }
@@ -192,7 +209,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
       console.log('CG: Ignore column field');
     }
     /*----------------------------------------------------------------------------------------------------------
-    2.3: Handle complex arrays
+    3.3: Handle complex arrays
     ----------------------------------------------------------------------------------------------------------*/ 
     // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
     else if((typeof(fieldSchema['type']) !== 'undefined')
@@ -223,7 +240,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
       parameter_counter +=1;
     }
     /*----------------------------------------------------------------------------------------------------------
-    2.4: Handle individual fields
+    3.4: Handle standard fields according to type 
     ----------------------------------------------------------------------------------------------------------*/ 
     else{
       console.log('------- MAP FORM RESPONSE:',key);
@@ -234,6 +251,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     }
   }
 
+  // Handle the case of 0 parameters found
   if(parameter_counter != 0){
     // Remove last comma and space given there are no more parameters
     formula = formula.substring(0, formula.length - 2);
@@ -246,30 +264,13 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     formula = formula + ')';
   }
 
-
   /*-------------------------------------------------------------------
-    3. Assign to result to variable
-  --------------------------------------------------------------------*/  
+    4. Handle defaults when there is no result variable defined
+  --------------------------------------------------------------------*/
 
-  let returnType = '';
-  // Determine the type of the result variable. Default is dataframe
-  if(typeof(formReponse.schema.returnType) !== 'undefined'){
-    console.log('CG: Defined return type in schema');
-    returnType = formReponse.schema.returnType;
-  }else{
-    if(typeof(formReponse.schema.properties['New variable name']) !== 'undefined'){
-      returnType = 'variable';
-    }else if(typeof(formReponse.schema.properties['New column name']) !== 'undefined'){
-      returnType = 'series';
-    }else{
-      returnType = 'dataframe';
-    }
-  }
-
-
-
-
-  // ------------ HANDLE DEFAULTS FOR RESULT VARIABLE (i.e. if not specified in the form)
+  /*------------------------------------
+    4.1 Result is a dataframe
+  ------------------------------------*/
   if(returnType.localeCompare('dataframe') == 0){
     console.log('CG: 3.1 Return type is dataframe');
     // If no target variable, and calling from a given dataframe apply transformation to this dataframe
@@ -283,6 +284,9 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
       result_variable = 'data';
     }
   }
+  /*------------------------------------
+    4.2 Result is a series
+  ------------------------------------*/
   else if(returnType.localeCompare('series') == 0){
     console.log('CG: 3.2 Return type is series');
     // This covers both scenarios df->series and series->series
@@ -311,6 +315,9 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
      result_variable =  dataframeSelection + '["' + result_column_name + '"]';
     }
   }
+  /*------------------------------------
+    4.3 Result is a variable
+  ------------------------------------*/
   else if (returnType.localeCompare('variable') == 0){
     console.log('CG: 3.3 Return type is variable');
     if(result_variable === ''){
@@ -318,10 +325,17 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
       result_variable = 'var';
     }
   }
-   
-  formula = result_variable + ' = ' + formula;
+  
+  // Handle the case where we do not save the result to a variable and we just want to print to a notebook
+  if(returnType.localeCompare('none') != 0){
+    formula = result_variable + ' = ' + formula;
+  }
+
+  // Handle the cases where we append something at the end
+  if(typeof(formReponse.schema.append) != 'undefined'){
+    formula = formula + formReponse.schema.append;
+  }
+
   console.log('FORMULA: ', formula);
-
   return formula;
-
  };
