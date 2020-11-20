@@ -58,6 +58,8 @@
 .thead-dark {
   background-color: #212529;
   color: #ffffff;
+  position: sticky;
+  top: 0;
 }
 
 .full-height-container {
@@ -102,7 +104,6 @@
 }
 
 .tab-item {
-  padding-top: 2px;
   width: 100%;
   margin-bottom: 15px;
   overflow: auto;
@@ -115,14 +116,6 @@
   color: #2d2d2d;
   padding: 8px;
   margin: 0
-}
-
-.fixed-header {
-  border: 1px solid #DDDDDD;
-}
-
-.fixed-header table{
-  margin-bottom: 0;
 }
 
 table td, table th {
@@ -169,5 +162,30 @@ table td, table th {
 .data-type-info > * {
   font-size: 11px;
   padding-bottom: 0;
+  margin-top: -2px;
 }
 
+thead th {
+  background-color: #212529;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 50%;
+}
+thead {
+  background-color: white;
+}
+.sticky {
+  position: sticky;
+  top: 0;
+}
+
+thead td {
+  background-color: white;
+  position: sticky;
+  z-index: 1;
+}
+
+tbody {
+  z-index: 0;
+}
