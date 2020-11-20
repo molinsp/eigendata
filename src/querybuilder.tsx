@@ -78,7 +78,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
                   <div className="form-group">
                       <label
                           htmlFor="filterDataFrame"
-                          className="control-label">Filter type
+                          className="control-label">filter type
                       </label>
                       <Select
                           id="filterDataFrame"
@@ -90,7 +90,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
                    <div className="form-group">
                       <label
                           htmlFor="newTableNameTextInput"
-                          className="control-label">New table name
+                          className="control-label">new table name
                       </label>
                       <input
                           id="newTableNameTextInput"

@@ -150,9 +150,9 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     console.log('CG: Defined return type in schema');
     returnType = formReponse.schema.returnType;
   }else{
-    if(typeof(formReponse.schema.properties['New variable name']) !== 'undefined'){
+    if(typeof(formReponse.schema.properties['new variable name']) !== 'undefined'){
       returnType = 'variable';
-    }else if(typeof(formReponse.schema.properties['New column name']) !== 'undefined'){
+    }else if(typeof(formReponse.schema.properties['new column name']) !== 'undefined'){
       returnType = 'series';
     }else{
       returnType = 'dataframe';
@@ -189,15 +189,15 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     ----------------------------------------------------------------------------------------------------------*/
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
-    if (key.localeCompare('New table name') == 0 && returnType.localeCompare('print') != 0){
+    if (key.localeCompare('new table name') == 0 && returnType.localeCompare('print') != 0){
       console.log('CG: Result is dataframe');
       result_variable = formData[key].replace(/ /g,"_");
     }
-    else if(key.localeCompare('New column name') == 0 && returnType.localeCompare('print') != 0){
+    else if(key.localeCompare('new column name') == 0 && returnType.localeCompare('print') != 0){
       console.log('CG: Result is series');
       result_variable = dataframeSelection + '["' + formData[key].replace(/ /g,"_") + '"]';
     }
-    else if(key.localeCompare('New variable name') == 0 && returnType.localeCompare('print') != 0){
+    else if(key.localeCompare('new variable name') == 0 && returnType.localeCompare('print') != 0){
       console.log('CG: Result is variable');
       result_variable = formData[key].replace(/ /g,"_");
     }
@@ -327,7 +327,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
   }
   
   // Handle the case where we do not save the result to a variable and we just want to print to a notebook
-  if(returnType.localeCompare('print') != 0){
+  if(returnType.localeCompare('none') != 0){
     formula = result_variable + ' = ' + formula;
   }
 
