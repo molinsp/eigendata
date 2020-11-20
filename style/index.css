@@ -58,8 +58,6 @@
 .thead-dark {
   background-color: #212529;
   color: #ffffff;
-  position: sticky;
-  top: 0;
 }
 
 .full-height-container {
