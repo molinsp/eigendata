@@ -331,6 +331,11 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     formula = result_variable + ' = ' + formula;
   }
 
+  // Handle the cases where we append something at the end
+  if(typeof(formReponse.schema.append) != 'undefined'){
+    formula = formula + formReponse.schema.append;
+  }
+
   console.log('FORMULA: ', formula);
   return formula;
  };
