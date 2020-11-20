@@ -176,7 +176,13 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       //  Compose formula: variable = dataframe . query/eval (query)
       let formula =  variable + ' = ' + this.state.dataframeSelection;
       formula = formula + '.' + this.state.queryType;
-      formula = formula + '(' + sql_query + ', engine="python"' + ')';   
+
+      // Add the copy command to make sure pandas knows we are creating a copy
+      if(returnType.localeCompare('dataframe') == 0){
+        formula = formula + '(' + sql_query + ', engine="python"' + ').copy()';  
+      }else{
+        formula = formula + '(' + sql_query + ', engine="python"' + ')';  
+      } 
       console.log('Formula', formula);
       this.state.logic.writeToNotebookAndExecute(formula);  
     }
