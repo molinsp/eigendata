@@ -163,6 +163,38 @@
         }
       }
     },
+    "transpose" : {
+      "form" : {
+        "properties" : {
+          "New table name" : {
+            "type" : "string",
+            "default" : "pivot"
+          }
+        },
+        "required" : [],
+        "title" : "Transpose table",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "transpose",
+        "description" : "Reflect the table over its main diagonal by writing rows as columns and vice-versa."
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "aggfunc" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "function" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
+      }
+    },
     "get_dummies" : {
       "form" : {
         "required" : [
@@ -1180,13 +1212,16 @@
                     ]
                   },
                   "start" : {
-                    "type" : "number"
+                    "type" : "number",
+                    "description" : "Non-inclusive: Sart the bucket above this number. For example, if start is set at 5, bucketing will start at 6."
                   },
                   "size" : {
-                    "type" : "number"
+                    "type" : "number",
+                    "description" : "Inclusive: Take buckets of this size. For example, if start is set at 5, and size to 10, it will pick up elements from 6 to 15, including 15."
                   },
                   "end" : {
-                    "type" : "number"
+                    "type" : "number",
+                    "description" : "Inclusive: Number at which to end the buckets. E.g. if start = 5, size =10 and end is set to 17, it will only create a category (5,15]. The next valid end would be 25."
                   },
                   "New column name" : {
                     "type" : "string"
@@ -1201,7 +1236,9 @@
                     ]
                   },
                   "bin_number" : {
-                    "type" : "number"
+                    "type" : "number",
+                    "title" : "bin number",
+                    "description" : "Number of equally spaced bins used. Bin width is then (max-min)/bin number."
                   },
                   "New column name" : {
                     "type" : "string"
@@ -1216,7 +1253,8 @@
                     ]
                   },
                   "quantiles" : {
-                    "type" : "number"
+                    "type" : "number",
+                    "description" : "Number of quantiles. 10 for deciles, 4 for quartiles, etc."
                   },
                   "New column name" : {
                     "type" : "string"
@@ -2114,6 +2152,92 @@
         "function" : "info",
         "returnType" : "print",
         "description" : "Get the number of non-null values and datatypes of all columns."
+      },
+      "uischema" : {
+        "New table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "mask" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column to change",
+            "codegenstyle" : "ignore"
+          },
+          "cond" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column with indicator",
+            "codegenstyle" : "seriesColumn"
+          },
+          "other" : {
+            "title" : "value",
+            "description" : "Value if the condition is true. If it is a text, add quotation marks (e.g. \"text\").",
+            "type" : "string",
+            "codegenstyle" : "variable"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Change value based on indicator",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "mask",
+        "type" : "object",
+        "description" : "Use a column indicator to set a new value. Indicators need to be true/false. If they are 0/1 you need to change the type to boolean first."
+      },
+      "uischema" : {
+        "New column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "rename_categories" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "new_categories" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "title" : "new categories",
+            "description" : "Enter the name of the categories"
+          },
+          "New column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "new_categories"
+        ],
+        "title" : "[Column] Rename categories",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].cat",
+        "function" : "rename_categories",
+        "description" : "Change the names of categories (for example after creating buckets)."
       },
       "uischema" : {
         "New table name" : {

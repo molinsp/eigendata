@@ -370,16 +370,7 @@ def ed_build_colDefs_for_mi_cols(df):
     return s
 
 def ed_build_colDefs_for_si_cols(df, verbose=True):
-    colDefs = []
-    for c in df.columns:
-        dic = {}
-        col = df[c]
-        field = col.name
-        header_name = field.title()
-        # Replace dots with underscores, otherwise react-table cannot handle it (see step 4 last function)
-        dic['accessor'] = field.replace('.','_')
-        dic['Header'] = field
-        colDefs.append(dic)
+    colDefs = [{'accessor': str(col).replace('.','_'), 'Header': col} for col in df.columns]
     return colDefs
 
 def ed_build_colDefs_for_mi_rows(df):
@@ -492,6 +483,11 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     # 3. Show only preview of 50 rows, but first get the real size
     n_rows =  df_data.shape[0]
     n_columns =  df_data.shape[1]
+    # Handle very wide dataframes
+    inform_user_reduced_columns = ''
+    if n_columns > 100:
+        df_data = df_data.iloc[:,:100]
+        inform_user_reduced_columns = 'Displaying first 600 columns for performance reasons'
     df_data = df_data.head(50)
     
     # 4. Ensure data can be read in the frontend
@@ -519,6 +515,7 @@ def ed_prep_data_for_visualization(dfmi,index=False):
         'shape' : {
             'rows': n_rows,
             'columns': n_columns
+            'columnsPreviewMessage' : inform_user_reduced_columns
         }  
     }
     

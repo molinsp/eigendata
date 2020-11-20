@@ -134,7 +134,6 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/ IS NOT EMPTY/g,'.notnull()');
       
 
-      // To-do: add backticks for fields with blanks
       console.log('Config fields', this.state.config.fields);
       for(var i in this.state.config.fields){
         let col_name = String(i);
@@ -149,12 +148,29 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
         }
       }
 
+      let returnType = '';
+      if(this.state.queryType.localeCompare('query') == 0){
+        returnType = 'dataframe';
+      }else{
+        // eval case
+        returnType = 'series';
+      }
+
       // If no variable defined, use this dataframe selection
       let variable = '';
-      if(this.state.newTableName !== ''){
-        variable = this.state.newTableName.replace(/ /g,"_");
-      }else{
-        variable = this.state.dataframeSelection ;
+      if(returnType.localeCompare('dataframe') == 0){
+        if(this.state.newTableName === ''){
+          variable = this.state.dataframeSelection ;
+        }else{
+          variable = this.state.newTableName.replace(/ /g,"_");
+        }
+      }
+      else if(returnType.localeCompare('series') == 0){
+        if(this.state.newTableName === ''){
+          variable = this.state.dataframeSelection + '["indicator"]';
+        }else{
+          variable = this.state.dataframeSelection + '["' + this.state.newTableName.replace(/ /g,"_") + '"]';
+        }
       }
 
       //  Compose formula: variable = dataframe . query/eval (query)
