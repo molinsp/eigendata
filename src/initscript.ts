@@ -452,7 +452,18 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     
     # Abreviations: mi is multi index
 
-    # 1. Handle multi-level columns
+    # 1. Show only preview of 50 rows, but first get the real size
+    n_rows =  df_data.shape[0]
+    n_columns =  df_data.shape[1]
+    # Handle very wide dataframes
+    displayed_columns = n_columns
+    if n_columns > 100:
+        df_data = df_data.iloc[:,:100]
+        displayed_columns = 100
+    df_data = df_data.head(50)
+
+
+    # 2. Handle multi-level columns
     # Check it ther are multi-level columns
     if ed_is_multiindex_col_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
@@ -464,7 +475,7 @@ def ed_prep_data_for_visualization(dfmi,index=False):
         columnDefs_col = ed_build_colDefs_for_si_cols(df_data)
     
     
-    # 2. Handle multi-index rows (does not seem to matter gith now)
+    # 3. Handle multi-index rows (does not seem to matter gith now)
     if ed_is_multiindex_row_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
         columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
@@ -478,17 +489,6 @@ def ed_prep_data_for_visualization(dfmi,index=False):
             # Single index
             columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
             df_data = df_data.reset_index()
-            
-
-    # 3. Show only preview of 50 rows, but first get the real size
-    n_rows =  df_data.shape[0]
-    n_columns =  df_data.shape[1]
-    # Handle very wide dataframes
-    inform_user_reduced_columns = ''
-    if n_columns > 100:
-        df_data = df_data.iloc[:,:100]
-        inform_user_reduced_columns = 'Displaying first 600 columns for performance reasons'
-    df_data = df_data.head(50)
     
     # 4. Ensure data can be read in the frontend
     ed_format_data_for_visualization(df_data)
@@ -514,8 +514,8 @@ def ed_prep_data_for_visualization(dfmi,index=False):
         'columnTypes': col_types,
         'shape' : {
             'rows': n_rows,
-            'columns': n_columns
-            'columnsPreviewMessage' : inform_user_reduced_columns
+            'columns': n_columns,
+            'displayedColumns' : displayed_columns
         }  
     }
     
