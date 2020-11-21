@@ -457,9 +457,9 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     n_columns =  df_data.shape[1]
     # Handle very wide dataframes
     displayed_columns = n_columns
-    if n_columns > 100:
-        df_data = df_data.iloc[:,:100]
-        displayed_columns = 100
+    if n_columns > 200:
+        df_data = df_data.iloc[:,:200]
+        displayed_columns = 200
     df_data = df_data.head(50)
 
 
