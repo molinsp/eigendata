@@ -171,7 +171,7 @@
           "aggfunc",
           "index_type"
         ],
-        "title" : "Pivot Table",
+        "title" : "Pivot table",
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "pivot_table",
@@ -2199,7 +2199,9 @@
           }
         },
         "required" : [
-          "column"
+          "column",
+          "cond",
+          "other"
         ],
         "title" : "[Column] Change value based on indicator",
         "callerObject" : "DataFrame[Series]",
@@ -2227,7 +2229,7 @@
               "type" : "string"
             },
             "title" : "new categories",
-            "description" : "Enter the name of the categories"
+            "description" : "Enter the name of the categories, from small to large."
           },
           "new column name" : {
             "type" : "string"

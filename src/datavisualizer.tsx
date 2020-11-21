@@ -109,7 +109,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             </div>
             <p className={'disclaimer'}>
               Data shape: {separateThousands(shape['rows'])} rows and{' '}
-              {shape['columns']} columns. Preview: first {data.length} rows.
+              {shape['columns']} columns. Preview: first {data.length} rows and {shape['displayedColumns']} columns.
             </p>
           </nav>
           <div className="tab-item">
