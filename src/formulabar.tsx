@@ -37,9 +37,15 @@ import Demo from "./querybuilder";
 
 import 'bootstrap/dist/css/bootstrap.css';
 
-import posthog from 'posthog-js'
+// Usage analytics
+import posthog from 'posthog-js';
+import amplitude from 'amplitude-js';
 
 import {generatePythonCode} from './code_generation';
+
+// Before deploying to production, we change this flag
+const production: boolean = false;
+const packageVersion: string = "0.1.9";
 
 /*
  Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
@@ -221,7 +227,11 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   // Save the input of the transformation seleciton in the UI to the state
   const handleTransformationSelectionChange = (input: any) => {
      //console.log(input);
-     posthog.capture('TransformationSelection', { property: input.value });
+     // Event tracking
+     if(production){
+        posthog.capture('TransformationSelection', { property: input.value });
+        amplitude.getInstance().logEvent('TransformationSelection', { userSelection: input.value });
+     }
      if(state.dataframeSelection){
        console.log('all defined');
        getTransformationFormToState(state.dataframeSelection, input);
@@ -273,6 +283,10 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   // Generate python code and write in the notebook
   const callGeneratePythonCode = ( formReponse: any) => {
+    // Track submitted transformations 
+    if(production){
+      amplitude.getInstance().logEvent('SubmitTransformation', { function: formReponse.schema.function });
+    }
     let dataframeSelection: string; 
     if(state.dataframeSelection){
       dataframeSelection = state.dataframeSelection.value;
@@ -466,9 +480,12 @@ export class Backend {
     // Load initialization script
     this._initScripts = python_initialization_script;
 
-
     // Init tracking
-    posthog.init('PDFTg_vI83yh_K3h5vlI-iobpWI1Wr7dl2PmzXA3R-E', { api_host: 'https://app.posthog.com' })
+    if(production){
+      posthog.init('PDFTg_vI83yh_K3h5vlI-iobpWI1Wr7dl2PmzXA3R-E', { api_host: 'https://app.posthog.com' });
+      amplitude.getInstance().init("c461bfacd2f2ac406483d90c01a708a7");
+      amplitude.getInstance().setVersionName(packageVersion);
+    }
   }
 
   // -------------------------------------------------------------------------------------------------------------
