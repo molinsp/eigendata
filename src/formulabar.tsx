@@ -12,7 +12,7 @@ import {NotebookPanel, INotebookTracker} from '@jupyterlab/notebook';
 
 import { KernelMessage, Kernel } from '@jupyterlab/services';
 
-import {ISessionContext} from "@jupyterlab/apputils";
+import {ISessionContext, Dialog, showDialog} from "@jupyterlab/apputils";
 
 import { ISignal, Signal } from '@lumino/signaling';
 
@@ -42,6 +42,8 @@ import posthog from 'posthog-js';
 import amplitude from 'amplitude-js';
 
 import {generatePythonCode} from './code_generation';
+
+import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 // Before deploying to production, we change this flag
 const production: boolean = false;
@@ -228,7 +230,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   const handleTransformationSelectionChange = (input: any) => {
      //console.log(input);
      // Event tracking
-     if(production){
+     if(production && logic.shareProductData){
         posthog.capture('TransformationSelection', { property: input.value });
         amplitude.getInstance().logEvent('TransformationSelection', { userSelection: input.value });
      }
@@ -284,7 +286,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   // Generate python code and write in the notebook
   const callGeneratePythonCode = ( formReponse: any) => {
     // Track submitted transformations 
-    if(production){
+    if(production && logic.shareProductData){
       amplitude.getInstance().logEvent('SubmitTransformation', { function: formReponse.schema.function });
     }
     let dataframeSelection: string; 
@@ -428,6 +430,9 @@ export class Backend {
   // Data transformation functions
   public transformationsList = []
 
+  // Flag to decide if we are going to share product data
+  public shareProductData;
+
 
   /*---------------------------------
     Communicate with Python Kernel
@@ -453,7 +458,7 @@ export class Backend {
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
-  constructor(notebooks: INotebookTracker) {
+  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry) {
     console.log('------> Backend Constructor');
 
     // Add a notebook tracker
@@ -473,19 +478,56 @@ export class Backend {
       transformationList.push({"value": transformation, "label": _transformationsConfig["transformations"][transformation]['form']['title']} );
     };
 
-    console.log('Transformation list', transformationList);
-
     this.transformationsList = transformationList;
 
-    // Load initialization script
+    // Load python initialization script
     this._initScripts = python_initialization_script;
 
-    // Init tracking
-    if(production){
-      posthog.init('PDFTg_vI83yh_K3h5vlI-iobpWI1Wr7dl2PmzXA3R-E', { api_host: 'https://app.posthog.com' });
-      amplitude.getInstance().init("c461bfacd2f2ac406483d90c01a708a7");
-      amplitude.getInstance().setVersionName(packageVersion);
-    }
+
+    /*------------------------------
+      Get user consent for analytics
+    -------------------------------*/
+    settingRegistry.load('@molinsp/eigendata:plugin').then(
+      (settings: ISettingRegistry.ISettings) => {
+        if (settings.get('answeredProductDataDialog').composite == false){
+          showDialog({
+              title: 'Welcome to Eigendata',
+              body: 'Eigendata captures anonymous product data using cookies. If you wish, you can opt-out by selecting reject.',
+              buttons: [Dialog.okButton({label: 'Accept'}), Dialog.cancelButton({label: 'Reject'})]
+          }).catch(e => console.log(e)).then((result: any) => {
+            settings.set('answeredProductDataDialog', true);
+            const clickedButtonLabel = result.button.label;
+            console.log('Analytics: Clicked', clickedButtonLabel);
+            if(clickedButtonLabel == 'Accept'){
+              console.log('Analytics: Accepted permission');
+              settings.set('shareProductData', true);
+              this.shareProductData = true;
+            }else{
+              settings.set('shareProductData', false);
+              this.shareProductData = false;
+            }
+
+          })
+        }else{
+          console.log('Analytics: Reading product dada settings');
+          this.shareProductData = settings.get('shareProductData').composite as boolean;
+        }
+
+        console.log('Analytics: Product tracking data', this.shareProductData);
+        // Tracking setup
+        if(production && this.shareProductData){
+          posthog.init('PDFTg_vI83yh_K3h5vlI-iobpWI1Wr7dl2PmzXA3R-E', { api_host: 'https://app.posthog.com' });
+          amplitude.getInstance().init("c461bfacd2f2ac406483d90c01a708a7");
+          amplitude.getInstance().setVersionName(packageVersion);
+        }
+
+      },
+      (err: Error) => {
+        console.error(
+          `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+        );
+      }
+    );
   }
 
   // -------------------------------------------------------------------------------------------------------------

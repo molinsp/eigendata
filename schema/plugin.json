@@ -14,6 +14,12 @@
       "title": "Share product data",
       "description": "This setting determines if product data is shared. We don't keep your identity, and only record which transformations are used to help us better invest time improving the product.",
       "default": false
+    },
+    "answeredProductDataDialog": {
+      "type": "boolean",
+      "title": "User consent requested",
+      "description": "Property to validate that user consent for product data has been asked",
+      "default": false
     }
   }
 }

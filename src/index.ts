@@ -4,7 +4,7 @@ import {
   ILayoutRestorer
 } from '@jupyterlab/application';
 
-import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
+import { MainAreaWidget, WidgetTracker} from '@jupyterlab/apputils';
 import { FormWidget, Backend } from './formulabar';
 import { DataVisualizerWidget } from './datavisualizer';
 import { reactIcon } from '@jupyterlab/ui-components';
@@ -19,8 +19,6 @@ import { IMainMenu } from '@jupyterlab/mainmenu';
 import { Menu } from '@lumino/widgets';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
-
-const PLUGIN_ID = '@molinsp/eigendata:plugin';
 
 /**
  * The command IDs used by the react-formulawidget plugin.
@@ -48,20 +46,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     const datavizcommand = CommandIDs.dataviz;
 
     // Create class that manages the backend behavior
-    const backend = new Backend(notebook_tracker);
-    
-
-    settingRegistry.load(PLUGIN_ID).then(
-      (settings: ISettingRegistry.ISettings) => {
-        console.log('Settings', settings);
-        //settings.changed.connect(this._updateSettings.bind(this));
-      },
-      (err: Error) => {
-        console.error(
-          `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
-        );
-      }
-    );
+    const backend = new Backend(notebook_tracker, settingRegistry);
 
     commands.addCommand(command, {
       caption: 'Create a new React Widget',
@@ -91,7 +76,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         app.shell.activateById(formulawidget.id);
         }
     });
-
     
     commands.addCommand(datavizcommand, {
       caption: 'Create a new Data Data Visualizer',
@@ -122,7 +106,6 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
     });
    
-
     // Track and restore the formulawidget state
     let tracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
       namespace: 'ed'
@@ -132,8 +115,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: () => 'ed'
     });
 
-    // Track and restore the data visualizer state
-   
+    // Track and restore the data visualizer state  
     let viztracker = new WidgetTracker<MainAreaWidget<DataVisualizerWidget>>({
       namespace: 'dv'
     });
@@ -142,7 +124,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: () => 'dv'
     });
    
-
     // Create a menu
     const tutorialMenu: Menu = new Menu({ commands });
     tutorialMenu.title.label = 'Eigendata';
@@ -151,7 +132,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     // Add the command to the menu
     tutorialMenu.addItem({ command, args: { origin: 'from the menu' } });
     tutorialMenu.addItem({ command: datavizcommand, args: { origin: 'from the menu' } });
-
   }
 };
 
