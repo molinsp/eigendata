@@ -369,27 +369,15 @@ def ed_build_colDefs_for_mi_cols(df):
                 s2.append(new_index_name)
     return s
 
-def ed_build_colDefs_for_si_cols(df, verbose=True):
+def ed_build_colDefs(df, verbose=True):
     colDefs = [{'accessor': str(col).replace('.','_'), 'Header': col} for col in df.columns]
     return colDefs
 
-def ed_build_colDefs_for_mi_rows(df):
-    """
-    create agGrid columnDefs dict for column grouping
-    from multiindex dataframe columns
-    """
-    mindexrow = df.index
-    s = []
-    for e in list(mindexrow.names):
-        new_e = {'accessor': e,
-                 'Header': e.title()}
-        s.append(new_e)
-    return s
 
 def ed_flatten_mi_col_df(dfmi):
     """
     create flattend dataframe
-    multi index col ('a', 'b', 'c') turned to 'a-b-c'
+    multi index col ('a', 'b', 'c') turned to 'a_b_c'
     """
     df = dfmi.copy()
     cols = df.columns.map(lambda x: '_'.join([str(i) for i in x]))
@@ -415,7 +403,7 @@ def ed_is_multiindex_row_df(df):
 
 def ed_check_if_default_index(df):
     # Check if the index is the same as the default index. We use the name as a proxy
-    check_index = (df.index.name == None)
+    check_index = ((df.index == pd.RangeIndex(start=0,stop=df.shape[0], step=1)).all())
     return check_index
 
 def ed_format_data_for_visualization(df_data):
@@ -423,12 +411,12 @@ def ed_format_data_for_visualization(df_data):
         if is_datetime64_any_dtype(col):
             # Check if it contains only dates
             if ((df_data[col_name].dt.floor('d') == df_data[col_name]) | (df_data[col_name].isnull())).all():
-                df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y')
+                df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d')
             # Check if it contains only times
-            elif ( (df_data[col_name].dt.date == pd.Timestamp('now').date()) | (df_data[col_name].isnull()) ).all():
-                df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
+            #elif ( (df_data[col_name].dt.date == pd.Timestamp('now').date()) | (df_data[col_name].isnull()) ).all():
+            #    df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
             else:
-                df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y %H:%M:%S')
+                df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d %H:%M:%S')
             
             df_data[col_name] = df_data[col_name].fillna('')
         elif is_numeric_dtype(col):
@@ -461,35 +449,29 @@ def ed_prep_data_for_visualization(dfmi,index=False):
         df_data = df_data.iloc[:,:200]
         displayed_columns = 200
     df_data = df_data.head(50)
-
-
+    
     # 2. Handle multi-level columns
-    # Check it ther are multi-level columns
+    # Check it ther are multi-level columns, and generate the column definitions
     if ed_is_multiindex_col_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
         columnDefs_col = ed_build_colDefs_for_mi_cols(df_data)
         # Create a unique name for each column by composing the names of all the levels
         df_data = ed_flatten_mi_col_df(df_data)
     else:
-        # Generate column definitions for the frontend
-        columnDefs_col = ed_build_colDefs_for_si_cols(df_data)
+        columnDefs_col = ed_build_colDefs(df_data)
     
-    
-    # 3. Handle multi-index rows (does not seem to matter gith now)
+    # 3. Handle multi-index rows
     if ed_is_multiindex_row_df(df_data):
-        # Build multi-level column definitions to be used by the frontend grid
-        columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
-        # Flatten the multi-level index so that each row has a unique number
+        columnDefs_row = [{'accessor': str(col).replace('.','_'), 'Header': col} for col in list(df_data.index.names)]
         df_data = df_data.reset_index()
     else:
-        # If it is the default index
-        if ed_check_if_default_index(df_data):
-            columnDefs_row = []
-        else:
-            # Single index
-            columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
+        if 'index' in df_data.columns:
+            columnDefs_row = [{'accessor': 'level_0', 'Header': 'pd_index'}]
             df_data = df_data.reset_index()
-    
+        else:
+            columnDefs_row = [{'accessor': 'index', 'Header': 'index'}]
+            df_data = df_data.reset_index()
+
     # 4. Ensure data can be read in the frontend
     ed_format_data_for_visualization(df_data)
     # If there are any dots, remove them because react-table can't handle them

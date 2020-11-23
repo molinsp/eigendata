@@ -789,7 +789,7 @@ export class Backend {
      let codeToRun = '_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';        
       // Flag as code to ignore avoid triggering the pythonRequestDataframes function
       this._codeToIgnore = codeToRun;
-      console.log('Request expression',codeToRun);
+      console.log('DataViz: Request expression',codeToRun);
       let result_object = {};
       
        // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
@@ -797,7 +797,7 @@ export class Backend {
         codeToRun, {'data' : '_visualizer_data', 'columns':'_visualizer_columns'});
 
       let content = result.data.data["text/plain"];
-      console.log('Content', content.slice(0,100));
+      //console.log('DataViz content', content.slice(0,100));
 
       if (content.slice(0, 1) == "'" || content.slice(0, 1) == "\""){
         content = content.slice(1,-1);
@@ -808,11 +808,11 @@ export class Backend {
       try{
        parsed_data = JSON.parse(content);
       }catch(e){
-        console.error('(!) Cannot parse data');
+        console.error('DataViz: (!) Cannot parse data');
       }
 
       result_object = parsed_data;
-      console.log('Backend visualizer object', result_object);
+      console.log('DataViz: Backend visualizer object', result_object);
       
       return result_object;
   }
