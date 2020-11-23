@@ -284,7 +284,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
   }
 
   // Generate python code and write in the notebook
-  const callGeneratePythonCode = ( formReponse: any) => {
+  const callGeneratePythonCode = async ( formReponse: any) => {
     // Track submitted transformations 
     if(production && logic.shareProductData){
       amplitude.getInstance().logEvent('SubmitTransformation', { function: formReponse.schema.function });
@@ -297,14 +297,19 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
     }
     let formula = generatePythonCode(formReponse, dataframeSelection);
 
-    // Write and execute the formula in the notebook
-    setState(state => ({
-         ...state,
-         transformationSelection:null,
-         showForm: false,
-    }));
-
-    logic.writeToNotebookAndExecute(formula);  
+    try{
+      await logic.writeToNotebookAndExecute(formula);
+          // Write and execute the formula in the notebook
+      setState(state => ({
+           ...state,
+           transformationSelection:null,
+           showForm: false,
+      }));
+    }
+    catch(error){
+      console.log('Error in fe', error);
+    }
+    
   };
 
 
@@ -707,7 +712,7 @@ export class Backend {
   [FUNCTION] Write to the last cell of the notebook and execute
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
-  public writeToNotebookAndExecute = (code: string) => {
+  public async writeToNotebookAndExecute (code: string) {
     // Add pandas if not already added
     if(this._importedLibraries == false){
       code = 'import pandas as pd\nimport numpy as np\nfrom fastdata.core import *\n' + code;
@@ -719,7 +724,14 @@ export class Backend {
     console.log('Last cell index',last_cell_index);
     
     // Run and insert using cell utilities
-    CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, code, false);
+    try{
+      await CellUtilities.insertRunShow(this._currentNotebook, last_cell_index, code, true);
+      return 'success';
+    }
+    catch(error) {
+      console.log('Error caught in the backend');
+      throw error;
+    };
 
   };
 
