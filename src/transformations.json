@@ -41,6 +41,79 @@
         }
       }
     },
+    "read_excel" : {
+      "form" : {
+        "properties" : {
+          "io" : {
+            "type" : "string",
+            "title" : "file path",
+            "description" : "Location of the file relative to the notebook. E.g. /Documents/Data/testdata.csv."
+          },
+          "sheet_name" : {
+            "type" : "string",
+            "default" : ",",
+            "title" : "sheet name",
+            "description" : "Name of the sheet to load."
+          },
+          "header" : {
+            "type" : "number",
+            "description" : "Row to use for the column labels (first row is 0).",
+            "default" : 0
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "filepath_or_buffer"
+        ],
+        "title" : "Read Excel Sheet",
+        "type" : "object",
+        "callerObject" : "pd",
+        "function" : "read_excel",
+        "transformationType" : "dataLoading",
+        "description" : "Load an excel sheet in a table."
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "to_csv" : {
+      "form" : {
+        "properties" : {
+          "path_or_buf" : {
+            "type" : "string",
+            "title" : "filename or path",
+            "description" : "Location of the file. You can also indicate a path to save it in a specific folder."
+          },
+          "index" : {
+            "type" : "string",
+            "default" : "False",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "enumNames" : [
+              "Include index",
+              "Exclude index"
+            ],
+            "codegenstyle" : "variable"
+          }
+        },
+        "required" : [
+          "path_or_buf",
+          "index"
+        ],
+        "type" : "object",
+        "title" : "Save/write to CSV",
+        "callerObject" : "DataFrame",
+        "function" : "to_csv",
+        "description" : "Save selected table to csv file.",
+        "returnType" : "none"
+      }
+    },
     "describe" : {
       "form" : {
         "title" : "Overview: Column statistics",
@@ -684,40 +757,6 @@
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
         }
-      }
-    },
-    "to_csv" : {
-      "form" : {
-        "properties" : {
-          "path_or_buf" : {
-            "type" : "string",
-            "title" : "filename or path",
-            "description" : "Location of the file. You can also indicate a path to save it in a specific folder."
-          },
-          "index" : {
-            "type" : "string",
-            "default" : "False",
-            "enum" : [
-              "True",
-              "False"
-            ],
-            "enumNames" : [
-              "Include index",
-              "Exclude index"
-            ],
-            "codegenstyle" : "variable"
-          }
-        },
-        "required" : [
-          "path_or_buf",
-          "index"
-        ],
-        "type" : "object",
-        "title" : "Save/write to CSV",
-        "callerObject" : "DataFrame",
-        "function" : "to_csv",
-        "description" : "Save selected table to csv file.",
-        "returnType" : "none"
       }
     },
     "astype" : {

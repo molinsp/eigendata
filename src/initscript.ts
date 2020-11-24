@@ -322,9 +322,8 @@ def ed_generate_querybuilder_config(df):
                 }
             
     return json.dumps(queryprops, ensure_ascii=False)
-
-from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
 # ---------------- DATA VISUALIZER ----------------
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype,is_bool_dtype
 def ed_build_colDefs_for_mi_cols(df):
     """
     create columnDefs dict for column grouping
@@ -419,6 +418,9 @@ def ed_format_data_for_visualization(df_data):
                 df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d %H:%M:%S')
             
             df_data[col_name] = df_data[col_name].fillna('')
+        # Check for bool before numeric, given booleans return tru to is_numeric
+        elif is_bool_dtype(col):
+            df_data[col_name] = df_data[col_name].astype('str')
         elif is_numeric_dtype(col):
             df_data[col_name] = df_data[col_name].fillna('')
             pass
