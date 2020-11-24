@@ -474,20 +474,20 @@ def ed_prep_data_for_visualization(dfmi,index=False):
             columnDefs_row = [{'accessor': 'index', 'Header': 'index'}]
             df_data = df_data.reset_index()
 
-    # 4. Ensure data can be read in the frontend
+    # 4. Get the col types before transforming
+    names = [col for col in df_data.columns]
+    types = [dtype.name for dtype in df_data.dtypes]
+    col_types = [{'name': name, 'type': dtype} for name,dtype in zip(names,types)]
+
+    # 5. Ensure data can be read in the frontend
     ed_format_data_for_visualization(df_data)
     # If there are any dots, remove them because react-table can't handle them
     # Only relevatn for single index columns case. 
     df_data.columns = df_data.columns.map(lambda x: str(x).replace('.','_'))
     
-    # 5.Prepare output
+    # 6.Prepare output
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
-    
-    # 6. Get the col types
-    names = [col for col in df_data.columns]
-    types = [dtype.name for dtype in df_data.dtypes]
-    col_types = [{'name': name, 'type': dtype} for name,dtype in zip(names,types)]
     
     # 7. Set the json format. 
     df_data = df_data.to_dict(orient='records')
@@ -505,4 +505,6 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     
     # 3. Return as JSON
     return json.dumps(result, ensure_ascii=True, allow_nan=False)
+# ---------------- FASTDATA IMPORT ----------------
+from fastdata.core import *
 `;
