@@ -163,14 +163,14 @@ table td, table th {
   margin-top: -2px;
 }
 
-thead th {
+.thead-dark th {
   background-color: #212529;
   position: sticky;
   top: 0;
   z-index: 1;
   height: 50%;
 }
-thead {
+.thead-dark {
   background-color: white;
 }
 .sticky {
@@ -178,13 +178,13 @@ thead {
   top: 0;
 }
 
-thead td {
+.thead-dark td {
   background-color: white;
   position: sticky;
   z-index: 1;
 }
 
-tbody {
+.table tbody {
   z-index: 0;
 }
 
