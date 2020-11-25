@@ -187,3 +187,12 @@ thead td {
 tbody {
   z-index: 0;
 }
+
+.rule--field,
+.rule--value,
+.rule--operator {
+  width: 30%;
+}
+.rule--operator {
+  max-width: 102px;
+}
