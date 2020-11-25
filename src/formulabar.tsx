@@ -311,7 +311,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       }));
     }
     catch(error){
-      console.log('Error in fe', error);
+      console.log('Error in submit', error);
     }
     
   };
@@ -724,7 +724,6 @@ export class Backend {
       return 'success';
     }
     catch(error) {
-      console.log('Error caught in the backend');
       throw error;
     };
 
