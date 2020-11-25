@@ -11,7 +11,9 @@ dependencies:
  - nodejs>10.14.0
  - jupyterlab=2.2.6
  - numpy<1.19.4
+ - xlrd>1.0.0
  - pip
  - pip:
     - --index-url https://test.pypi.org/simple/
     - fastdata
+    - pyforest

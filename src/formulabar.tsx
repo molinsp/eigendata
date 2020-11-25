@@ -228,18 +228,22 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
 
   // Save the input of the transformation seleciton in the UI to the state
   const handleTransformationSelectionChange = (input: any) => {
-     //console.log(input);
+     console.log('Transformatino', input);
      // Event tracking
      if(production && logic.shareProductData){
         posthog.capture('TransformationSelection', { property: input.value });
         amplitude.getInstance().logEvent('TransformationSelection', { userSelection: input.value });
      }
+
      if(state.dataframeSelection){
        console.log('all defined');
        getTransformationFormToState(state.dataframeSelection, input);
-     }else if (input.value.localeCompare('read_csv') == 0){
+     }else if (logic._transformationsConfig[input.value]['form']['transformationType'] === 'dataLoading'){
+       console.log('Data loading transformation');
         setState(state => ({
          ...state,
+         transformationForm: logic._transformationsConfig[input.value]['form'],
+         transformationUI: logic._transformationsConfig[input.value]['uischema'],
          transformationSelection:input,
          showForm: true,
          formData: {}
@@ -307,7 +311,7 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
       }));
     }
     catch(error){
-      console.log('Error in fe', error);
+      console.log('Error in submit', error);
     }
     
   };
@@ -446,9 +450,6 @@ export class Backend {
   // This variable is created so that we can avoid running the code to get the available dataframes when it is not 
   // needed, i.e. when we are executing code to get the form
   private _codeToIgnore: string;
-
-  // Boolean to determine if libraries are imported
-  private _importedLibraries: boolean = false;
 
   /*---------------------------------
     Configurations
@@ -713,12 +714,6 @@ export class Backend {
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute (code: string) {
-    // Add pandas if not already added
-    if(this._importedLibraries == false){
-      code = 'import pandas as pd\nimport numpy as np\nfrom fastdata.core import *\n' + code;
-      this._importedLibraries = true;
-    }
-
     // Calculate index of last cell
     const last_cell_index = this._currentNotebook.content.widgets.length - 1;
     console.log('Last cell index',last_cell_index);
@@ -729,7 +724,6 @@ export class Backend {
       return 'success';
     }
     catch(error) {
-      console.log('Error caught in the backend');
       throw error;
     };
 
@@ -920,8 +914,6 @@ export class Backend {
     -----------------------------------------------*/
     this._connector.kernelRestarted.connect(( sender, kernelReady: Promise<void> ) => {
       this._connector.ready.then(() => {
-        // Reset imported libraries
-        this._importedLibraries = false;
         // Flag to reset the frontend
         this._resetStateFormulabarFlag = true;
         this._resetStateDatavisualizerFlag = true;
