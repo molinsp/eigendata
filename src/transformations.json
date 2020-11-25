@@ -49,24 +49,70 @@
             "title" : "file path",
             "description" : "Location of the file relative to the notebook. E.g. /Documents/Data/testdata.csv."
           },
-          "sheet_name" : {
-            "type" : "string",
-            "default" : ",",
-            "title" : "sheet name",
-            "description" : "Name of the sheet to load."
-          },
           "header" : {
             "type" : "number",
             "description" : "Row to use for the column labels (first row is 0).",
             "default" : 0
           },
-          "new table name" : {
-            "type" : "string"
+          "mode" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "enum" : [
+              "number",
+              "name"
+            ],
+            "enumNames" : [
+              "Sheet number",
+              "Sheet names"
+            ],
+            "default" : "number"
           }
         },
         "required" : [
-          "filepath_or_buffer"
+          "io",
+          "mode"
         ],
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "number"
+                    ]
+                  },
+                  "sheet_name" : {
+                    "type" : "number",
+                    "title" : "sheet number",
+                    "description" : "Number of the sheet (first sheet is 0).",
+                    "default" : 0
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "name"
+                    ]
+                  },
+                  "sheet_name" : {
+                    "type" : "string",
+                    "title" : "sheet name",
+                    "description" : "Name of the sheet to load."
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
         "title" : "Read Excel Sheet",
         "type" : "object",
         "callerObject" : "pd",
@@ -660,7 +706,7 @@
         "properties" : {
           "items" : {
             "$ref" : "#/definitions/columns",
-            "description" : "Select the columns that you want to remove."
+            "description" : "Select the columns that you want to keep."
           },
           "new table name" : {
             "type" : "string"
@@ -1084,7 +1130,8 @@
             ],
             "default" : "False",
             "title" : "",
-            "description" : "[Advanced] extraction using a regular expression."
+            "description" : "[Advanced] extraction using a regular expression.",
+            "codegenstyle" : "variable"
           },
           "new column name" : {
             "type" : "string"
@@ -2128,7 +2175,7 @@
         }
       }
     },
-    "substract" : {
+    "subtract" : {
       "form" : {
         "properties" : {
           "column" : {
@@ -2195,12 +2242,12 @@
             ]
           }
         },
-        "title" : "[Column] Substract from column values",
+        "title" : "[Column] Subtract from column values",
         "callerObject" : "DataFrame[Series]",
-        "function" : "substract",
+        "function" : "subtract",
         "type" : "object",
         "returnType" : "series",
-        "description" : "Element-wise substraction of values in a column."
+        "description" : "Element-wise subtraction of values in a column."
       },
       "uischema" : {
         "new column name" : {
