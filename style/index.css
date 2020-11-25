@@ -187,3 +187,25 @@ thead td {
 tbody {
   z-index: 0;
 }
+
+.rule--field,
+.rule--value,
+.rule--operator {
+  width: 30%;
+}
+.rule--operator {
+  max-width: 130px;
+}
+
+.rule--body {
+  display: flex;
+}
+
+.rule--value input {
+  height: 30px;
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+}
