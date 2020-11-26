@@ -90,7 +90,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
                    <div className="form-group">
                       <label
                           htmlFor="newTableNameTextInput"
-                          className="control-label">new table name
+                          className="control-label">{this.state.queryType === 'query' ? 'new table name' : 'new column name'}
                       </label>
                       <input
                           id="newTableNameTextInput"
@@ -132,6 +132,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/false/g,'False');
       sql_query = sql_query.replace(/ IS EMPTY/g,'.isnull()');
       sql_query = sql_query.replace(/ IS NOT EMPTY/g,'.notnull()');
+      sql_query = sql_query.replace(/NOT/g,'~');
       
 
       console.log('Config fields', this.state.config.fields);

@@ -70,7 +70,6 @@ const packageVersion = '0.1.9';
    Functions:
      - getTransformationFormSchema: Gets the transformation form from the backend
      - pythonGetDataframeColumns: Used to update the forms dynamically 
-     - pythonGenerateCodeAndRun: Generate the code from the form using python (to accelerate development)
    Properties:
      - dataframesLoaded: Available dataframes
      - transformationsList: Available transformationsList
@@ -620,6 +619,7 @@ export class Backend {
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Sends request to Kernel
   -> Returns: User expressions
+  Todo: Unique way of creating Kernel requests. Probably move to the kernel connector class
   SOURCE: https://github.com/kubeflow-kale/kale/blob/167aa8859b58918622bb9b742a08cf5807dee4d8/labextension/src/utils/NotebookUtils.tsx#L326
   -----------------------------------------------------------------------------------------------------*/
   public static async sendKernelRequest(
@@ -689,48 +689,14 @@ export class Backend {
     // Check that there is a transformation selection and a dataframe selection
     console.log('------> Get transformation UI form');
     console.log('Transformation Selection', transformationSelection);
-
-    if (
-      typeof this._transformationsConfig[transformationSelection] ===
-      'undefined'
-    ) {
-      /*-------------------------------------------
-        Generate form on the fly by running python
-      -------------------------------------------*/
-      console.log('----> No custom transformation');
-      const request_expression =
-        'form = get_multi_select_values(' +
-        dataFrameSelection +
-        '.' +
-        transformationSelection +
-        ',caller=' +
-        dataFrameSelection +
-        ')';
-      // Save it so that we can avoid triggering the pythonRequestDataframes function
-      this._codeToIgnore = request_expression;
-      console.log('Form request expression', request_expression);
-      const result = await Backend.sendKernelRequest(
-        this._currentNotebook.sessionContext.session.kernel,
-        request_expression,
-        { form: 'form' }
-      );
-      let content = result.form.data['text/plain'];
-
-      // The resulting python JSON neets to be cleaned
-      if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
-        content = content.slice(1, -1);
-        content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
-      }
-
-      return JSON.parse(content);
-    } else {
+       
+    if(typeof(this._transformationsConfig[transformationSelection]) === 'undefined'){
+      console.log('----> No transformation found');
+    }else{
       /*-------------------------------------------
         Read form from custom configuration
       -------------------------------------------*/
-      const custom_transformation = _.cloneDeep(
-        this._transformationsConfig[transformationSelection].form
-      );
-      console.log('Custom transformation ', transformationSelection);
+      let custom_transformation = _.cloneDeep(this._transformationsConfig[transformationSelection].form);
 
       // Check if there is a definitions object
       if (typeof custom_transformation['definitions'] !== 'undefined') {
@@ -874,7 +840,7 @@ export class Backend {
   }
 
   /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Get 
+  [FUNCTION] Get the querybuilder configuration
   -> Returns: JSON object to pass to querybuiler
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
@@ -906,7 +872,7 @@ export class Backend {
   }
 
   /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Get 
+  [FUNCTION] Get the backendata in the visualizer 
   -> Returns: JSON object to pass to querybuiler
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
@@ -947,68 +913,20 @@ export class Backend {
   }
 
   /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Request function from Python: Call python to generate code from form & write+execute
-  -> Returns: None
-    1. Send form output and dataframe selection to python
-    2. Get code returned from python
-    3. Write and execute this code
-    Depends on:
-    - writeToNotebookAndExecute
+  [FUNCTION] Get list of columns from Kernel for selected dataframe
+  -> Returns: Array of columns
+  -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonGenerateCodeAndRun(
-    formReponse: any,
-    dataframeSelection: any
-  ) {
-    const start = new Date().getTime();
-    console.log('Form response', formReponse);
 
-    // Dataframe input is a string. If it does not exist, write None
-    let dataframeSelectionInput: string;
-    if (!dataframeSelection) {
-      console.log('No dataframe input');
-      dataframeSelectionInput = 'None';
-    } else {
-      dataframeSelectionInput = dataframeSelection as string;
-    }
-    console.log('Dataframe selection input: ', dataframeSelectionInput);
+  public async pythonRemoveTable(table: string){
+    let codeToRun = 'del' + table;      
+    console.log('Request expression',codeToRun);
 
-    // Replace True and False to be read by python
-    const processedString = JSON.stringify(formReponse)
-      .replace(/true/g, 'True')
-      .replace(/false/g, 'False');
-    console.log('Processed string', processedString);
-
-    // Generate function call
-    const request_expression =
-      'functionCall = generate_function_call_from_form(' +
-      processedString +
-      ',"' +
-      dataframeSelectionInput +
-      '")';
-    // Save it so that we can avoid triggering the pythonRequestDataframes function
-    this._codeToIgnore = request_expression;
-    console.log('Funciton call request expression', request_expression);
-    const result = await Backend.sendKernelRequest(
-      this._currentNotebook.sessionContext.session.kernel,
-      request_expression,
-      { functionCall: 'functionCall' }
-    );
-    console.log('result', result);
-    let content = result.functionCall.data['text/plain'];
-
-    // The resulting python JSON neets to be cleaned
-
-    if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
-      content = content.slice(1, -1);
-      // Format the new line characters
-      content = content.replace(/\\n/g, '\n');
-      // Format the
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
-    }
-    console.log('Result ', content);
-    const end = new Date().getTime();
-    console.log('DURATION ', end - start);
-    this.writeToNotebookAndExecute(content);
+    // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+    const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
+      codeToRun, {});
+    
+    console.log('Result', result);
   }
 
   // -------------------------------------------------------------------------------------------------------------

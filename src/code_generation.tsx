@@ -190,16 +190,22 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
     if (key.localeCompare('new table name') == 0 && returnType.localeCompare('print') != 0){
-      console.log('CG: Result is dataframe');
-      result_variable = formData[key].replace(/ /g,"_");
+      if(typeof(formData[key]) != 'undefined'){
+        console.log('CG: Result is dataframe');
+        result_variable = formData[key].replace(/ /g,"_");
+      }
     }
     else if(key.localeCompare('new column name') == 0 && returnType.localeCompare('print') != 0){
-      console.log('CG: Result is series');
-      result_variable = dataframeSelection + '["' + formData[key].replace(/ /g,"_") + '"]';
+      if(typeof(formData[key]) != 'undefined'){
+        console.log('CG: Result is series');
+        result_variable = dataframeSelection + '["' + formData[key].replace(/ /g,"_") + '"]';
+      }
     }
     else if(key.localeCompare('new variable name') == 0 && returnType.localeCompare('print') != 0){
-      console.log('CG: Result is variable');
-      result_variable = formData[key].replace(/ /g,"_");
+      if(typeof(formData[key]) != 'undefined'){
+        console.log('CG: Result is variable');
+        result_variable = formData[key].replace(/ /g,"_");
+      }
     }
     // IGNORE the fields marked as ignore
     else if((typeof(fieldSchema['codegenstyle']) !== 'undefined')
