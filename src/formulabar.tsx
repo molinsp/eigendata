@@ -366,7 +366,6 @@ const FormComponent = (props: {logic: Backend}): JSX.Element => {
         backend={logic}
       />
     }
-    <button onClick={logic.pythonRemoveTable}> Sample button </button>
     </div>
    );
   
@@ -811,8 +810,8 @@ export class Backend {
   -> Returns: Array of columns
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonRemoveTable(){
-    let codeToRun = 'del data';      
+  public async pythonRemoveTable(table: string){
+    let codeToRun = 'del' + table;      
     console.log('Request expression',codeToRun);
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
