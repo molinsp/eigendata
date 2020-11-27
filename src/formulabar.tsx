@@ -919,7 +919,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
 
   public async pythonRemoveTable(table: string){
-    let codeToRun = 'del' + table;      
+    let codeToRun = 'del ' + table;      
     console.log('Request expression',codeToRun);
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
@@ -1069,6 +1069,7 @@ export class Backend {
       if (dataframes.length == 0) {
         // If there is no data loaded, reset frontend component
         this._resetStateFormulabarFlag = true;
+        this._resetStateDatavisualizerFlag = true;
       } else {
         console.log('Refreshing dataframes');
         const dataframe_list: Array<any> = [];
