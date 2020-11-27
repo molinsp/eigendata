@@ -16,6 +16,9 @@ import customConfig from './querybuilder_config';
 import Select from 'react-select';
 //const InitialConfig = BasicConfig; // or BasicConfig
 
+import amplitude from 'amplitude-js';
+
+
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
 // Default empty query value
 const queryValue = {"id": QbUtils.uuid(), "type": "group"};
@@ -185,6 +188,14 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
         formula = formula + '(' + sql_query + ', engine="python"' + ')';  
       } 
       console.log('Formula', formula);
+
+      if (this.state.logic._production && this.state.logic.shareProductData) {
+          amplitude.getInstance().logEvent('Querybuilder: submit transformation', {
+          function: 'query',
+          generatedCode: formula,
+        });
+      }
+
       this.state.logic.writeToNotebookAndExecute(formula);  
     }
 

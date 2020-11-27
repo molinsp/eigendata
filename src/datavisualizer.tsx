@@ -8,6 +8,7 @@ import { useTable } from 'react-table';
 
 import { Backend } from './formulabar';
 
+import amplitude from 'amplitude-js';
 /**
  * React component for a counter.
  *
@@ -99,7 +100,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         ? 'tab-button_active'
                         : 'tab-button_inactive'
                     }`}
-                    onClick={() => setActiveTab(index)}
+                    onClick={() => {
+                      setActiveTab(index)
+                      if (props.logic._production && props.logic.shareProductData) {
+                          amplitude.getInstance().logEvent('Datavisualizer: change tab', { index: index});
+                      }
+                    }}
                     key={index}
                   >
                     {cutString(dataframe.label, 20)}

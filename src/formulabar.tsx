@@ -38,7 +38,6 @@ import Demo from './querybuilder';
 import 'bootstrap/dist/css/bootstrap.css';
 
 // Usage analytics
-import posthog from 'posthog-js';
 import amplitude from 'amplitude-js';
 
 import { generatePythonCode } from './code_generation';
@@ -46,7 +45,6 @@ import { generatePythonCode } from './code_generation';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 // Before deploying to production, we change this flag
-const production = false;
 const packageVersion = '0.1.9';
 let _transformationsConfig = localTransformationsConfig;
 
@@ -244,11 +242,8 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const handleTransformationSelectionChange = (input: any) => {
     console.log('Transformatino', input);
     // Event tracking
-    if (production && logic.shareProductData) {
-      posthog.capture('TransformationSelection', { property: input.value });
-      amplitude
-        .getInstance()
-        .logEvent('TransformationSelection', { userSelection: input.value });
+    if (logic._production && logic.shareProductData) {
+      amplitude.getInstance().logEvent('Formulabar: select transformation', { userSelection: input.value });
     }
 
     if (state.dataframeSelection) {
@@ -324,11 +319,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Generate python code and write in the notebook
   const callGeneratePythonCode = async (formReponse: any) => {
     // Track submitted transformations
-    if (production && logic.shareProductData) {
-      amplitude.getInstance().logEvent('SubmitTransformation', {
-        function: formReponse.schema.function
-      });
-    }
     let dataframeSelection: string;
     if (state.dataframeSelection) {
       dataframeSelection = state.dataframeSelection.value;
@@ -336,7 +326,13 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       dataframeSelection = null;
     }
     const formula = generatePythonCode(formReponse, dataframeSelection);
-
+    if (logic._production && logic.shareProductData) {
+      amplitude.getInstance().logEvent('Formulabar: submit transformation', {
+        function: formReponse.schema.function,
+        formInput: formReponse.formData,
+        generatedCode: formula,
+      });
+    }
     try {
       await logic.writeToNotebookAndExecute(formula);
       // Write and execute the formula in the notebook
@@ -347,6 +343,14 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         error: null
       }));
     } catch (error) {
+      if (logic._production && logic.shareProductData) {
+        amplitude.getInstance().logEvent('Formulabar: transformation error', {
+          function: formReponse.schema.function,
+          formInput: formReponse.formData,
+          generatedCode: formula,
+          errorMessage: error.message
+        });
+      }
       console.log('Error in submit', error);
       setState(state => ({
         ...state,
@@ -507,6 +511,8 @@ export class Backend {
   public _resetStateFormulabarFlag = false;
   public _resetStateDatavisualizerFlag = false;
 
+  public _production = true;
+
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
@@ -546,7 +552,7 @@ export class Backend {
 
     readTransformationConfig();
 
-    if (production) {
+    if (this._production) {
       console.log('--- In Production environment ---');
       const myHeaders = new Headers();
       myHeaders.append(
@@ -615,10 +621,7 @@ export class Backend {
 
         console.log('Analytics: Product tracking data', this.shareProductData);
         // Tracking setup
-        if (production && this.shareProductData) {
-          posthog.init('PDFTg_vI83yh_K3h5vlI-iobpWI1Wr7dl2PmzXA3R-E', {
-            api_host: 'https://app.posthog.com'
-          });
+        if (this._production && this.shareProductData) {
           amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
           amplitude.getInstance().setVersionName(packageVersion);
         }
