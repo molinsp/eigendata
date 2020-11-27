@@ -17,7 +17,7 @@ import { ISessionContext, Dialog, showDialog } from '@jupyterlab/apputils';
 import { ISignal, Signal } from '@lumino/signaling';
 
 // JSON configuration holding all information for the UI transformationsList
-import _transformationsConfig from './transformations.json';
+import localTransformationsConfig from './transformations.json';
 
 // Initialization scripts. See file for more details.
 import { python_initialization_script } from './initscript';
@@ -48,6 +48,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Before deploying to production, we change this flag
 const production = false;
 const packageVersion = '0.1.9';
+let _transformationsConfig = localTransformationsConfig;
 
 /*
  Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
@@ -69,7 +70,7 @@ const packageVersion = '0.1.9';
  Inputs from the backend:
    Functions:
      - getTransformationFormSchema: Gets the transformation form from the backend
-     - pythonGetDataframeColumns: Used to update the forms dynamically 
+     - pythonGetDataframeColumns: Used to update the forms dynamically
    Properties:
      - dataframesLoaded: Available dataframes
      - transformationsList: Available transformationsList
@@ -109,7 +110,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       - Show or not show form: If we don't have both dataframe and transformation selected, we don't show the form
       - DataFrame selection
       - Transformation selection
-    
   */
   const [state, setState] = useState({
     transformationForm: transformationForm,
@@ -449,7 +449,6 @@ export class FormWidget extends ReactWidget {
   // -------------------------------------------------------------------------------------------------------------
   // RENDER
   // -------------------------------------------------------------------------------------------------------------
-
   // Render
   render(): JSX.Element {
     return (
@@ -523,26 +522,58 @@ export class Backend {
       this
     );
 
-    // Read the transformation config
-    this._transformationsConfig = _transformationsConfig['transformations'];
+    const readTransformationConfig = () => {
+      this._transformationsConfig = _transformationsConfig['transformations'];
+      console.log(
+        'TRANSFORMATIONS VERSION:',
+        _transformationsConfig['version']
+      );
+      const transformationList = [
+        { value: 'query', label: 'Filter/Query dataframe' }
+      ];
+      for (const transformation in _transformationsConfig['transformations']) {
+        //console.log('type', transformation);
+        transformationList.push({
+          value: transformation,
+          label:
+            _transformationsConfig['transformations'][transformation]['form'][
+              'title'
+            ]
+        });
+      }
+      this.transformationsList = transformationList;
+    };
 
-    console.log('TRANSFORMATIONS VERSION:', _transformationsConfig['version']);
+    readTransformationConfig();
 
-    const transformationList = [
-      { value: 'query', label: 'Filter/Query dataframe' }
-    ];
-    for (const transformation in _transformationsConfig['transformations']) {
-      //console.log('type', transformation);
-      transformationList.push({
-        value: transformation,
-        label:
-          _transformationsConfig['transformations'][transformation]['form'][
-            'title'
-          ]
-      });
+    if (production) {
+      console.log('--- In Production environment ---');
+      const myHeaders = new Headers();
+      myHeaders.append(
+        'Authorization',
+        'Bearer yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0'
+      );
+      const requestOptions = {
+        method: 'GET',
+        headers: myHeaders,
+        redirect: 'follow'
+      };
+      fetch(
+        'https://eigendata-auth.herokuapp.com/transformations.json',
+        //@ts-ignore
+        requestOptions
+      )
+        .then(response => {
+          return response.json();
+        })
+        .then(parsedConfig => {
+          _transformationsConfig = parsedConfig;
+          readTransformationConfig();
+          this.signal.emit();
+        });
+    } else {
+      console.log('--- In Dev environment ---');
     }
-
-    this.transformationsList = transformationList;
 
     // Load python initialization script
     this._initScripts = python_initialization_script;
@@ -689,14 +720,19 @@ export class Backend {
     // Check that there is a transformation selection and a dataframe selection
     console.log('------> Get transformation UI form');
     console.log('Transformation Selection', transformationSelection);
-       
-    if(typeof(this._transformationsConfig[transformationSelection]) === 'undefined'){
+
+    if (
+      typeof this._transformationsConfig[transformationSelection] ===
+      'undefined'
+    ) {
       console.log('----> No transformation found');
-    }else{
+    } else {
       /*-------------------------------------------
         Read form from custom configuration
       -------------------------------------------*/
-      let custom_transformation = _.cloneDeep(this._transformationsConfig[transformationSelection].form);
+      const custom_transformation = _.cloneDeep(
+        this._transformationsConfig[transformationSelection].form
+      );
 
       // Check if there is a definitions object
       if (typeof custom_transformation['definitions'] !== 'undefined') {
@@ -918,14 +954,17 @@ export class Backend {
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
 
-  public async pythonRemoveTable(table: string){
-    let codeToRun = 'del ' + table;      
-    console.log('Request expression',codeToRun);
+  public async pythonRemoveTable(table: string) {
+    const codeToRun = 'del ' + table;
+    console.log('Request expression', codeToRun);
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
-    const result = await Backend.sendKernelRequest(this._currentNotebook.sessionContext.session.kernel, 
-      codeToRun, {});
-    
+    const result = await Backend.sendKernelRequest(
+      this._currentNotebook.sessionContext.session.kernel,
+      codeToRun,
+      {}
+    );
+
     console.log('Result', result);
   }
 
