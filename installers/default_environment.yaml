@@ -13,6 +13,5 @@ dependencies:
  - xlrd>1.0.0
  - pip
  - pip:
-    - --index-url https://test.pypi.org/simple/
     - fastdata
     - pyforest
