@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.2",
+  "version" : "0.0.22",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -408,6 +408,21 @@
           "column" : {
             "$ref" : "#/definitions/column"
           },
+          "split_type" : {
+            "type" : "string",
+            "enum" : [
+              "unique",
+              "order"
+            ],
+            "enumNames" : [
+              "Indicators for each unique element (0/1)",
+              "Split items in order",
+              "split_type"
+            ],
+            "default" : "unique",
+            "title" : "split type",
+            "description" : "Define how to split the list in the rows to columns."
+          },
           "separator" : {
             "type" : "string",
             "default" : ",",
@@ -428,21 +443,6 @@
             "description" : "Item that surounds the elements. E.g. in [1,2,3] it would be a square brackets, in (1;2;3) parentheses.",
             "default" : "na",
             "title" : "list marker"
-          },
-          "split_type" : {
-            "type" : "string",
-            "enum" : [
-              "unique",
-              "order"
-            ],
-            "enumNames" : [
-              "Indicators for each unique element (0/1)",
-              "Split items in order",
-              "split_type"
-            ],
-            "default" : "unique",
-            "title" : "split type",
-            "description" : "Define how to split the list in the rows to columns."
           },
           "new table name" : {
             "type" : "string"
@@ -545,13 +545,13 @@
         "function" : "merge",
         "callerObject" : "DataFrame",
         "type" : "object",
-        "title" : "Join tables",
-        "description" : "Joins two tables. Select right parameter to populate column names to join on."
+        "title" : "Join tables"
       },
       "uischema" : {
         "classNames" : "side-by-side-fields",
         "right" : {
-          "classNames" : "left-field"
+          "classNames" : "left-field",
+          "String" : ""
         },
         "how" : {
           "classNames" : "right-field"
@@ -601,6 +601,46 @@
       "uischema" : {
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "insert" : {
+      "form" : {
+        "required" : [
+          "loc",
+          "column",
+          "value"
+        ],
+        "title" : "Insert column with constant value",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "insert",
+        "description" : "Insert new column with a constant value (same value in all rows).",
+        "properties" : {
+          "loc" : {
+            "type" : "number",
+            "default" : 0
+          },
+          "column" : {
+            "type" : "string",
+            "title" : "new column name"
+          },
+          "value" : {
+            "type" : "string",
+            "codegenstyle" : "variable"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "returnType" : "none"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "value" : {
+          "ui:placeholder" : "E.g. \"text\" / 45"
         }
       }
     },
@@ -724,7 +764,7 @@
         }
       }
     },
-    "flatten_multiindex" : {
+    "remove_indexes" : {
       "form" : {
         "properties" : {
           "axis" : {
@@ -748,11 +788,11 @@
         "required" : [
           "axis"
         ],
-        "title" : "Flatten multiindex",
+        "title" : "Remove indexes",
         "description" : "Flatten multi-index in columns and rows.",
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
-        "function" : "flatten_multiindex"
+        "function" : "remove_indexes"
       },
       "uischema" : {
         "new table name" : {
@@ -1870,7 +1910,11 @@
               "column"
             ],
             "default" : "value",
-            "codegenstyle" : "ignore"
+            "codegenstyle" : "ignore",
+            "enumNames" : [
+              "Divide by a value",
+              "Divide by another column"
+            ]
           }
         },
         "definitions" : {
@@ -1935,86 +1979,6 @@
         }
       }
     },
-    "add" : {
-      "form" : {
-        "properties" : {
-          "column" : {
-            "$ref" : "#/definitions/column",
-            "title" : "column",
-            "codegenstyle" : "ignore"
-          },
-          "mode" : {
-            "type" : "string",
-            "enum" : [
-              "value",
-              "column"
-            ],
-            "default" : "value",
-            "codegenstyle" : "ignore"
-          }
-        },
-        "definitions" : {
-          "column" : {
-            "type" : "string",
-            "enum" : []
-          }
-        },
-        "required" : [
-          "column",
-          "mode"
-        ],
-        "dependencies" : {
-          "mode" : {
-            "oneOf" : [
-              {
-                "properties" : {
-                  "mode" : {
-                    "enum" : [
-                      "value"
-                    ]
-                  },
-                  "other" : {
-                    "type" : "number",
-                    "title" : "value"
-                  },
-                  "new column name" : {
-                    "type" : "string"
-                  }
-                }
-              },
-              {
-                "properties" : {
-                  "mode" : {
-                    "enum" : [
-                      "column"
-                    ]
-                  },
-                  "other" : {
-                    "$ref" : "#/definitions/column",
-                    "codegenstyle" : "seriesColumn",
-                    "title" : "column"
-                  },
-                  "new column name" : {
-                    "type" : "string"
-                  }
-                }
-              }
-            ]
-          }
-        },
-        "title" : "[Column] Add to column values",
-        "callerObject" : "DataFrame[Series]",
-        "function" : "add",
-        "type" : "object",
-        "returnType" : "series",
-        "description" : "Element-wise addition of values in a column."
-      },
-      "uischema" : {
-        "new column name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      }
-    },
     "multiply" : {
       "form" : {
         "properties" : {
@@ -2030,7 +1994,11 @@
               "column"
             ],
             "default" : "value",
-            "codegenstyle" : "ignore"
+            "codegenstyle" : "ignore",
+            "enumNames" : [
+              "Multiply by a value",
+              "Multiply by another column"
+            ]
           }
         },
         "definitions" : {
@@ -2110,7 +2078,11 @@
               "column"
             ],
             "default" : "value",
-            "codegenstyle" : "ignore"
+            "codegenstyle" : "ignore",
+            "enumNames" : [
+              "Exponentiate by a value",
+              "Exponentiate by another column"
+            ]
           }
         },
         "definitions" : {
@@ -2175,6 +2147,90 @@
         }
       }
     },
+    "add" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "value",
+              "column"
+            ],
+            "default" : "value",
+            "codegenstyle" : "ignore",
+            "enumNames" : [
+              "Add a value",
+              "Add another column"
+            ]
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "mode"
+        ],
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "value"
+                    ]
+                  },
+                  "other" : {
+                    "type" : "number",
+                    "title" : "value"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "column"
+                    ]
+                  },
+                  "other" : {
+                    "$ref" : "#/definitions/column",
+                    "codegenstyle" : "seriesColumn",
+                    "title" : "column"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "title" : "[Column] Add to column values",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "add",
+        "type" : "object",
+        "returnType" : "series",
+        "description" : "Element-wise addition of values in a column."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
     "subtract" : {
       "form" : {
         "properties" : {
@@ -2190,7 +2246,11 @@
               "column"
             ],
             "default" : "value",
-            "codegenstyle" : "ignore"
+            "codegenstyle" : "ignore",
+            "enumNames" : [
+              "Subtract a value",
+              "Subtract another column"
+            ]
           }
         },
         "definitions" : {
@@ -2255,7 +2315,7 @@
         }
       }
     },
-    "mask" : {
+    "replace_based_on_condition" : {
       "form" : {
         "properties" : {
           "column" : {
@@ -2265,12 +2325,23 @@
           },
           "cond" : {
             "$ref" : "#/definitions/column",
-            "title" : "column with indicator",
-            "codegenstyle" : "seriesColumn"
+            "title" : "indicator column",
+            "codegenstyle" : "seriesColumn",
+            "description" : "Boolean column condaining True/False indicators."
           },
-          "other" : {
-            "title" : "value",
-            "description" : "Value if the condition is true. If it is a text, add quotation marks (e.g. \"text\").",
+          "when" : {
+            "type" : "string",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "description" : "Replace when the indicator column is True/False.",
+            "default" : "True",
+            "codegenstyle" : "variable"
+          },
+          "replace_with" : {
+            "title" : "replace with",
+            "description" : "Value if the condition is true. For text, add quotation marks (e.g. \"text\").",
             "type" : "string",
             "codegenstyle" : "variable"
           },
@@ -2287,17 +2358,21 @@
         "required" : [
           "column",
           "cond",
-          "other"
+          "replace_with",
+          "when"
         ],
         "title" : "[Column] Change value based on indicator",
-        "callerObject" : "DataFrame[Series]",
-        "function" : "mask",
+        "callerObject" : "DataFrame[Series].fdt",
+        "function" : "replace_based_on_condition",
         "type" : "object",
         "description" : "Use a column indicator to set a new value. Indicators need to be true/false. If they are 0/1 you need to change the type to boolean first."
       },
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "replace_with" : {
+          "ui:placeholder" : "Add quotation marks if input is text"
         }
       }
     },
@@ -2388,6 +2463,111 @@
         "function" : "factorize",
         "description" : "Encode the object as an enumerated type or categorical variable. E.g. [male,female] -> [0,1].",
         "append" : "[0]"
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "strip" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "to_strip" : {
+            "title" : "characters",
+            "type" : "string",
+            "description" : "Leave blank to remove spaces."
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "title" : "[Column] Remove leading and trailing characters",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "strip",
+        "description" : "Remove leading and trailing characters of a text column."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "lstrip" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "to_strip" : {
+            "title" : "characters",
+            "type" : "string",
+            "description" : "Leave blank to remove spaces."
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "title" : "[Column] Remove leading characters",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "lstrip",
+        "description" : "Remove leading characters of a text column."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "rstrip" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "to_strip" : {
+            "title" : "characters",
+            "type" : "string",
+            "description" : "Leave blank to remove spaces."
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "title" : "[Column] Remove trailing characters",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "rstrip",
+        "description" : "Remove trailing characters of a text column."
       },
       "uischema" : {
         "new column name" : {
