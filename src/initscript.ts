@@ -174,11 +174,6 @@ def ed_is_multiindex_row_df(df):
             return True
     return False
 
-def ed_check_if_default_index(df):
-    # Check if the index is the same as the default index. We use the name as a proxy
-    check_index = ((df.index == pd.RangeIndex(start=0,stop=df.shape[0], step=1)).all())
-    return check_index
-
 def ed_format_data_for_visualization(df_data):
     for col_name, col in df_data.items():
         if is_datetime64_any_dtype(col):
@@ -278,7 +273,7 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     }
     
     # 3. Return as JSON
-    return json.dumps(result, ensure_ascii=True, allow_nan=False)
+    return json.dumps(result, ensure_ascii=False, allow_nan=False)
 # ---------------- FASTDATA IMPORT ----------------
 from fastdata.core import *
 `;

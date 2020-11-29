@@ -511,7 +511,7 @@ export class Backend {
   public _resetStateFormulabarFlag = false;
   public _resetStateDatavisualizerFlag = false;
 
-  public _production = true;
+  public _production = false;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -935,14 +935,14 @@ export class Backend {
 
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
+      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
     }
 
     let parsed_data = {};
     try {
       parsed_data = JSON.parse(content);
     } catch (e) {
-      console.error('DataViz: (!) Cannot parse data');
+      console.error('DataViz: (!) Cannot parse data', e);
     }
 
     result_object = parsed_data;
