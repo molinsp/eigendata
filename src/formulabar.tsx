@@ -44,6 +44,8 @@ import { generatePythonCode } from './code_generation';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
+import ChatWidget from '@papercups-io/chat-widget';
+
 // Before deploying to production, we change this flag
 const packageVersion = '0.1.9';
 let _transformationsConfig = localTransformationsConfig;
@@ -416,7 +418,17 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           backend={logic}
         />
       )}
-    </div>
+      <div>
+      <ChatWidget
+        // Pass in your Papercups account token here after signing up 
+        accountId='784f140c-6c85-4613-bfd0-9869026cd1cb'
+        title='Welcome to Eigendata'
+        subtitle='We are here to help you become a data superhero'
+        newMessagePlaceholder='Start typing...'
+        primaryColor='#13c2c2'
+      />
+      </div>
+    </div> 
   );
 };
 

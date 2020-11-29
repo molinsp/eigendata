@@ -40,6 +40,7 @@
     "@jupyterlab/mainmenu": "^2.2.3",
     "@jupyterlab/notebook": "^2.0.0",
     "@jupyterlab/settingregistry": "^2.2.5",
+    "@papercups-io/chat-widget": "^1.1.5",
     "@rjsf/core": "^2.4.0",
     "@types/lodash": "^4.14.161",
     "@types/react-select": "^3.0.20",
