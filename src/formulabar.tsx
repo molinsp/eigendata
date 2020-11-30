@@ -205,13 +205,14 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     /*-------------------------------
      MERGE
      -------------------------------*/
-    // By selecting the right parameter, we get the options for the right_on
-
     if (
       data.schema.function === 'merge' &&
+      // Do not trigger this when another parameter is set
       typeof data.formData['right'] !== 'undefined'
+      // Only trigger if the state does not have the data (undefined) or if the state has different data (selected another right)
+      && ((typeof state.formData['right'] === 'undefined') || (data.formData['right'] != state.formData['right']))
     ) {
-      console.log('-> Changed right in merge');
+      console.log('Dynamic forms: Changed right in merge');
       // Get the columns from the backend
       const columns = await logic.pythonGetDataframeColumns(
         data.formData['right']
