@@ -58,18 +58,13 @@ def ed_generate_querybuilder_config(df):
             }
         elif col_type == 'object':
             # Categorical if less than 10% of values are unique
-            if df[col_name].dtype == np.object:
-                queryprops[col_name] = {
-                    'label' : col_name,
-                    'type' : 'text'
-                }
-            elif (ed_get_percentage_unique_column(df, col_name) < 10):
+            if (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
                 'label' : col_name,
-                'type' : 'select',
-                'fieldSettings' : {
-                    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
-                    }
+                'type' : 'text',
+                #'fieldSettings' : {
+                #    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
+                #    }
                 }
             else:
                 queryprops[col_name] = {
