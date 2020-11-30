@@ -280,13 +280,16 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
   if(returnType.localeCompare('dataframe') == 0){
     console.log('CG: 3.1 Return type is dataframe');
     // If no target variable, and calling from a given dataframe apply transformation to this dataframe
-    if((result_variable === '') && (dataframeSelection !== null)){
+    if((result_variable === '') && (dataframeSelection !== null) && (transformationType != 'dataLoading')){
       console.log('CG: 3.1.1 Result defaults: Use selected dataframe');
       result_variable = dataframeSelection;
     }
     // else if dataframe not defined (only case is read_csv), name it data
     else if ((result_variable === '') && (dataframeSelection === null)){
       console.log('CG: 3.1.2 Result defaults: no dataframe selected');
+      result_variable = 'data';
+    }else{
+      console.log('CG: 3.1.3 Catch remaining cases');
       result_variable = 'data';
     }
   }
