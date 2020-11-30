@@ -382,6 +382,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           label="Select data"
           onChange={handleDataframeSelectionChange}
           className="left-field"
+          id="dataselect"
         />
         <Select
           name="Select transformation"
@@ -399,6 +400,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
             DropdownIndicator: () => null,
             IndicatorSeparator: () => null
           }}
+          id="transformationselect"
         />
       </fieldset>
       {state.showForm && (
