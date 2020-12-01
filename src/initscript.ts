@@ -175,22 +175,22 @@ def ed_format_data_for_visualization(df_data):
             # Check if it contains only dates
             if ((df_data[col_name].dt.floor('d') == df_data[col_name]) | (df_data[col_name].isnull())).all():
                 df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d')
-            # Check if it contains only times
+            # Check if it contains only times (commented out given the default notebook diplay does not print this)
             #elif ( (df_data[col_name].dt.date == pd.Timestamp('now').date()) | (df_data[col_name].isnull()) ).all():
             #    df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
             else:
                 df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d %H:%M:%S')
             
-            df_data[col_name] = df_data[col_name].fillna('')
+            #df_data[col_name] = df_data[col_name].fillna('')
         # Check for bool before numeric, given booleans return tru to is_numeric
         elif is_bool_dtype(col):
-            df_data[col_name] = df_data[col_name].astype('str')
+            df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
         elif is_numeric_dtype(col):
-            df_data[col_name] = df_data[col_name].fillna('')
+            df_data[col_name] = df_data[col_name].fillna('NaN')
             pass
         else:
             #If not handled, treat as a string
-            df_data[col_name] = df_data[col_name].astype('str').replace('nan','')
+            df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
 
 def ed_prep_data_for_visualization(dfmi,index=False):
     """
