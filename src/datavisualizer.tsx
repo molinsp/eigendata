@@ -15,7 +15,7 @@ import amplitude from 'amplitude-js';
  * @returns The React component
  */
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
-  console.log('------> Rendering Data Visualizer UI');
+  //console.log('------> Rendering Data Visualizer UI');
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
   const [showTable, setShowTable] = useState(false);

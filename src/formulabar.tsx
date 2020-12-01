@@ -141,8 +141,8 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     logic._resetStateFormulabarFlag = false;
   }
 
-  console.log('FB: State:', state);
-  console.log('------> FB: Rendering Formulabar UI');
+  //console.log('FB: State:', state);
+  //console.log('------> FB: Rendering Formulabar UI');
 
   /*-----------------------------------
   CUSTOM SELECT: Use React select with JSONschema form
@@ -234,7 +234,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const handleDataframeSelectionChange = (input: any) => {
     //console.log(this);
     if (state.transformationSelection) {
-      console.log('all defined');
+      console.log('Formulabar: get transformation to state');
       getTransformationFormToState(input, state.transformationSelection);
     } else {
       setState(state => ({ ...state, dataframeSelection: input, error: null }));
@@ -1069,7 +1069,7 @@ export class Backend {
     sess: ISessionContext,
     msg: KernelMessage.IExecuteInputMsg
   ) => {
-    console.log('------> Code running in the notebook');
+    //console.log('------> Code running in the notebook');
     const msgType = msg.header.msg_type;
     switch (msgType) {
       case 'execute_input':
@@ -1110,7 +1110,7 @@ export class Backend {
   private handleGetDataframesResponse = (
     response: KernelMessage.IIOPubMessage
   ): void => {
-    console.log('------> Handle inspector request');
+    //console.log('------> Handle inspector request');
     const message_type = response.header.msg_type;
     if (message_type === 'execute_result') {
       const payload: any = response.content;

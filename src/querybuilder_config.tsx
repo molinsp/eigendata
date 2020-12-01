@@ -63,11 +63,11 @@ const types: Types = {
           'less',
           'less_or_equal',
           'greater',
-          'greater_or_equal'
+          'greater_or_equal',
           //"between",
           //"not_between",
-          //"is_empty",
-          //"is_not_empty",
+          "is_empty",
+          "is_not_empty",
         ]
       }
     }
@@ -223,6 +223,7 @@ interface ISelection {
   value: string;
   label: string;
 }
+
 
 const settings: Settings = {
   ...InitialConfig.settings,

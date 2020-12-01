@@ -26,13 +26,11 @@ const queryValue = {"id": QbUtils.uuid(), "type": "group"};
 export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, DemoQueryBuilderState> {
     constructor(props: DemoQueryBuilderProps) {
         super(props);
-        console.log('CUSTOM CONFIG', customConfig );
         const config = {...customConfig, fields: {...this.props.queryConfig}};
         this.state = {
             // @ts-ignore
             tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
             config: config,
-            dataframeSelection : props.dataframeSelection,
             logic : props.backend,
             queryType: "query",
             newTableName: '',
@@ -126,7 +124,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
     -----------------------------------------------------------------------------------------------------*/
     generateCode = () => {
       let sql_query = JSON.stringify(QbUtils.sqlFormat(this.state.tree, this.state.config), undefined, 2);
-      console.log('SQL query', sql_query);
+      //console.log('Querybuilder: SQL query', sql_query);
       sql_query = sql_query.replace(/ = /g,'==');
       sql_query = sql_query.replace(/<>/g,'!=');
       sql_query = sql_query.replace(/AND/g,'and');
@@ -138,7 +136,7 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/NOT/g,'~');
       
 
-      console.log('Config fields', this.state.config.fields);
+      //console.log('Querybuilder: Config fields', this.state.config.fields);
       for(var i in this.state.config.fields){
         let col_name = String(i);
 
@@ -164,21 +162,21 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       let variable = '';
       if(returnType.localeCompare('dataframe') == 0){
         if(this.state.newTableName === ''){
-          variable = this.state.dataframeSelection ;
+          variable = this.props.dataframeSelection ;
         }else{
           variable = this.state.newTableName.replace(/ /g,"_");
         }
       }
       else if(returnType.localeCompare('series') == 0){
         if(this.state.newTableName === ''){
-          variable = this.state.dataframeSelection + '["indicator"]';
+          variable = this.props.dataframeSelection + '["indicator"]';
         }else{
-          variable = this.state.dataframeSelection + '["' + this.state.newTableName.replace(/ /g,"_") + '"]';
+          variable = this.props.dataframeSelection + '["' + this.state.newTableName.replace(/ /g,"_") + '"]';
         }
       }
 
       //  Compose formula: variable = dataframe . query/eval (query)
-      let formula =  variable + ' = ' + this.state.dataframeSelection;
+      let formula =  variable + ' = ' + this.props.dataframeSelection;
       formula = formula + '.' + this.state.queryType;
 
       // Add the copy command to make sure pandas knows we are creating a copy
@@ -187,7 +185,9 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       }else{
         formula = formula + '(' + sql_query + ', engine="python"' + ')';  
       } 
-      console.log('Formula', formula);
+
+      console.log('Querybuilder: Datatable selection', this.props.dataframeSelection);
+      console.log('Querybuilder: Formula', formula);
 
       if (this.state.logic._production && this.state.logic.shareProductData) {
           amplitude.getInstance().logEvent('Querybuilder: submit transformation', {
@@ -224,7 +224,6 @@ interface DemoQueryBuilderState {
     tree: ImmutableTree;
     config: Config;
     logic: Backend;
-    dataframeSelection: string;
     queryType:string;
     newTableName: string;
 }
