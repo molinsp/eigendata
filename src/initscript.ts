@@ -231,9 +231,16 @@ def ed_prep_data_for_visualization(dfmi,index=False):
         columnDefs_row = [{'accessor': str(col).replace('.','_'), 'Header': col} for col in list(df_data.index.names)]
         df_data = df_data.reset_index()
     else:
+        # There is already a column named index in the dataframe
         if 'index' in df_data.columns:
+            # Name the index pd_index given there is already a column named index
             columnDefs_row = [{'accessor': 'level_0', 'Header': 'pd_index'}]
             df_data = df_data.reset_index()
+        # The index has a name
+        elif df_data.index.name != None:
+            columnDefs_row = [{'accessor': df_data.index.name, 'Header': df_data.index.name}]
+            df_data = df_data.reset_index()
+        # The index has no name
         else:
             columnDefs_row = [{'accessor': 'index', 'Header': 'index'}]
             df_data = df_data.reset_index()
