@@ -150,7 +150,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
   // To-do: Move custom components to separate files
   const CustomSelect = function(props: any) {
-    console.log('Props custom select: ', props);
+    //console.log('Props custom select: ', props);
 
     const processSingleSelect = (selection: any) => {
       const { value } = selection;
@@ -743,7 +743,7 @@ export class Backend {
       typeof this._transformationsConfig[transformationSelection] ===
       'undefined'
     ) {
-      console.log('----> No transformation found');
+      console.log('TG: No transformation found');
     } else {
       /*-------------------------------------------
         Read form from custom configuration
@@ -761,27 +761,9 @@ export class Backend {
           typeof definitions['columns'] !== 'undefined' ||
           typeof definitions['column'] !== 'undefined'
         ) {
-          console.log('Transformation needs columns');
-          const request_expression =
-            'form = ed_get_json_column_values(' + dataFrameSelection + ')';
-          // Save it so that we can avoid triggering the pythonRequestDataframes function
-          this._codeToIgnore = request_expression;
-          console.log('Form request expression', request_expression);
-          const result = await Backend.sendKernelRequest(
-            this._currentNotebook.sessionContext.session.kernel,
-            request_expression,
-            { form: 'form' }
-          );
-          let content = result.form.data['text/plain'];
-
-          // The resulting python JSON neets to be cleaned
-          if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
-            content = content.slice(1, -1);
-            content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
-          }
-
-          const columns = JSON.parse(content);
-          console.log('Retrieved columns:', columns);
+          console.log('TG: Transformation needs columns');
+          const columns = await this.pythonGetDataframeColumns(dataFrameSelection);
+          console.log('TG: fetched columns', columns)
 
           // Check if multi-select columns defined
           if (
@@ -822,7 +804,7 @@ export class Backend {
       typeof this._transformationsConfig[transformationSelection] ===
       'undefined'
     ) {
-      console.log('No transformation form defined');
+      console.log('TG: No transformation form defined');
       return;
     } else {
       if (
@@ -832,7 +814,7 @@ export class Backend {
       ) {
         return this._transformationsConfig[transformationSelection]['uischema'];
       } else {
-        console.log('No transformation uischema defined');
+        console.log('TG: No transformation uischema defined');
       }
     }
   }
@@ -870,7 +852,7 @@ export class Backend {
       'form = ed_get_json_column_values(' + rightParameter + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
-    console.log('Request expression', codeToRun);
+    //console.log('Request expression', codeToRun);
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
     const result = await Backend.sendKernelRequest(
@@ -884,11 +866,12 @@ export class Backend {
     // Clean the JSON result that python returns
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
+      // Replace \' with ', \" with " and \xa0 with \\xa0
+      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
     }
 
     const columns = JSON.parse(content);
-    console.log('New columns', columns);
+    //console.log('New columns', columns);
 
     return columns;
   }
@@ -917,8 +900,12 @@ export class Backend {
     // Clean the JSON result that python returns
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
+      // Replace \' with ', \" with "
+      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
     }
+
+    console.log('Content', content);
+
 
     const query_config = JSON.parse(content);
     console.log('Query config', query_config);
@@ -950,6 +937,7 @@ export class Backend {
 
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
+      // Replace \' with ', \" with " and \xa0 with \\xa0
       content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
     }
 
