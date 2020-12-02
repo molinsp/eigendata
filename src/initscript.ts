@@ -181,7 +181,7 @@ def ed_format_data_for_visualization(df_data):
             else:
                 df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d %H:%M:%S')
             
-            #df_data[col_name] = df_data[col_name].fillna('')
+            df_data[col_name] = df_data[col_name].fillna('NaT')
         # Check for bool before numeric, given booleans return tru to is_numeric
         elif is_bool_dtype(col):
             df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
