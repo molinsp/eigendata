@@ -610,8 +610,8 @@ export class Backend {
             body:
               'Eigendata captures anonymous product data using cookies. If you wish, you can opt-out by selecting reject.',
             buttons: [
-              Dialog.okButton({ label: 'Accept' }),
-              Dialog.cancelButton({ label: 'Reject' })
+              Dialog.cancelButton({ label: 'Reject' }),
+              Dialog.okButton({ label: 'Accept' })
             ]
           })
             .catch(e => console.log(e))
