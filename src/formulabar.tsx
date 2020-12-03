@@ -149,7 +149,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   -----------------------------------*/
   const getKeywordsForFilter = (option, rawInput) => {
     // Add keywords to search
-    console.log('Option', option.value);
+    //console.log('Option', option.value);
     let keywords = ''
     if(option.value != 'query' && logic._transformationsConfig[option.value]['keywords']){
       keywords = logic._transformationsConfig[option.value]['keywords'];

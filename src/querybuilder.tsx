@@ -134,21 +134,10 @@ export default class DemoQueryBuilder extends Component<DemoQueryBuilderProps, D
       sql_query = sql_query.replace(/ IS EMPTY/g,'.isnull()');
       sql_query = sql_query.replace(/ IS NOT EMPTY/g,'.notnull()');
       sql_query = sql_query.replace(/NOT/g,'~');
+      sql_query = sql_query.replace(/\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+\s\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+/g,'`$&`');
       
-
       //console.log('Querybuilder: Config fields', this.state.config.fields);
-      for(var i in this.state.config.fields){
-        let col_name = String(i);
-
-        // Check if there is any blank space in the column names
-        if (/\s/.test(col_name)) {
-          // It has any kind of whitespace
-          // Replace with backticks to ensure pandas does not generate an error
-          const re = new RegExp(col_name, 'g');
-          const replace_to = '`' + col_name + '`';
-          sql_query = sql_query.replace(re,replace_to);
-        }
-      }
+      
 
       let returnType = '';
       if(this.state.queryType.localeCompare('query') == 0){
