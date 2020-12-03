@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.23",
+  "version" : "0.0.24",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -634,7 +634,7 @@
           "value" : {
             "type" : "string",
             "codegenstyle" : "variable",
-            "description" : "Value to be inserted in the column. Use quotation marks if it is text."
+            "description" : "Value to be inserted in the column. Use quotation marks for text."
           }
         },
         "returnType" : "none"
@@ -1525,7 +1525,6 @@
           "mode" : {
             "oneOf" : [
               {
-                "title" : "Size of bins",
                 "properties" : {
                   "mode" : {
                     "enum" : [
@@ -1553,7 +1552,6 @@
                 }
               },
               {
-                "title" : "Number of bins",
                 "properties" : {
                   "mode" : {
                     "enum" : [
@@ -1561,7 +1559,9 @@
                     ]
                   },
                   "value" : {
-                    "type" : "number"
+                    "type" : "string",
+                    "codegenstyle" : "variable",
+                    "description" : ""
                   },
                   "new column name" : {
                     "type" : "string"
@@ -1581,8 +1581,17 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "value" : {
+          "ui:placeholder" : "E.g. \"text\" / 45"
         }
-      }
+      },
+      "keywords" : [
+        "nan",
+        "na",
+        "null",
+        "empty"
+      ]
     },
     "uppercase" : {
       "form" : {
@@ -2362,7 +2371,7 @@
           },
           "replace_with" : {
             "title" : "replace with",
-            "description" : "Value if the condition is true. For text, add quotation marks (e.g. \"text\").",
+            "description" : "Value if the condition is true. Use quotation marks for text.",
             "type" : "string",
             "codegenstyle" : "variable"
           },
@@ -2393,7 +2402,7 @@
           "ui:placeholder" : "Leave blank to modify selected column"
         },
         "replace_with" : {
-          "ui:placeholder" : "Add quotation marks if input is text"
+          "ui:placeholder" : "E.g. \"text\" / 45"
         }
       }
     },
