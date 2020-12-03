@@ -86,36 +86,113 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       : string;
   };
 
+  const closeDropdownMenu = (element: Element): void => {
+    element.className = element.className.replace(' show', '');
+  };
+
+  const openDropdownMenu = (index: number): void => {
+    const dropdown = document.querySelector(
+      `#dropdown-${index} .dropdown-menu`
+    );
+    if (dropdown.className.indexOf('show') === -1) {
+      dropdown.className += ' show';
+    } else {
+      closeDropdownMenu(dropdown);
+    }
+  };
+
+  const onBlur = (e: any, index: number): void => {
+    const dropdown = document.querySelector(
+      `#dropdown-${index} .dropdown-menu`
+    );
+    const target = e.relatedTarget;
+    if (target.className !== 'dropdown-item') {
+      closeDropdownMenu(dropdown);
+    }
+  };
+
+  const deleteTab = async (table: string): Promise<void> => {
+    await props.logic.pythonRemoveTable(table);
+    const dropdowns = document.querySelectorAll('.dropdown-menu');
+    const element = Array.from(dropdowns).find(element =>
+      element.className.includes('show')
+    );
+    if (element) {
+      closeDropdownMenu(element);
+    }
+  };
+
   return (
     <div className="full-height-container">
       {showTable ? (
         <div className="full-height-container">
           <nav className="scroll-nav">
-            <div>
+            <div className="dropdown-container">
               {props.logic.dataframesLoaded.map((dataframe, index) => {
                 return (
-                  <button
-                    className={`tab-button ${
-                      activeTab === index
-                        ? 'tab-button_active'
-                        : 'tab-button_inactive'
-                    }`}
-                    onClick={() => {
-                      setActiveTab(index)
-                      if (props.logic._production && props.logic.shareProductData) {
-                          amplitude.getInstance().logEvent('Datavisualizer: change tab', { index: index});
-                      }
-                    }}
-                    key={index}
+                  <div
+                    className="dropdown"
+                    id={'dropdown-' + index}
+                    key={'dropdown-' + index}
                   >
-                    {cutString(dataframe.label, 20)}
-                  </button>
+                    <button
+                      type="button"
+                      className={`tab-button ${
+                        activeTab === index
+                          ? 'tab-button_active'
+                          : 'tab-button_inactive'
+                      }`}
+                      onClick={() => {
+                        setActiveTab(index);
+                        if (
+                          props.logic._production &&
+                          props.logic.shareProductData
+                        ) {
+                          amplitude
+                            .getInstance()
+                            .logEvent('Datavisualizer: change tab', {
+                              index: index
+                            });
+                        }
+                      }}
+                    >
+                      {cutString(dataframe.label, 20)}
+                    </button>
+                    <button
+                      type="button"
+                      className={`dropdown-button dropdown-toggle ${
+                        activeTab === index
+                          ? 'tab-button_active'
+                          : 'tab-button_inactive'
+                      }`}
+                      onClick={(): void => openDropdownMenu(index)}
+                      onBlur={(e): void => onBlur(e, index)}
+                      key={'dropdown-button' + index}
+                    >
+                      <span className="dropdown-arrow" />
+                    </button>
+                    <div
+                      className="dropdown-menu"
+                      key={'dropdown-menu' + index}
+                    >
+                      <a
+                        className="dropdown-item"
+                        href="#"
+                        onClick={(): Promise<void> =>
+                          deleteTab(dataframe.label)
+                        }
+                      >
+                        Delete table
+                      </a>
+                    </div>
+                  </div>
                 );
               })}
             </div>
             <p className={'disclaimer'}>
               Data shape: {separateThousands(shape['rows'])} rows and{' '}
-              {shape['columns']} columns. Preview: first {data.length} rows and {shape['displayedColumns']} columns.
+              {shape['columns']} columns. Preview: first {data.length} rows and{' '}
+              {shape['displayedColumns']} columns.
             </p>
           </nav>
           <div className="tab-item">
