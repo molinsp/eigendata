@@ -262,3 +262,22 @@ table td, table th {
   border-radius: 4px;
   width: 100%;
 }
+
+/* -------------> Rewrite existing rules for boolean widget */
+/* Set specific width for external block */
+.rule--widget--BOOLEAN {
+  max-width: 70%;
+  width: 170px;
+}
+
+/* Make inner block flex to align elements inside of it */
+.rule--widget--BOOLEAN .widget--widget {
+  display: flex;
+  align-items: center;
+}
+
+/* Remove unnecessary margin from radio button */
+.rule--widget--BOOLEAN .widget--widget input[type="radio"] {
+  margin: 0 !important;
+}
+/* <-------------------------------------------------------- */
