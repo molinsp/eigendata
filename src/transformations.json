@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.22",
+  "version" : "0.0.23",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -62,8 +62,8 @@
               "name"
             ],
             "enumNames" : [
-              "Sheet number",
-              "Sheet names"
+              "Load using sheet number",
+              "Load using sheet name"
             ],
             "default" : "number"
           }
@@ -153,12 +153,15 @@
           "index"
         ],
         "type" : "object",
-        "title" : "Save/write to CSV",
+        "title" : "Save to CSV",
         "callerObject" : "DataFrame",
         "function" : "to_csv",
         "description" : "Save selected table to csv file.",
         "returnType" : "none"
-      }
+      },
+      "keywords" : [
+        "write"
+      ]
     },
     "describe" : {
       "form" : {
@@ -369,7 +372,14 @@
           "data" : {
             "type" : "string",
             "codegenstyle" : "variable",
-            "$ref" : "#/definitions/dataframes"
+            "$ref" : "#/definitions/dataframes",
+            "title" : "table",
+            "description" : "table to transform"
+          },
+          "columns" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators.",
+            "title" : "expand columns"
           },
           "dummy_na" : {
             "title" : "NaN column",
@@ -381,10 +391,6 @@
               "True",
               "False"
             ]
-          },
-          "columns" : {
-            "$ref" : "#/definitions/columns",
-            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
           },
           "new table name" : {
             "type" : "string"
@@ -557,11 +563,9 @@
           "classNames" : "right-field"
         },
         "right_on" : {
-          "ui:widget" : "checkboxes",
           "classNames" : "right-field"
         },
         "left_on" : {
-          "ui:widget" : "checkboxes",
           "classNames" : "left-field"
         },
         "new table name" : {
@@ -596,7 +600,7 @@
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "append",
-        "description" : "Add two tables with the same columns \"on top of each other\"."
+        "description" : "Add two tables with the same columns \"on top of each other\". If tables have different columns, they will be kept and populated with NaN for the tables that don't have that column."
       },
       "uischema" : {
         "new table name" : {
@@ -619,26 +623,23 @@
         "properties" : {
           "loc" : {
             "type" : "number",
-            "default" : 0
+            "default" : 0,
+            "description" : "Position at which the column will be created (0 is to the left). If the number is larger than number of columns it will return an error."
           },
           "column" : {
             "type" : "string",
-            "title" : "new column name"
+            "title" : "new column name",
+            "description" : ""
           },
           "value" : {
             "type" : "string",
-            "codegenstyle" : "variable"
-          },
-          "new table name" : {
-            "type" : "string"
+            "codegenstyle" : "variable",
+            "description" : "Value to be inserted in the column. Use quotation marks if it is text."
           }
         },
         "returnType" : "none"
       },
       "uischema" : {
-        "new table name" : {
-          "ui:placeholder" : "Leave blank to modify selected table"
-        },
         "value" : {
           "ui:placeholder" : "E.g. \"text\" / 45"
         }
@@ -905,7 +906,10 @@
     },
     "dropna" : {
       "form" : {
-        "required" : [],
+        "required" : [
+          "axis",
+          "how"
+        ],
         "properties" : {
           "axis" : {
             "type" : "string",
@@ -929,6 +933,10 @@
             "description" : "Elements that need to be blank to drop the column",
             "default" : "any"
           },
+          "subset" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "List of columns used to drop blanks. If not selected all columns are used. Only valid for axis=rows."
+          },
           "new table name" : {
             "type" : "string"
           }
@@ -937,7 +945,17 @@
         "description" : "Drop rows or columns that contain blanks",
         "type" : "object",
         "callerObject" : "DataFrame",
-        "function" : "dropna"
+        "function" : "dropna",
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        }
       },
       "uischema" : {
         "new table name" : {
@@ -1096,13 +1114,16 @@
           },
           "sub" : {
             "type" : "string",
-            "title" : "Text being searched"
+            "title" : "pattern",
+            "description" : "Find this pattern in the column (includes partial matches)"
           },
           "start" : {
-            "type" : "number"
+            "type" : "number",
+            "description" : "Optional. Position at which to start searching (starting at 0). Inclusive."
           },
           "end" : {
-            "type" : "number"
+            "type" : "number",
+            "description" : "Optional. Position at which to start searching (starting at 0). Exclusive."
           },
           "new column name" : {
             "type" : "string"
@@ -2497,7 +2518,10 @@
         "type" : "object",
         "callerObject" : "DataFrame[Series].str",
         "function" : "strip",
-        "description" : "Remove leading and trailing characters of a text column."
+        "description" : "Remove leading and trailing characters of a text column.",
+        "required" : [
+          "column"
+        ]
       },
       "uischema" : {
         "new column name" : {
@@ -2532,7 +2556,10 @@
         "type" : "object",
         "callerObject" : "DataFrame[Series].str",
         "function" : "lstrip",
-        "description" : "Remove leading characters of a text column."
+        "description" : "Remove leading characters of a text column.",
+        "required" : [
+          "column"
+        ]
       },
       "uischema" : {
         "new column name" : {
@@ -2567,7 +2594,55 @@
         "type" : "object",
         "callerObject" : "DataFrame[Series].str",
         "function" : "rstrip",
-        "description" : "Remove trailing characters of a text column."
+        "description" : "Remove trailing characters of a text column.",
+        "required" : [
+          "column"
+        ]
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      }
+    },
+    "slice" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "start" : {
+            "type" : "number",
+            "description" : "Start position (counting from 0). Inclusive."
+          },
+          "step" : {
+            "type" : "number",
+            "description" : "Only get X characters. If left empty gets all the characters. E.g. step 2 for \"koala\" would extract \"k\" , \"a\" and \"a\"."
+          },
+          "stop" : {
+            "type" : "number",
+            "description" : "End position. Exclusive."
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "title" : "[Column] Get text by position",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "slice",
+        "description" : "Get a subset of a string using position indexes.",
+        "required" : [
+          "column"
+        ]
       },
       "uischema" : {
         "new column name" : {
