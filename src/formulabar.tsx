@@ -145,6 +145,27 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   //console.log('------> FB: Rendering Formulabar UI');
 
   /*-----------------------------------
+  Custom search for transformations
+  -----------------------------------*/
+  const getKeywordsForFilter = (option, rawInput) => {
+    // Add keywords to search
+    console.log('Option', option.value);
+    let keywords = ''
+    if(option.value != 'query' && logic._transformationsConfig[option.value]['keywords']){
+      keywords = logic._transformationsConfig[option.value]['keywords'];
+    }
+
+    const textToSearch = option.label + ' ' + keywords + ' ' + option.value.replace(/_/g, ' ');
+
+    const words = rawInput.split(' ');
+    return words.reduce(
+      (acc, cur) => acc && textToSearch.toLowerCase().includes(cur.toLowerCase()),
+      true,
+    );
+  };
+
+
+  /*-----------------------------------
   CUSTOM SELECT: Use React select with JSONschema form
   -----------------------------------*/
   // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
@@ -401,6 +422,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
             IndicatorSeparator: () => null
           }}
           id="transformationselect"
+          filterOption={getKeywordsForFilter}
         />
       </fieldset>
       {state.showForm && (
