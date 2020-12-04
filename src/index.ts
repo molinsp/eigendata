@@ -7,7 +7,7 @@ import {
 import { MainAreaWidget, WidgetTracker} from '@jupyterlab/apputils';
 import { FormWidget, Backend } from './formulabar';
 import { DataVisualizerWidget } from './datavisualizer';
-import { reactIcon } from '@jupyterlab/ui-components';
+import { inspectorIcon } from '@jupyterlab/ui-components';
 import { searchIcon } from '@jupyterlab/ui-components';
 
 import {
@@ -80,7 +80,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(datavizcommand, {
       caption: 'Create a new Data Data Visualizer',
       label: 'Data Visualizer',
-      icon: args => (args['isPalette'] ? null : reactIcon),
+      icon: args => (args['isPalette'] ? null : inspectorIcon),
       execute: () => {
         if (!datavizwidget || datavizwidget.isDisposed) {
           // Create form component and pass backend behavior
