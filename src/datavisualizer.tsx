@@ -231,7 +231,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                     <tr {...row.getRowProps()}>
                       {row.cells.map(cell => {
                         return (
-                          <td {...cell.getCellProps()}>
+                          <td {...cell.getCellProps()} title={cell.value}>
                             {cell.render('Cell')}
                           </td>
                         );

@@ -240,6 +240,15 @@ table td, table th {
 .table tbody {
   z-index: 0;
 }
+/* ---> Add ellipsis to cells */
+.table th, .table td {
+  text-overflow: ellipsis;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: text;
+}
+/* <------------------------- */
 
 .rule--field,
 .rule--value,
