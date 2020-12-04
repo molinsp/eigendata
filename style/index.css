@@ -255,7 +255,7 @@ table td, table th {
 }
 
 .rule--value input {
-  height: 30px;
+  height: 100%;
   padding: 6px 12px;
   font-size: 14px;
   border: 1px solid #ccc;
@@ -281,3 +281,18 @@ table td, table th {
   margin: 0 !important;
 }
 /* <-------------------------------------------------------- */
+
+/* -------------> Rewrite existing rules for widgets */
+.rule--widget--MULTISELECT,
+.rule--widget--MULTISELECT .widget--widget {
+  width: 100%;
+}
+.rule--widget--NUMBER,
+.rule--widget--NUMBER .widget--widget,
+.rule--widget--TEXT,
+.rule--widget--TEXT .widget--widget{
+  height: 100%;
+  width: 100%;
+}
+/* <------------------------------------------------- */
+

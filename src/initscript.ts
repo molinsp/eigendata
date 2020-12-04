@@ -61,10 +61,10 @@ def ed_generate_querybuilder_config(df):
             if (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
                 'label' : col_name,
-                'type' : 'text',
-                #'fieldSettings' : {
-                #    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
-                #    }
+                'type' : 'select',
+                'fieldSettings' : {
+                    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
+                    }
                 }
             else:
                 queryprops[col_name] = {

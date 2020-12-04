@@ -1,11 +1,10 @@
 /*eslint @typescript-eslint/no-unused-vars: ["off", {"varsIgnorePattern": "^_"}]*/
 import {
   BasicConfig,
-  // types:
-  Types,
+  Operators,
   Settings,
-  Operators
-  //Widgets, Fields, Config, Types, Conjunctions, Settings, LocaleSettings, Funcs,
+  Types,
+  Widgets
 } from 'react-awesome-query-builder';
 
 import React, { useEffect, useState } from 'react';
@@ -66,8 +65,8 @@ const types: Types = {
           'greater_or_equal',
           //"between",
           //"not_between",
-          "is_empty",
-          "is_not_empty",
+          'is_empty',
+          'is_not_empty'
         ]
       }
     }
@@ -143,6 +142,27 @@ const types: Types = {
         ]
       }
     }
+  },
+  select: {
+    defaultOperator: 'select_any_in',
+    valueSources: ['value'],
+    widgets: {
+      multiselect: {
+        operators: ['select_any_in', 'select_not_any_in']
+      }
+    }
+  }
+};
+
+const widgets: Widgets = {
+  ...InitialConfig.widgets,
+  multiselect: {
+    ...InitialConfig.widgets.multiselect,
+    type: 'multiselect',
+    factory: (props): JSX.Element => <CustomMultiSelect {...props} />,
+    sqlFormatValue: (val): string => {
+      return val.map(value => `'${value}'`);
+    }
   }
 };
 
@@ -172,44 +192,82 @@ const operators: Operators = {
   }
 };
 
-const CustomSelect = props => {
-  const [options, setOptions] = useState([...props.items]);
+const settings: Settings = {
+  ...InitialConfig.settings,
+  renderOperator: props => {
+    return <CustomSelect {...props} />;
+  },
+  renderField: props => {
+    return <CustomSelect {...props} />;
+  }
+};
+
+const customConfig: any = {
+  ...InitialConfig,
+  types,
+  operators,
+  settings,
+  widgets
+};
+
+export default customConfig;
+
+const selectHeight = 30;
+
+const customStyles = {
+  menuPortal: (base): object => ({ ...base, zIndex: 9999 }),
+  control: (base): object => ({
+    ...base,
+    minHeight: selectHeight
+  }),
+  valueContainer: (base): object => ({
+    ...base,
+    minHeight: selectHeight
+  }),
+  input: (base): object => ({ ...base, margin: 0 }),
+  indicatorsContainer: (base): object => ({
+    ...base,
+    minHeight: selectHeight
+  })
+};
+
+const CustomMultiSelect = (props): JSX.Element => {
+  const [options, setOptions] = useState([]);
+  useEffect(() => {
+    // React select requires 'value' field for options
+    const modifiedOptions = props.listValues.map(listValue => {
+      return { label: listValue.title, value: listValue.value };
+    });
+    setOptions(modifiedOptions);
+  }, []);
+  return (
+    <Select
+      onChange={(selection: ISelection[]): void => {
+        props.setValue(selection.map(item => item.value));
+      }}
+      isMulti
+      options={options}
+      menuPortalTarget={document.body}
+      styles={customStyles}
+    />
+  );
+};
+
+const CustomSelect = (props): JSX.Element => {
+  const [options, setOptions] = useState([]);
 
   useEffect(() => {
     // React select requires 'value' field for options
-    const modifiedOptions = options.map(option => {
-      option.value = option.key;
-      return option;
+    const modifiedOptions = props.items.map(item => {
+      return { value: item.key, label: item.label };
     });
 
     setOptions(modifiedOptions);
   }, []);
 
-  const selectHeight = 30;
-
-  const customStyles = {
-    menuPortal: base => ({ ...base, zIndex: 9999 }),
-    control: base => ({
-      ...base,
-      height: selectHeight,
-      minHeight: selectHeight
-    }),
-    valueContainer: base => ({
-      ...base,
-      height: selectHeight,
-      minHeight: selectHeight
-    }),
-    input: base => ({ ...base, margin: 0 }),
-    indicatorsContainer: base => ({
-      ...base,
-      height: selectHeight,
-      minHeight: selectHeight
-    })
-  };
-
   return (
     <Select
-      onChange={(selection: ISelection) => {
+      onChange={(selection: ISelection): void => {
         props.setField(selection.value);
       }}
       options={options}
@@ -223,24 +281,3 @@ interface ISelection {
   value: string;
   label: string;
 }
-
-
-const settings: Settings = {
-  ...InitialConfig.settings,
-  renderOperator: props => {
-    return <CustomSelect {...props} />;
-  },
-  renderField: props => {
-    console.log(props);
-    return <CustomSelect {...props} />;
-  }
-};
-
-const customConfig: any = {
-  ...InitialConfig,
-  types,
-  operators,
-  settings
-};
-
-export default customConfig;
