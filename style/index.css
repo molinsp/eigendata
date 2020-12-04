@@ -255,10 +255,48 @@ table td, table th {
 }
 
 .rule--value input {
-  height: 30px;
+  height: 100%;
   padding: 6px 12px;
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 4px;
   width: 100%;
 }
+
+/* -------------> Rewrite existing rules for boolean widget */
+/* Set specific width for external block */
+.rule--widget--BOOLEAN {
+  max-width: 70%;
+  width: 170px;
+  height: 100%;
+}
+
+/* Make inner block flex to align elements inside of it */
+.rule--widget--BOOLEAN .widget--widget {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* Remove unnecessary margin from radio button */
+.rule--widget--BOOLEAN .widget--widget input[type="radio"] {
+  margin: 0 10px !important;
+  height: 20px;
+  width: 20px;
+}
+/* <-------------------------------------------------------- */
+
+/* -------------> Rewrite existing rules for widgets */
+.rule--widget--MULTISELECT,
+.rule--widget--MULTISELECT .widget--widget {
+  width: 100%;
+}
+.rule--widget--NUMBER,
+.rule--widget--NUMBER .widget--widget,
+.rule--widget--TEXT,
+.rule--widget--TEXT .widget--widget{
+  height: 100%;
+  width: 100%;
+}
+/* <------------------------------------------------- */
+
