@@ -148,7 +148,7 @@ const types: Types = {
     valueSources: ['value'],
     widgets: {
       multiselect: {
-        operators: ['select_any_in', 'select_not_any_in']
+        operators: ['select_any_in', 'select_not_any_in','is_empty','is_not_empty']
       }
     }
   }

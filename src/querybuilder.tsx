@@ -142,11 +142,11 @@ export default class DemoQueryBuilder extends Component<
     sql_query = sql_query.replace(/OR/g, 'or');
     sql_query = sql_query.replace(/true/g, 'True');
     sql_query = sql_query.replace(/false/g, 'False');
+    sql_query = sql_query.replace(/\(/g, '[');
+    sql_query = sql_query.replace(/\)/g, ']');
     sql_query = sql_query.replace(/ IS EMPTY/g, '.isnull()');
     sql_query = sql_query.replace(/ IS NOT EMPTY/g, '.notnull()');
     sql_query = sql_query.replace(/NOT/g, '~');
-    sql_query = sql_query.replace(/\(/g, '[');
-    sql_query = sql_query.replace(/\)/g, ']');
     sql_query = sql_query.replace(/IN/g, 'in');
     sql_query = sql_query.replace(
       /\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+\s\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+/g,
