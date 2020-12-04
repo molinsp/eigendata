@@ -548,7 +548,7 @@ export class Backend {
   public _resetStateFormulabarFlag = false;
   public _resetStateDatavisualizerFlag = false;
 
-  public _production = false;
+  public _production = true;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -587,7 +587,7 @@ export class Backend {
       this.transformationsList = transformationList;
     };
 
-    readTransformationConfig();
+    //readTransformationConfig();
 
     if (this._production) {
       console.log('--- In Production environment ---');
@@ -616,6 +616,7 @@ export class Backend {
         });
     } else {
       console.log('--- In Dev environment ---');
+      readTransformationConfig();
     }
 
     // Load python initialization script
