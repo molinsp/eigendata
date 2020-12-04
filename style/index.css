@@ -268,17 +268,21 @@ table td, table th {
 .rule--widget--BOOLEAN {
   max-width: 70%;
   width: 170px;
+  height: 100%;
 }
 
 /* Make inner block flex to align elements inside of it */
 .rule--widget--BOOLEAN .widget--widget {
   display: flex;
   align-items: center;
+  height: 100%;
 }
 
 /* Remove unnecessary margin from radio button */
 .rule--widget--BOOLEAN .widget--widget input[type="radio"] {
-  margin: 0 !important;
+  margin: 0 10px !important;
+  height: 20px;
+  width: 20px;
 }
 /* <-------------------------------------------------------- */
 
