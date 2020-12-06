@@ -1,230 +1,4 @@
 export const python_initialization_script = `
-# ---------------- TRANSFORMATIONS ----------------
-
-custom_config = {
-    'read_csv' : {
-        'included_parameters' : ['filepath_or_buffer','sep','delimiter','decimal'],
-    },
-    'merge' : {
-        'included_parameters' : ['right','how','left_on','right_on'],
-    },
-    'pivot_table' : {
-        'parameters' : {
-            'aggfunc':{
-                    'type' : 'array',
-                    'title' : 'Aggregations',
-                    'items': {
-                            'type' : 'object',
-                            'title': 'aggregation',
-                            'properties': {
-                                'function' : {
-                                    'type' : 'string',
-                                    'enum' : ['np.mean', 'count'],
-                                    'enumNames' : ['Mean', 'Count']
-                                    },
-                            'column' : {
-                                'type' : 'string',
-                                '$ref' : '#/definitions/column'
-                                }
-                                
-                            }
-                        
-                    }         
-                }
-        }
-    }    
-}
-
-
-# ---------------- TRANSFORMATION DEVELOPMENT ----------------
-
-from numpydoc.docscrape import NumpyDocString
-import re
-def get_multi_select_values(function, caller=None, debug=False):
-    """
-    This function takes a pandas function an returns a parameter configuration that allows us to build a graphical
-    user interface
-    """
-    doc = NumpyDocString(function.__doc__)
-    
-    function_name = function.__name__
-    
-    # Check if there is a custom function config
-    has_custom_config = 0
-    if(function_name in custom_config):
-        if debug: print('Has custom config for function: ' + function_name)
-        has_custom_config = 1
-    
-    # Check if there is a custom parameter config
-    has_custom_parameters_config = 0
-    if((has_custom_config == 1) and 'parameters' in custom_config[function_name]):
-        if debug: print('Has custom parameter config for function: '  + function_name)
-        has_custom_parameters_config = 1
-        
-    # Check if there is a custom parameter list
-    has_custom_parameters_list = 0
-    if((has_custom_config == 1) and 'included_parameters' in custom_config[function_name]):
-        if debug: print('Has custom parameter list for function'  + function_name)
-        has_custom_parameters_list = 1
-        
-    # Iterate over all parameters
-    # ------------------------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------
-    # ------------------------------------------------------------------------------------------
-    
-    parameter_configuration = {'properties': {}}
-    parameter_configuration['type'] = 'object'
-    parameter_configuration['title'] = function_name
-    parameter_configuration['required'] = []
-    for i in doc['Parameters']:
-        if debug: print('---------------------------------------- ' + i.name )
-        # CHECK FOR CUSTOM CONFIGS
-        # ------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------
-       
-        # Check if the parameter is excluded 
-        if has_custom_parameters_list == 1:
-            if((has_custom_config == 1) and i.name in custom_config[function_name]['included_parameters']):
-                if debug: print(i.name + '  is included in the custom parameter list')
-                pass
-            else:
-                # Skip the config
-                continue
-        
-        # Check if there is custom parameter config
-        has_custom_config_parameter = 0
-        custom_parameter_config = {}
-        if has_custom_parameters_config == 1:           
-            if((has_custom_config == 1) and i.name in custom_config[function_name]['parameters']):
-                if debug: print('Reading custom parameter config for parameter:', i.name)
-                has_custom_config_parameter = 1
-                custom_parameter_config = custom_config[function_name]['parameters'][i.name]
-        
-        
-        # CREATE THE OUTPUT
-        # ------------------------------------------------------------------------------------------
-        # ------------------------------------------------------------------------------------------
-        parameter_description = {}
-        parameter_description[i.name] = {}
-        
-        # 1. PARAMETER TYPE
-        # ------------------------------------------------------------------------------------------
-        # Check for custom config
-        if 'type' in custom_parameter_config:
-            if debug: print('Set parameter type for ' + i.name + ' as ' + custom_parameter_config['type'] )
-            parameter_description[i.name]['type'] = custom_parameter_config['type'] 
-            if custom_parameter_config['type'] == 'array':
-                parameter_description[i.name]['items'] = custom_parameter_config['items'] 
-            elif custom_parameter_config['type'] == 'object':
-                parameter_description[i.name] = custom_parameter_config
-        # Automatic check
-        elif 'column' in i.type:
-            if 'list' in i.type:
-                if debug: print('Set parameter type for ' + i.name + ' as ' + 'column list' )
-                parameter_description[i.name]['$ref'] = '#/definitions/columns'
-            else:
-                if debug: print('Set parameter type for ' + i.name + ' as ' + 'column' )
-                parameter_description[i.name]['$ref'] = '#/definitions/column'
-        elif 'label' in i.type:
-            if 'list' in i.type:
-                if debug: print('Set parameter type for ' + i.name + ' as ' + 'label list' )
-                parameter_description[i.name]['$ref'] = '#/definitions/columns'
-            else:
-                if debug: print('Set parameter type for ' + i.name + ' as ' + 'label' )
-                parameter_description[i.name]['$ref'] = '#/definitions/column'
-            # To-do add also row labels
-        elif 'DataFrame' in i.type:
-            parameter_description[i.name]['type'] = 'string'
-            parameter_description[i.name]['enum'] = _jupyterlab_variableinspector_array()
-            parameter_description[i.name]['codegenstyle'] = 'variable'
-        elif 'function' in i.type:
-            parameter_description[i.name]['type'] = 'string'
-        elif 'scalar' in i.type:
-            parameter_description[i.name]['type'] = 'integer'
-        elif 'int' in i.type:
-            parameter_description[i.name]['type'] = 'integer'
-        elif 'bool' in i.type:
-            parameter_description[i.name]['type'] = 'boolean'
-        elif 'str' in i.type:
-            parameter_description[i.name]['type'] = 'string'
-        else:
-            parameter_description[i.name]['type'] = 'string'
-
-        
-        
-        # 3. CHECK FOR OPTIONS
-        # ------------------------------------------------------------------------------------------
-        # Check for custom config
-        if 'values' in custom_parameter_config:
-            parameter_description[i.name]['values'] = custom_parameter_config['values'] 
-        # Automatic check: Check if the parameter has specific set of values given
-        elif '{' in i.type:
-            options = re.search('{(.*)}', i.type).group(1)
-            options = options.replace('"', '')
-            options = options.replace("'", '')
-            options = options.replace(' ', '')
-            options = options.split(',')
-            #options = options.replace('"', '').replace(' ', '').split(',')
-            parameter_description[i.name]['enum'] = options
-
-
-        # 3. DETERMINE SELECTOR TYPE
-        # ------------------------------------------------------------------------------------------     
-        if 'selector_type' in custom_parameter_config:
-            #print('selecto type from config')
-            parameter_description[i.name]['selector_type'] = custom_parameter_config['selector_type'] 
-        # Automatic check: Check if more than one input can be given             
-        #elif 'list' in i.type:
-        #    parameter_description[i.name]['selector_type'] = 'multiselect'
-        #elif 'str' in i.type:
-        #    parameter_description[i.name]['selector_type'] = 'text'
-        #else:
-        #    parameter_description[i.name]['selector_type'] = 'singleselect'
-        
-        # 4. OPTIONAL VS REQUIRED
-        # ------------------------------------------------------------------------------------------
-        if 'optional' not in i.type:
-            parameter_configuration['required'].append(i.name)
-            
-        # 5. DEFAULT VALUE
-        # ------------------------------------------------------------------------------------------
-        if 'default is' in i.type:
-                default_index = i.type.find('default is') + 11
-                default_val = i.type[default_index:]
-                # Clean the string
-                default_val = default_val.strip("'")
-                parameter_description[i.name]['default'] = default_val      
-        elif 'default' in i.type:
-                default_index = i.type.find('default') + 8
-                default_val = i.type[default_index:]
-                # Clean the string
-                default_val = default_val.strip("'")
-                parameter_description[i.name]['default'] = default_val
-        
-        parameter_configuration['properties'].update(parameter_description) 
-        
-    parameter_configuration['properties']['New table'] = {'type': 'string'};
-    
-    parameter_configuration['definitions'] =  {
-        'columns' :     {
-            'type' : 'array',
-            'uniqueItems' : True,
-            'items' : {
-                'type' : 'string',
-                'enum' : []
-            }
-        },
-        'column' :     {
-            'type' : 'string',
-            'enum' : []
-        }
-    }    
-    parameter_configuration['definitions']['columns']['items']['enum'] = caller.columns.tolist()
-    parameter_configuration['definitions']['column']['enum'] = caller.columns.tolist()
-    
-    res = json.dumps(parameter_configuration, ensure_ascii=False) 
-    return json.dumps(parameter_configuration, ensure_ascii=False) 
-
 # ---------------- VARIABLE INSPECTOR ----------------
 import json
 import sys
@@ -284,12 +58,7 @@ def ed_generate_querybuilder_config(df):
             }
         elif col_type == 'object':
             # Categorical if less than 10% of values are unique
-            if df[col_name].dtype == np.object:
-                queryprops[col_name] = {
-                    'label' : col_name,
-                    'type' : 'text'
-                }
-            elif (ed_get_percentage_unique_column(df, col_name) < 10):
+            if (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'select',
@@ -322,9 +91,8 @@ def ed_generate_querybuilder_config(df):
                 }
             
     return json.dumps(queryprops, ensure_ascii=False)
-
-from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype
 # ---------------- DATA VISUALIZER ----------------
+from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype,is_bool_dtype
 def ed_build_colDefs_for_mi_cols(df):
     """
     create columnDefs dict for column grouping
@@ -369,27 +137,15 @@ def ed_build_colDefs_for_mi_cols(df):
                 s2.append(new_index_name)
     return s
 
-def ed_build_colDefs_for_si_cols(df, verbose=True):
+def ed_build_colDefs(df, verbose=True):
     colDefs = [{'accessor': str(col).replace('.','_'), 'Header': col} for col in df.columns]
     return colDefs
 
-def ed_build_colDefs_for_mi_rows(df):
-    """
-    create agGrid columnDefs dict for column grouping
-    from multiindex dataframe columns
-    """
-    mindexrow = df.index
-    s = []
-    for e in list(mindexrow.names):
-        new_e = {'accessor': e,
-                 'Header': e.title()}
-        s.append(new_e)
-    return s
 
 def ed_flatten_mi_col_df(dfmi):
     """
     create flattend dataframe
-    multi index col ('a', 'b', 'c') turned to 'a-b-c'
+    multi index col ('a', 'b', 'c') turned to 'a_b_c'
     """
     df = dfmi.copy()
     cols = df.columns.map(lambda x: '_'.join([str(i) for i in x]))
@@ -413,30 +169,28 @@ def ed_is_multiindex_row_df(df):
             return True
     return False
 
-def ed_check_if_default_index(df):
-    # Check if the index is the same as the default index. We use the name as a proxy
-    check_index = (df.index.name == None)
-    return check_index
-
 def ed_format_data_for_visualization(df_data):
     for col_name, col in df_data.items():
         if is_datetime64_any_dtype(col):
             # Check if it contains only dates
             if ((df_data[col_name].dt.floor('d') == df_data[col_name]) | (df_data[col_name].isnull())).all():
-                df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y')
-            # Check if it contains only times
-            elif ( (df_data[col_name].dt.date == pd.Timestamp('now').date()) | (df_data[col_name].isnull()) ).all():
-                df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
+                df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d')
+            # Check if it contains only times (commented out given the default notebook diplay does not print this)
+            #elif ( (df_data[col_name].dt.date == pd.Timestamp('now').date()) | (df_data[col_name].isnull()) ).all():
+            #    df_data[col_name] =  df_data[col_name].dt.strftime('%H:%M:%S')
             else:
-                df_data[col_name] =  df_data[col_name].dt.strftime('%d/%m/%Y %H:%M:%S')
+                df_data[col_name] =  df_data[col_name].dt.strftime('%Y-%m-%d %H:%M:%S')
             
-            df_data[col_name] = df_data[col_name].fillna('')
+            df_data[col_name] = df_data[col_name].fillna('NaT')
+        # Check for bool before numeric, given booleans return tru to is_numeric
+        elif is_bool_dtype(col):
+            df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
         elif is_numeric_dtype(col):
-            df_data[col_name] = df_data[col_name].fillna('')
+            df_data[col_name] = df_data[col_name].fillna('NaN')
             pass
         else:
             #If not handled, treat as a string
-            df_data[col_name] = df_data[col_name].astype('str').replace('nan','')
+            df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
 
 def ed_prep_data_for_visualization(dfmi,index=False):
     """
@@ -461,49 +215,50 @@ def ed_prep_data_for_visualization(dfmi,index=False):
         df_data = df_data.iloc[:,:200]
         displayed_columns = 200
     df_data = df_data.head(50)
-
-
+    
     # 2. Handle multi-level columns
-    # Check it ther are multi-level columns
+    # Check it ther are multi-level columns, and generate the column definitions
     if ed_is_multiindex_col_df(df_data):
         # Build multi-level column definitions to be used by the frontend grid
         columnDefs_col = ed_build_colDefs_for_mi_cols(df_data)
         # Create a unique name for each column by composing the names of all the levels
         df_data = ed_flatten_mi_col_df(df_data)
     else:
-        # Generate column definitions for the frontend
-        columnDefs_col = ed_build_colDefs_for_si_cols(df_data)
+        columnDefs_col = ed_build_colDefs(df_data)
     
-    
-    # 3. Handle multi-index rows (does not seem to matter gith now)
+    # 3. Handle multi-index rows
     if ed_is_multiindex_row_df(df_data):
-        # Build multi-level column definitions to be used by the frontend grid
-        columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
-        # Flatten the multi-level index so that each row has a unique number
+        columnDefs_row = [{'accessor': str(col).replace('.','_'), 'Header': col} for col in list(df_data.index.names)]
         df_data = df_data.reset_index()
     else:
-        # If it is the default index
-        if ed_check_if_default_index(df_data):
-            columnDefs_row = []
-        else:
-            # Single index
-            columnDefs_row = ed_build_colDefs_for_mi_rows(df_data)
+        # There is already a column named index in the dataframe
+        if 'index' in df_data.columns:
+            # Name the index pd_index given there is already a column named index
+            columnDefs_row = [{'accessor': 'level_0', 'Header': 'pd_index'}]
             df_data = df_data.reset_index()
-    
-    # 4. Ensure data can be read in the frontend
+        # The index has a name
+        elif df_data.index.name != None:
+            columnDefs_row = [{'accessor': df_data.index.name, 'Header': df_data.index.name}]
+            df_data = df_data.reset_index()
+        # The index has no name
+        else:
+            columnDefs_row = [{'accessor': 'index', 'Header': 'index'}]
+            df_data = df_data.reset_index()
+
+    # 4. Get the col types before transforming
+    names = [col for col in df_data.columns]
+    types = [dtype.name for dtype in df_data.dtypes]
+    col_types = [{'name': name, 'type': dtype} for name,dtype in zip(names,types)]
+
+    # 5. Ensure data can be read in the frontend
     ed_format_data_for_visualization(df_data)
     # If there are any dots, remove them because react-table can't handle them
     # Only relevatn for single index columns case. 
     df_data.columns = df_data.columns.map(lambda x: str(x).replace('.','_'))
     
-    # 5.Prepare output
+    # 6.Prepare output
     # Put together the columns from flattening rows and from flattinging columns
     new_columnDefs = columnDefs_row + columnDefs_col
-    
-    # 6. Get the col types
-    names = [col for col in df_data.columns]
-    types = [dtype.name for dtype in df_data.dtypes]
-    col_types = [{'name': name, 'type': dtype} for name,dtype in zip(names,types)]
     
     # 7. Set the json format. 
     df_data = df_data.to_dict(orient='records')
@@ -520,5 +275,7 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     }
     
     # 3. Return as JSON
-    return json.dumps(result, ensure_ascii=True, allow_nan=False)
+    return json.dumps(result, ensure_ascii=False, allow_nan=False)
+# ---------------- FASTDATA IMPORT ----------------
+from fastdata.core import *
 `;

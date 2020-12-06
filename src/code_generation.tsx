@@ -190,16 +190,25 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
     if (key.localeCompare('new table name') == 0 && returnType.localeCompare('print') != 0){
-      console.log('CG: Result is dataframe');
-      result_variable = formData[key].replace(/ /g,"_");
+      console.log('CG: 3.2 New table name detected');
+      if(typeof(formData[key]) != 'undefined'){
+        console.log('CG: 3.2 User entered table name');
+        result_variable = formData[key].replace(/ /g,"_");
+      }
     }
     else if(key.localeCompare('new column name') == 0 && returnType.localeCompare('print') != 0){
-      console.log('CG: Result is series');
-      result_variable = dataframeSelection + '["' + formData[key].replace(/ /g,"_") + '"]';
+      console.log('CG: 3.2 New column name detected');
+      if(typeof(formData[key]) != 'undefined'){
+        console.log('CG: User entered series name');
+        result_variable = dataframeSelection + '["' + formData[key].replace(/ /g,"_") + '"]';
+      }
     }
     else if(key.localeCompare('new variable name') == 0 && returnType.localeCompare('print') != 0){
-      console.log('CG: Result is variable');
-      result_variable = formData[key].replace(/ /g,"_");
+      console.log('CG: 3.2 New variable name detected');
+      if(typeof(formData[key]) != 'undefined'){
+        console.log('CG: User entered variable name');
+        result_variable = formData[key].replace(/ /g,"_");
+      }
     }
     // IGNORE the fields marked as ignore
     else if((typeof(fieldSchema['codegenstyle']) !== 'undefined')
@@ -217,7 +226,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
         && (typeof(fieldSchema['items']['type']) !== 'undefined')   
         && (fieldSchema['items']['type'].localeCompare('object') == 0)
       ){ 
-      console.log('Complex object');
+      console.log('CG: 3.3 Complex object');
       var parameterDict = '{'
       const mapperProperties = fieldSchema.items.properties;
       // Firs element is the key
@@ -274,13 +283,18 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
   if(returnType.localeCompare('dataframe') == 0){
     console.log('CG: 3.1 Return type is dataframe');
     // If no target variable, and calling from a given dataframe apply transformation to this dataframe
-    if((result_variable === '') && (dataframeSelection !== null)){
-      console.log('CG: 3.1.1 Result defaults: Use selected dataframe');
+    if((result_variable === '') && (dataframeSelection !== null) && (transformationType != 'dataLoading')){
+      console.log('CG: 4.1.1 Result defaults: Use selected dataframe');
       result_variable = dataframeSelection;
     }
     // else if dataframe not defined (only case is read_csv), name it data
     else if ((result_variable === '') && (dataframeSelection === null)){
-      console.log('CG: 3.1.2 Result defaults: no dataframe selected');
+      console.log('CG: 4.1.2 Result defaults: no dataframe selected');
+      result_variable = 'data';
+    }
+    // If the variable is written above no need to handle default cases
+    else if (result_variable === ''){
+      console.log('CG: 4.1.3 Catch remaining cases');
       result_variable = 'data';
     }
   }
@@ -288,7 +302,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     4.2 Result is a series
   ------------------------------------*/
   else if(returnType.localeCompare('series') == 0){
-    console.log('CG: 3.2 Return type is series');
+    console.log('CG: 4.2 Return type is series');
     // This covers both scenarios df->series and series->series
         
     var result_column_name = '';
@@ -301,7 +315,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
        if(typeof(col_schema['$ref']) !== 'undefined'){
           console.log('Ref found', col_schema['$ref']);
           if(col_schema['$ref'].localeCompare('#/definitions/column') == 0){ 
-            console.log('CG: 3.2.1 Result defaults: Using default column');
+            console.log('CG: 4.2.1 Result defaults: Using default column');
             result_column_name = formData[key];
             break;               
           }
@@ -309,7 +323,7 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
      }
      if(result_column_name == ''){
        // This handle the case pandasObject -> series, where a column definition has not been found
-       console.log('CG: 3.2.2 Result defaults: No column found');
+       console.log('CG: 4.2.2 Result defaults: No column found');
        result_column_name = 'new column';
      }
      result_variable =  dataframeSelection + '["' + result_column_name + '"]';
@@ -319,9 +333,9 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     4.3 Result is a variable
   ------------------------------------*/
   else if (returnType.localeCompare('variable') == 0){
-    console.log('CG: 3.3 Return type is variable');
+    console.log('CG: 4.3 Return type is variable');
     if(result_variable === ''){
-      console.log('CG: 3.3.1 Result defaults: Using var');
+      console.log('CG: 4.3.1 Result defaults: Using var');
       result_variable = 'var';
     }
   }
