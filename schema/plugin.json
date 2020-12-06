@@ -13,7 +13,7 @@
       "type": "boolean",
       "title": "Share product data",
       "description": "This setting determines if product data is shared. We don't keep your identity, and only record which transformations are used to help us better invest time improving the product.",
-      "default": false
+      "default": true
     },
     "answeredProductDataDialog": {
       "type": "boolean",
