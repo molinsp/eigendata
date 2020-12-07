@@ -47,7 +47,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import ChatWidget from '@papercups-io/chat-widget';
 
 // Before deploying to production, we change this flag
-const packageVersion = '0.1.9';
+const packageVersion = '0.2.0';
 let _transformationsConfig = localTransformationsConfig;
 
 /*
@@ -548,7 +548,7 @@ export class Backend {
   public _resetStateFormulabarFlag = false;
   public _resetStateDatavisualizerFlag = false;
 
-  public _production = true;
+  public _production = false;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
