@@ -222,7 +222,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
   const handleFormChange = async (data: any) => {
-    console.log('Form data changed', data);
+    //console.log('Form data changed', data);
     /*-------------------------------
      MERGE
      -------------------------------*/
@@ -357,6 +357,17 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         generatedCode: formula,
       });
     }
+    // Perform imports if neccessary
+    const library = logic._transformationsConfig[formReponse.schema.function]['library'];
+    if(logic.packagesImported.includes(library['name'])) {
+      console.log('CG: Package already imported');
+    }else{
+      console.log('CG: Not importes, using statement', library['importStatement']);
+      await logic.pythonImport(library['importStatement']);
+    }
+    
+
+
     try {
       await logic.writeToNotebookAndExecute(formula);
       // Write and execute the formula in the notebook
@@ -523,6 +534,7 @@ export class Backend {
   // Keeps track of dataframes that can be transformed through the UI
   // Used to display forms
   public dataframesLoaded: any = [];
+  public packagesImported: any = [];
 
   // Data transformation functions
   public transformationsList = [];
@@ -681,8 +693,14 @@ export class Backend {
 
   private _initScripts: string;
 
-  // Returns a json object with all the dataframes
-  private _inspectorScript = 'ed_variableinspector_dict_list()';
+  // Returns a json object with all the dataframes & imported modules
+  // Use multi import call strategy
+  private kernelInspectorRequest = `
+  call_backend_functions([
+   {'name': 'ed_variableinspector_dict_list', 'parameters': {}},
+   {'name': 'ed_get_imported_modules', 'parameters': {}}    
+  ])
+  `;
 
   // -------------------------------------------------------------------------------------------------------------
   // INTERNAL UTILITIES
@@ -978,11 +996,8 @@ export class Backend {
   }
 
   /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Get list of columns from Kernel for selected dataframe
-  -> Returns: Array of columns
-  -> Writes: _codeToIgnore
+  [FUNCTION] Remove table 
   -----------------------------------------------------------------------------------------------------*/
-
   public async pythonRemoveTable(table: string) {
     const codeToRun = 'del ' + table;
     console.log('Request expression', codeToRun);
@@ -995,6 +1010,18 @@ export class Backend {
     );
 
     console.log('Result', result);
+  }
+
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Import library with given statment
+  -----------------------------------------------------------------------------------------------------*/
+  public async pythonImport(importStatement: string) {
+    // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+    await Backend.sendKernelRequest(
+      this._currentNotebook.sessionContext.session.kernel,
+      importStatement,
+      {}
+    );
   }
 
   // -------------------------------------------------------------------------------------------------------------
@@ -1044,6 +1071,7 @@ export class Backend {
           this._resetStateDatavisualizerFlag = true;
           // Reset dataframes
           this.dataframesLoaded = [];
+          this.packagesImported = [];
 
           // Restart init scripts
           const content: KernelMessage.IExecuteRequestMsg['content'] = {
@@ -1087,7 +1115,7 @@ export class Backend {
         const code = msg.content.code;
         // Check this is not my code running
         if (
-          !(code == this._inspectorScript) &&
+          !(code == this.kernelInspectorRequest) &&
           !(code == this._initScripts) &&
           !(code == this._codeToIgnore)
         ) {
@@ -1107,7 +1135,7 @@ export class Backend {
   private pythonRequestDataframes(): void {
     console.log('------> Get dataframe list');
     const content: KernelMessage.IExecuteRequestMsg['content'] = {
-      code: this._inspectorScript,
+      code: this.kernelInspectorRequest,
       stop_on_error: false,
       store_history: false
     };
@@ -1132,8 +1160,12 @@ export class Backend {
         content = content.slice(1, -1);
         content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
       }
-      const dataframes = JSON.parse(content);
-      console.log('Number of dataframes:', dataframes.length);
+
+      const kerneldata = JSON.parse(content);
+      //console.log('Kernel Inspector: Result', kerneldata)
+      const dataframes = kerneldata['ed_variableinspector_dict_list'];
+      //console.log('Number of dataframes:', dataframes.length);
+      
       if (dataframes.length == 0) {
         // If there is no data loaded, reset frontend component
         this._resetStateFormulabarFlag = true;
@@ -1152,6 +1184,7 @@ export class Backend {
         });
 
         this.dataframesLoaded = dataframe_list;
+        this.packagesImported = kerneldata['ed_get_imported_modules'];
       }
       // Emit signal to re-render the component
       this.signal.emit();

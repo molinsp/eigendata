@@ -1,4 +1,12 @@
 export const python_initialization_script = `
+# ---------------- Multi-backend caller ----------------
+def call_backend_functions(functions):
+    results = {}
+    for func in functions:
+        func_name = func['name']
+        results[func_name] = globals()[func_name](**func['parameters']) 
+        
+    return json.dumps(results)
 # ---------------- VARIABLE INSPECTOR ----------------
 import json
 import sys
@@ -22,12 +30,15 @@ def ed_keep_dataframes(v):
 def ed_variableinspector_dict_list():
     values = _jupyterlab_variableinspector_nms.who_ls()
     vardic = [{'varName': _v} for _v in values if ed_keep_dataframes(_v)]
-    return json.dumps(vardic, ensure_ascii=False)
+    return vardic
 
 def ed_variableinspector_array():
     values = _jupyterlab_variableinspector_nms.who_ls()
     vararray = [_v for _v in values if ed_keep_dataframes(_v)]
     return vararray
+
+def ed_get_imported_modules():
+    return list(sys.modules.keys())
 
 # ---------------- GET DF COLUMNS AS JSON ----------------
 def ed_get_json_column_values(df):
