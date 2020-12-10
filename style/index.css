@@ -1,3 +1,5 @@
+/* |----------------------- Common style rules --------------------------------------------------------------------> */
+
 .jp-ReactWidget {
   color: var(--jp-ui-font-color1);
   background: var(--jp-layout-color1);
@@ -9,6 +11,21 @@
   overflow: auto;
 }
 
+/* Any element that fills its parent by width */
+.full-width {
+  width: 100%;
+}
+
+/* Any element that fills its parent by height */
+.full-height-container {
+  height: 100%;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+
+/* |----------------------- Side-by-side fields rules -------------------------------------------------------------> */
+
+/* Side-by-side container */
 .side-by-side-fields > fieldset {
   display: flex;
   flex-wrap: wrap;
@@ -17,35 +34,45 @@
   margin-bottom: 10px;
 }
 
+/* Left and right fields of side-by-side container */
 .side-by-side-fields .left-field,
 .side-by-side-fields .right-field {
   width: 49%;
 }
 
+/* Rewrite left field rules for data-transformation-form */
+.data-transformation-form .left-field {
+  width: 33%;
+}
+
+/* Rewrite right field rules for data-transformation-form */
+.data-transformation-form .right-field {
+  width: 66%;
+}
+
+/* Rules for description inside of side-by-side container */
 .side-by-side-fields .field-description {
   width: 100%;
 }
+/* <---------------------------------------------------------------------------------------------------------------| */
 
-.full-width {
-  width: 100%;
-}
 
+/* |----------------------- Rewrite items at array level of transformations.json ----------------------------------> */
+
+/* Item container */
 .array-item {
   display: flex;
   align-items: center;
 }
 
+/* Item buttons */
 .array-item-toolbox {
   margin-bottom: 9px;
 }
+/* <---------------------------------------------------------------------------------------------------------------| */
 
-.data-transformation-form .left-field {
-  width: 33%;
-}
 
-.data-transformation-form .right-field {
-  width: 66%;
-}
+/* |----------------------- Rewrite query builder style rules -----------------------------------------------------> */
 
 #query-form .group-or-rule-container {
   padding-right: 0;
@@ -60,10 +87,101 @@
   margin-bottom: 20px;
 }
 
-.full-height-container {
+.query-builder-container button {
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #337ab7;
+  display: inline-block;
+  cursor: pointer;
+  padding: 2px 9px;
+  font-size: 14px;
+  line-height: 1.42857143;
+  border-radius: 4px;
+}
+
+/* Make action buttons always visible */
+.group--actions.group--actions--tr {
+  opacity: 1 !important;
+}
+
+/* Style for action buttons */
+.group--actions.group--actions--tr > button {
+  margin-right: 5px;
+}
+
+.group--actions.group--actions--tr > button:last-child {
+  margin-right: 0;
+}
+
+.rule--header > button,
+.group--actions.group--actions--tr > button:nth-child(3) {
+  background: #dc2222;
+  border-color: #dc2222;
+}
+
+/* Styles for rule fields */
+.rule--field,
+.rule--value,
+.rule--operator {
+  width: 30%;
+}
+.rule--operator {
+  max-width: 130px;
+}
+
+.rule--body {
+  display: flex;
+}
+
+.rule--value input {
+  height: 100%;
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+}
+
+/* -------------> Rewrite existing rules for widgets */
+.rule--widget--MULTISELECT,
+.rule--widget--MULTISELECT .widget--widget {
+  width: 100%;
+}
+.rule--widget--NUMBER,
+.rule--widget--NUMBER .widget--widget,
+.rule--widget--TEXT,
+.rule--widget--TEXT .widget--widget{
+  height: 100%;
+  width: 100%;
+}
+/* Set specific width for external block */
+.rule--widget--BOOLEAN {
+  max-width: 70%;
+  width: 170px;
   height: 100%;
 }
 
+/* Make inner block flex to align elements inside of it */
+.rule--widget--BOOLEAN .widget--widget {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+/* Remove unnecessary margin from radio button */
+.rule--widget--BOOLEAN .widget--widget input[type="radio"] {
+  margin: 0 10px !important;
+  height: 20px;
+  width: 20px;
+}
+/* <------------------------------------------------- */
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+
+/* |----------------------- Data visualizer rules -----------------------------------------------------------------> */
+
+/* |----------- Navigation --------------------------------------->*/
+/* Navigation bar */
 .scroll-nav {
   overflow-x: auto;
   overflow-y: hidden;
@@ -72,6 +190,7 @@
   z-index: 5;
 }
 
+/* Navigation tab (button) */
 .tab-button {
   min-width: 77px;
   height: 30px;
@@ -86,20 +205,28 @@
   transition: 0.2s ease;
 }
 
+/* Navigation tab (button) style by hover */
 .tab-button:hover,
 .dropdown-button:hover
 {
   background-color: #EEEEEE;
 }
 
+/* Navigation tab (button) style if active */
 .tab-button_active {
   background-color: #ffffff;
   color: #353EFF;
 }
 
+/* Navigation tab (button) style if inactive */
 .tab-button_inactive {
   color: #959494;
   background-color: #f6f6f6;
+}
+
+/* Containers for dropdown button */
+.dropdown-container {
+  display: flex;
 }
 
 .dropdown {
@@ -107,10 +234,7 @@
   min-width: 97px;
 }
 
-.dropdown-container {
-  display: flex;
-}
-
+/* Dropdown button container */
 .dropdown-button {
   height: 30px;
   padding: 2px 4px;
@@ -123,6 +247,7 @@
   justify-content: center;
 }
 
+/* Rewrite bootstrap's dropdown menu */
 .dropdown-menu {
   padding: 0 !important;
   margin: 0 !important;
@@ -130,6 +255,7 @@
   border-top-right-radius: 0 !important;
 }
 
+/* Rewrite bootstrap's dropdown menu item */
 .dropdown-item {
   display: block;
   padding: 2px 10px;
@@ -144,6 +270,7 @@
   color: #212529;
 }
 
+/* CSS arrow for dropdown container */
 .dropdown-arrow {
   height: 0;
   width: 0;
@@ -152,7 +279,9 @@
   border-bottom: 0;
   border-left: .3em solid transparent;
 }
+/* <--------------------------------------------------------------|*/
 
+/* Container for table */
 .tab-item {
   width: 100%;
   margin-bottom: 15px;
@@ -185,6 +314,7 @@
   color: #ffffff;
 }
 
+/* Row style for thead-dark */
 .thead-dark .tr {
   border-bottom: 1px solid grey;
 }
@@ -202,6 +332,7 @@
   font-size: 11px;
 }
 
+/* Cell's style */
 .td{
   padding: .75rem;
   border-top: 1px solid #dee2e6;
@@ -252,92 +383,4 @@
 
 /* <----------------------------------------------------------- */
 
-.group--actions.group--actions--tr {
-  opacity: 1 !important;
-}
-
-.group--actions.group--actions--tr > button {
-  margin-right: 5px;
-}
-
-.group--actions.group--actions--tr > button:last-child {
-  margin-right: 0;
-}
-
-.query-builder-container button {
-  color: #fff;
-  background-color: #337ab7;
-  border-color: #337ab7;
-  display: inline-block;
-  cursor: pointer;
-  padding: 2px 9px;
-  font-size: 14px;
-  line-height: 1.42857143;
-  border-radius: 4px;
-}
-
-.rule--header > button,
-.group--actions.group--actions--tr > button:nth-child(3) {
-  background: #dc2222;
-  border-color: #dc2222;
-}
-
-.rule--field,
-.rule--value,
-.rule--operator {
-  width: 30%;
-}
-.rule--operator {
-  max-width: 130px;
-}
-
-.rule--body {
-  display: flex;
-}
-
-.rule--value input {
-  height: 100%;
-  padding: 6px 12px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  width: 100%;
-}
-
-/* -------------> Rewrite existing rules for boolean widget */
-/* Set specific width for external block */
-.rule--widget--BOOLEAN {
-  max-width: 70%;
-  width: 170px;
-  height: 100%;
-}
-
-/* Make inner block flex to align elements inside of it */
-.rule--widget--BOOLEAN .widget--widget {
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-/* Remove unnecessary margin from radio button */
-.rule--widget--BOOLEAN .widget--widget input[type="radio"] {
-  margin: 0 10px !important;
-  height: 20px;
-  width: 20px;
-}
-/* <-------------------------------------------------------- */
-
-/* -------------> Rewrite existing rules for widgets */
-.rule--widget--MULTISELECT,
-.rule--widget--MULTISELECT .widget--widget {
-  width: 100%;
-}
-.rule--widget--NUMBER,
-.rule--widget--NUMBER .widget--widget,
-.rule--widget--TEXT,
-.rule--widget--TEXT .widget--widget{
-  height: 100%;
-  width: 100%;
-}
-/* <------------------------------------------------- */
-
+/* <---------------------------------------------------------------------------------------------------------------| */
