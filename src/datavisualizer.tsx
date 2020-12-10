@@ -40,6 +40,9 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     setActiveTab(0);
     props.logic._resetStateDatavisualizerFlag = false;
   }
+  const getModifiedValue = (value: number): string => {
+    return value.toLocaleString('USD');
+  };
 
   useEffect(() => {
     const getDataForVisualization = async () => {
@@ -50,8 +53,15 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           const result = await props.logic.pythonGetDataForVisualization(
             dfs[activeTab].value
           );
+          const columns = result['columns'].map(column => {
+            column.Cell = (props): string =>
+              typeof props.value === 'number'
+                ? getModifiedValue(props.value)
+                : String(props.value);
+            return column;
+          });
           setShowTable(true);
-          setColumns([...result['columns']]);
+          setColumns([...columns]);
           setData([...result['data']]);
           setColumnTypes([...result['columnTypes']]);
           setShape({ ...result['shape'] });
@@ -63,7 +73,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     };
     getDataForVisualization();
   }, [props.logic.dataframesLoaded, activeTab]);
-
   const {
     getTableProps,
     getTableBodyProps,
