@@ -587,7 +587,8 @@
         "function" : "merge",
         "callerObject" : "DataFrame",
         "type" : "object",
-        "title" : "Join tables"
+        "title" : "Join tables",
+        "description": "Join tables on one or more columns."
       },
       "uischema" : {
         "classNames" : "side-by-side-fields",
@@ -1001,6 +1002,17 @@
       "uischema" : {
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "columns": {
+          "items": {
+            "classNames": "side-by-side-fields",
+            "column": {
+              "classNames": "left-field"
+            },
+            "newname": {
+              "classNames": "right-field"
+            }
+          }
         }
       },
       "library" : {

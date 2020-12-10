@@ -22,17 +22,21 @@
   width: 49%;
 }
 
-.side-by-side-fields .full-width {
+.side-by-side-fields .field-description {
   width: 100%;
 }
 
-#root_aggfunc .array-item {
+.full-width {
+  width: 100%;
+}
+
+.array-item {
   display: flex;
   align-items: center;
 }
 
-#root_aggfunc .array-item-toolbox {
-  margin-bottom: 6px;
+.array-item-toolbox {
+  margin-bottom: 9px;
 }
 
 .data-transformation-form .left-field {
