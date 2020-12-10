@@ -1,10 +1,10 @@
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { ISignal } from '@lumino/signaling';
 
-import { useTable } from 'react-table';
+import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
 
 import { Backend } from './formulabar';
 
@@ -22,14 +22,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [activeTab, setActiveTab] = useState(0);
   const [columnTypes, setColumnTypes] = useState([]);
   const [shape, setShape] = useState({});
-  const [columnTypesTop, setColumnTypesTop] = useState(0);
-  const darkHeadRef = useRef(null);
-
-  useEffect(() => {
-    if (darkHeadRef.current) {
-      setColumnTypesTop(darkHeadRef.current.clientHeight - 2);
-    }
-  });
 
   const separateThousands = number => {
     let stringNumber = number + '';
@@ -78,7 +70,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     headerGroups,
     rows,
     prepareRow
-  } = useTable({ columns, data });
+  } = useTable({ columns, data }, useBlockLayout, useResizeColumns);
 
   const cutString = (string, requiredLength) => {
     return string.length > requiredLength
@@ -121,7 +113,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       closeDropdownMenu(element);
     }
   };
-
   return (
     <div className="full-height-container">
       {showTable ? (
@@ -196,51 +187,61 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             </p>
           </nav>
           <div className="tab-item">
-            <table
+            <div
               {...getTableProps()}
-              className="table table-striped table-hover"
+              className="div-table div-table-striped"
+              role="table"
             >
-              <thead className="thead-dark">
+              <div className="thead-dark sticky" role="thead">
                 {headerGroups.map(headerGroup => (
-                  <tr ref={darkHeadRef} {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map(column => (
-                      <th {...column.getHeaderProps()}>
-                        {column.render('Header')}
-                      </th>
+                  <div
+                    {...headerGroup.getHeaderGroupProps()}
+                    className="tr"
+                    role="tr"
+                  >
+                    {headerGroup.headers.map((column, index) => (
+                      <div
+                        {...column.getHeaderProps()}
+                        className="th"
+                        role="th"
+                      >
+                        <div>{column.render('Header')}</div>
+                        <div
+                          {...column.getResizerProps()}
+                          className="delimiter-wrapper"
+                        >
+                          <div className="delimiter" />
+                        </div>
+                        <div className="data-type-info">
+                          {columnTypes[index] && columnTypes[index].type}
+                        </div>
+                      </div>
                     ))}
-                  </tr>
+                  </div>
                 ))}
-                <tr role="row" className="data-type-info">
-                  {columnTypes.map((columnType, index) => (
-                    <td
-                      role="cell"
-                      key={index}
-                      style={{
-                        top: columnTypesTop
-                      }}
-                    >
-                      {columnType.type}
-                    </td>
-                  ))}
-                </tr>
-              </thead>
-              <tbody {...getTableBodyProps()}>
+              </div>
+              <div {...getTableBodyProps()} className="tbody" role="tbody">
                 {rows.map(row => {
                   prepareRow(row);
                   return (
-                    <tr {...row.getRowProps()}>
+                    <div {...row.getRowProps()} className="tr" role="tr">
                       {row.cells.map(cell => {
                         return (
-                          <td {...cell.getCellProps()} title={cell.value}>
+                          <div
+                            {...cell.getCellProps()}
+                            title={cell.value}
+                            className="td"
+                            role="td"
+                          >
                             {cell.render('Cell')}
-                          </td>
+                          </div>
                         );
                       })}
-                    </tr>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
         </div>
       ) : (
