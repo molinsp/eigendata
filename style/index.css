@@ -56,11 +56,6 @@
   margin-bottom: 20px;
 }
 
-.thead-dark {
-  background-color: #212529;
-  color: #ffffff;
-}
-
 .full-height-container {
   height: 100%;
 }
@@ -169,9 +164,89 @@
   margin: 0
 }
 
-table td, table th {
+/* ---> Table rules ------------------------------------------- */
+
+/* Table style */
+.div-table {
+  width: 100%;
+  border-collapse: collapse;
+  display: table;
+  border-color: grey;
+  border-spacing: 2px;
+}
+
+/* Dark header style */
+.thead-dark {
+  background-color: #212529;
+  color: #ffffff;
+}
+
+.thead-dark .tr {
+  border-bottom: 1px solid grey;
+}
+
+/* Add padding to all .th children*/
+.th > *{
+  padding: .35rem;
+}
+
+/* Style for data type info */
+.data-type-info {
+  color: grey;
+  background-color: white;
+  width: 100%;
+  font-size: 11px;
+}
+
+.td{
+  padding: .75rem;
+  border-top: 1px solid #dee2e6;
   font-size: 12px;
 }
+
+/* Striped table style */
+.div-table-striped .tbody .tr:nth-of-type(odd) {
+  background-color: rgba(0,0,0,.05);
+}
+
+/* Sticky position for header */
+.sticky {
+  position: sticky;
+  top: 0;
+}
+
+/* ---> Add ellipsis to cells */
+.th, .td {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: text;
+}
+
+.delimiter-wrapper {
+  background-color: transparent;
+  width: 20px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0;
+  height: 100%;
+}
+
+.delimiter {
+  width: 1px;
+  height: 100%;
+  background-color: rgba(128, 128, 128, 0.2);
+  position: absolute;
+  right: 20%;
+}
+
+.delimiter:hover {
+  cursor: col-resize;
+}
+/* <------------------------- */
+
+/* <----------------------------------------------------------- */
 
 .group--actions.group--actions--tr {
   opacity: 1 !important;
@@ -202,53 +277,6 @@ table td, table th {
   background: #dc2222;
   border-color: #dc2222;
 }
-
-.data-type-info {
-  color: grey;
-  background-color: white !important;
-  border-bottom: 2px solid grey;
-
-}
-
-.data-type-info > * {
-  font-size: 11px;
-  padding-bottom: 0;
-  margin-top: -2px;
-}
-
-.thead-dark th {
-  background-color: #212529;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  height: 50%;
-}
-.thead-dark {
-  background-color: white;
-}
-.sticky {
-  position: sticky;
-  top: 0;
-}
-
-.thead-dark td {
-  background-color: white;
-  position: sticky;
-  z-index: 1;
-}
-
-.table tbody {
-  z-index: 0;
-}
-/* ---> Add ellipsis to cells */
-.table th, .table td {
-  text-overflow: ellipsis;
-  max-width: 100px;
-  white-space: nowrap;
-  overflow: hidden;
-  cursor: text;
-}
-/* <------------------------- */
 
 .rule--field,
 .rule--value,
