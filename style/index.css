@@ -215,7 +215,7 @@
 /* Navigation tab (button) style if active */
 .tab-button_active {
   background-color: #ffffff;
-  color: #353EFF;
+  color: #353EFF !important;
 }
 
 /* Navigation tab (button) style if inactive */
@@ -278,6 +278,19 @@
   border-right: .3em solid transparent;
   border-bottom: 0;
   border-left: .3em solid transparent;
+}
+
+/* Rules for variables button */
+.variables-button {
+  margin-right: 4px;
+  border: 1px solid #a596e6;
+  border-top-right-radius: 4px;
+  background-color: #bcaff5;
+  color: white;
+}
+
+.variables-button:hover {
+  background-color: #b29cef;
 }
 /* <--------------------------------------------------------------|*/
 

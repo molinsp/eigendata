@@ -150,20 +150,24 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const getKeywordsForFilter = (option, rawInput) => {
     // Add keywords to search
     //console.log('Option', option.value);
-    let keywords = ''
-    if(option.value != 'query' && logic._transformationsConfig[option.value]['keywords']){
+    let keywords = '';
+    if (
+      option.value != 'query' &&
+      logic._transformationsConfig[option.value]['keywords']
+    ) {
       keywords = logic._transformationsConfig[option.value]['keywords'];
     }
 
-    const textToSearch = option.label + ' ' + keywords + ' ' + option.value.replace(/_/g, ' ');
+    const textToSearch =
+      option.label + ' ' + keywords + ' ' + option.value.replace(/_/g, ' ');
 
     const words = rawInput.split(' ');
     return words.reduce(
-      (acc, cur) => acc && textToSearch.toLowerCase().includes(cur.toLowerCase()),
-      true,
+      (acc, cur) =>
+        acc && textToSearch.toLowerCase().includes(cur.toLowerCase()),
+      true
     );
   };
-
 
   /*-----------------------------------
   CUSTOM SELECT: Use React select with JSONschema form
@@ -229,9 +233,10 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     if (
       data.schema.function === 'merge' &&
       // Do not trigger this when another parameter is set
-      typeof data.formData['right'] !== 'undefined'
+      typeof data.formData['right'] !== 'undefined' &&
       // Only trigger if the state does not have the data (undefined) or if the state has different data (selected another right)
-      && ((typeof state.formData['right'] === 'undefined') || (data.formData['right'] != state.formData['right']))
+      (typeof state.formData['right'] === 'undefined' ||
+        data.formData['right'] != state.formData['right'])
     ) {
       console.log('Dynamic forms: Changed right in merge');
       // Get the columns from the backend
@@ -267,7 +272,9 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     console.log('Transformatino', input);
     // Event tracking
     if (logic._production && logic.shareProductData) {
-      amplitude.getInstance().logEvent('Formulabar: select transformation', { userSelection: input.value });
+      amplitude.getInstance().logEvent('Formulabar: select transformation', {
+        userSelection: input.value
+      });
     }
 
     if (state.dataframeSelection) {
@@ -342,6 +349,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Generate python code and write in the notebook
   const callGeneratePythonCode = async (formReponse: any) => {
+    console.log('SUBMIT WAS PRESSED');
     // Track submitted transformations
     let dataframeSelection: string;
     if (state.dataframeSelection) {
@@ -354,19 +362,21 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       amplitude.getInstance().logEvent('Formulabar: submit transformation', {
         function: formReponse.schema.function,
         formInput: formReponse.formData,
-        generatedCode: formula,
+        generatedCode: formula
       });
     }
     // Perform imports if neccessary
-    const library = logic._transformationsConfig[formReponse.schema.function]['library'];
-    if(logic.packagesImported.includes(library['name'])) {
+    const library =
+      logic._transformationsConfig[formReponse.schema.function]['library'];
+    if (logic.packagesImported.includes(library['name'])) {
       console.log('CG: Package already imported');
-    }else{
-      console.log('CG: Not importes, using statement', library['importStatement']);
+    } else {
+      console.log(
+        'CG: Not importes, using statement',
+        library['importStatement']
+      );
       await logic.pythonImport(library['importStatement']);
     }
-    
-
 
     try {
       await logic.writeToNotebookAndExecute(formula);
@@ -455,16 +465,16 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         />
       )}
       <div>
-      <ChatWidget
-        // Pass in your Papercups account token here after signing up 
-        accountId='784f140c-6c85-4613-bfd0-9869026cd1cb'
-        title='Welcome to Eigendata'
-        subtitle='We are here to help you become a data superhero'
-        newMessagePlaceholder='Start typing...'
-        primaryColor='#13c2c2'
-      />
+        <ChatWidget
+          // Pass in your Papercups account token here after signing up
+          accountId="784f140c-6c85-4613-bfd0-9869026cd1cb"
+          title="Welcome to Eigendata"
+          subtitle="We are here to help you become a data superhero"
+          newMessagePlaceholder="Start typing..."
+          primaryColor="#13c2c2"
+        />
       </div>
-    </div> 
+    </div>
   );
 };
 
@@ -542,6 +552,7 @@ export class Backend {
   // Flag to decide if we are going to share product data
   public shareProductData;
 
+  public variablesLoaded: any = [];
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -698,7 +709,8 @@ export class Backend {
   private kernelInspectorRequest = `
   call_backend_functions([
    {'name': 'ed_get_dfs', 'parameters': {}},
-   {'name': 'ed_get_imported_modules', 'parameters': {}}    
+   {'name': 'ed_get_imported_modules', 'parameters': {}},  
+   {'name': 'ed_get_nondf_variables', 'parameters': {}}
   ])
   `;
 
@@ -803,8 +815,10 @@ export class Backend {
           typeof definitions['column'] !== 'undefined'
         ) {
           console.log('TG: Transformation needs columns');
-          const columns = await this.pythonGetDataframeColumns(dataFrameSelection);
-          console.log('TG: fetched columns', columns)
+          const columns = await this.pythonGetDataframeColumns(
+            dataFrameSelection
+          );
+          console.log('TG: fetched columns', columns);
 
           // Check if multi-select columns defined
           if (
@@ -890,7 +904,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataframeColumns(rightParameter: string) {
     const codeToRun =
-      'form = ed_get_json_column_values(' + rightParameter + ')';
+      'ed_form = ed_get_json_column_values(' + rightParameter + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     //console.log('Request expression', codeToRun);
@@ -899,7 +913,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { form: 'form' }
+      { form: 'ed_form' }
     );
     // Retriev the data behind the javascript object where the result is saved
     let content = result.form.data['text/plain'];
@@ -908,49 +922,16 @@ export class Backend {
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with " and \xa0 with \\xa0
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
+      content = content
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\xa0/g, '\\\\xa0');
     }
 
     const columns = JSON.parse(content);
     //console.log('New columns', columns);
 
     return columns;
-  }
-
-
-  /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Get list of variables
-  -> Returns: Array of variable info
-  -> Writes: _codeToIgnore
-  -----------------------------------------------------------------------------------------------------*/
-  public async pythonGetVariables() {
-    const codeToRun =`
-    variables = call_backend_functions([
-     {'name': 'ed_get_nondf_variables', 'parameters': {}}])
-    `;
-    // Flag as code to ignore avoid triggering the pythonRequestDataframes function
-    this._codeToIgnore = codeToRun;
-    //console.log('Request expression', codeToRun);
-
-    // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
-    const result = await Backend.sendKernelRequest(
-      this._currentNotebook.sessionContext.session.kernel,
-      codeToRun,
-      { variables: 'variables' }
-    );
-    // Retriev the data behind the javascript object where the result is saved
-    let content = result.variables.data['text/plain'];
-
-    // Clean the JSON result that python returns
-    if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
-      content = content.slice(1, -1);
-      // Replace \' with ', \" with " and \xa0 with \\xa0
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
-    }
-
-    const variables = JSON.parse(content);
-
-    return variables['ed_get_nondf_variables'];
   }
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -960,7 +941,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGenerateQuerybuilderConfig(dataframe: string) {
     const codeToRun =
-      'queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';
+      'ed_queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('Request expression', codeToRun);
@@ -969,7 +950,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { queryconfig: 'queryconfig' }
+      { queryconfig: 'ed_queryconfig' }
     );
     // Retriev the data behind the javascript object where the result is saved
     let content = result.queryconfig.data['text/plain'];
@@ -978,11 +959,13 @@ export class Backend {
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with "
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
+      content = content
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\xa0/g, '\\\\xa0');
     }
 
     console.log('Content', content);
-
 
     const query_config = JSON.parse(content);
     console.log('Query config', query_config);
@@ -996,7 +979,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataForVisualization(dataframe: string) {
     const codeToRun =
-      '_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';
+      'ed_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
@@ -1006,7 +989,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { data: '_visualizer_data', columns: '_visualizer_columns' }
+      { data: 'ed_visualizer_data' }
     );
 
     let content = result.data.data['text/plain'];
@@ -1015,7 +998,10 @@ export class Backend {
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with " and \xa0 with \\xa0
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
+      content = content
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\xa0/g, '\\\\xa0');
     }
 
     let parsed_data = {};
@@ -1108,6 +1094,7 @@ export class Backend {
           // Reset dataframes
           this.dataframesLoaded = [];
           this.packagesImported = [];
+          this.variablesLoaded = [];
 
           // Restart init scripts
           const content: KernelMessage.IExecuteRequestMsg['content'] = {
@@ -1201,7 +1188,13 @@ export class Backend {
       //console.log('Kernel Inspector: Result', kerneldata)
       const dataframes = kerneldata['ed_get_dfs'];
       //console.log('Number of dataframes:', dataframes.length);
-      
+
+      const variables = kerneldata['ed_get_nondf_variables'];
+
+      if (variables.length > 0) {
+        this.variablesLoaded = variables;
+      }
+
       if (dataframes.length == 0) {
         // If there is no data loaded, reset frontend component
         this._resetStateFormulabarFlag = true;

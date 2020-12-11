@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.26",
+  "version" : "0.0.27",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -177,6 +177,66 @@
         "importStatement" : "from fastdata.integrations import *"
       }
     },
+    "df_to_airtable_base" : {
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "form" : {
+        "returnType" : "none",
+        "properties" : {
+          "data" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes"
+          },
+          "base" : {
+            "description" : "You can get the id from airtable.com/api.",
+            "type" : "string",
+            "title" : "id of the base"
+          },
+          "table" : {
+            "type" : "string",
+            "title" : "name of the table",
+            "description" : "Name of the table as shown in Airtable UI."
+          },
+          "key" : {
+            "type" : "string",
+            "title" : "api key",
+            "description" : "You can get the id from airtable.com/api (selecting show API key on the top right)."
+          }
+        },
+        "required" : [
+          "data",
+          "base",
+          "table",
+          "key"
+        ],
+        "title" : "Save to Airtable",
+        "type" : "object",
+        "function" : "df_to_airtable_base",
+        "description" : "Save table to airtable.",
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "library" : {
+        "name" : "fastdata.integrations",
+        "importStatement" : "from fastdata.integrations import *"
+      },
+      "keywords" : [
+        "airtable",
+        "base",
+        "save",
+        "write",
+        "upload",
+        "connect"
+      ]
+    },
     "to_csv" : {
       "form" : {
         "properties" : {
@@ -267,57 +327,18 @@
             "$ref" : "#/definitions/columns",
             "title" : "pivot table columns"
           },
-          "aggfunc" : {
-            "type" : "array",
-            "items" : {
-              "type" : "object",
-              "properties" : {
-                "column" : {
-                  "$ref" : "#/definitions/column",
-                  "title" : "column"
-                },
-                "function" : {
-                  "uniqueItems" : true,
-                  "title" : "aggregations",
-                  "type" : "array",
-                  "items" : {
-                    "codegenstyle" : "variable",
-                    "type" : "string",
-                    "default" : "Count (excl. missing values)",
-                    "enumNames" : [
-                      "Count (incl. missing values)",
-                      "Count (excl. missing values)",
-                      "Count unique",
-                      "Mean",
-                      "Sum",
-                      "Maximum",
-                      "Minimum",
-                      "Median",
-                      "First value",
-                      "Last value",
-                      "Standard deviation",
-                      "Variance"
-                    ],
-                    "enum" : [
-                      "\"size\"",
-                      "\"count\"",
-                      "\"nunique\"",
-                      "\"mean\"",
-                      "\"sum\"",
-                      "\"max\"",
-                      "\"min\"",
-                      "\"median\"",
-                      "\"first\"",
-                      "\"last\"",
-                      "\"std\"",
-                      "\"var\""
-                    ]
-                  }
-                }
-              }
-            },
-            "title" : "aggregations",
-            "description" : "Aggregations to perform in the pivot table (e.g. calculating the average)."
+          "mode" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "enum" : [
+              "array",
+              "single"
+            ],
+            "enumNames" : [
+              "Aggregate over individual columns",
+              "Aggregate over all columns"
+            ],
+            "default" : "array"
           },
           "index_type" : {
             "type" : "string",
@@ -330,11 +351,8 @@
             "enumNames" : [
               "Flat",
               "Hierarchical indexes"
-            ]
-          },
-          "new table name" : {
-            "type" : "string",
-            "default" : "pivot"
+            ],
+            "description" : "Enable or disable pandas hierarchical indexes."
           }
         },
         "definitions" : {
@@ -353,14 +371,135 @@
         },
         "required" : [
           "index",
-          "aggfunc",
-          "index_type"
+          "aggfunc"
         ],
         "title" : "Pivot table",
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "pivot_table",
-        "description" : "Returns a table with aggregations grouped by elements selected in the rows and columns."
+        "description" : "Returns a table with aggregations grouped by elements selected in the rows and columns.",
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "array"
+                    ]
+                  },
+                  "aggfunc" : {
+                    "type" : "array",
+                    "items" : {
+                      "type" : "object",
+                      "properties" : {
+                        "column" : {
+                          "$ref" : "#/definitions/column",
+                          "title" : "column"
+                        },
+                        "function" : {
+                          "uniqueItems" : true,
+                          "title" : "aggregations",
+                          "type" : "array",
+                          "items" : {
+                            "codegenstyle" : "variable",
+                            "type" : "string",
+                            "default" : "Count (excl. missing values)",
+                            "enumNames" : [
+                              "Count (incl. missing values)",
+                              "Count (excl. missing values)",
+                              "Count unique",
+                              "Mean",
+                              "Sum",
+                              "Maximum",
+                              "Minimum",
+                              "Median",
+                              "First value",
+                              "Last value",
+                              "Standard deviation",
+                              "Variance"
+                            ],
+                            "enum" : [
+                              "\"size\"",
+                              "\"count\"",
+                              "\"nunique\"",
+                              "\"mean\"",
+                              "\"sum\"",
+                              "\"max\"",
+                              "\"min\"",
+                              "\"median\"",
+                              "\"first\"",
+                              "\"last\"",
+                              "\"std\"",
+                              "\"var\""
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "title" : "aggregations",
+                    "description" : "Aggregations to perform in the pivot table (e.g. calculating the average)."
+                  },
+                  "new table name" : {
+                    "type" : "string",
+                    "default" : "pivot"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "single"
+                    ]
+                  },
+                  "aggfunc" : {
+                    "uniqueItems" : true,
+                    "title" : "aggregations",
+                    "type" : "array",
+                    "items" : {
+                      "codegenstyle" : "variable",
+                      "type" : "string",
+                      "default" : "Count (excl. missing values)",
+                      "enumNames" : [
+                        "Count (incl. missing values)",
+                        "Count (excl. missing values)",
+                        "Count unique",
+                        "Mean",
+                        "Sum",
+                        "Maximum",
+                        "Minimum",
+                        "Median",
+                        "First value",
+                        "Last value",
+                        "Standard deviation",
+                        "Variance"
+                      ],
+                      "enum" : [
+                        "\"size\"",
+                        "\"count\"",
+                        "\"nunique\"",
+                        "\"mean\"",
+                        "\"sum\"",
+                        "\"max\"",
+                        "\"min\"",
+                        "\"median\"",
+                        "\"first\"",
+                        "\"last\"",
+                        "\"std\"",
+                        "\"var\""
+                      ]
+                    }
+                  },
+                  "new table name" : {
+                    "type" : "string",
+                    "default" : "pivot"
+                  }
+                }
+              }
+            ]
+          }
+        }
       },
       "uischema" : {
         "new table name" : {
