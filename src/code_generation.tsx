@@ -107,17 +107,19 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
     1. Generate caller object 
   --------------------------------------------------------------------*/
   // Compose the caller object
-  if(callerObject.includes('DataFrame') == true){
-  // If there is no dataframe selection, calling from pandas
-    console.log('CG: Caller is Dataframe object');
-    callerObject = callerObject.replace('DataFrame',dataframeSelection);
-  }
-  if(callerObject.includes('Series') == true){
-  // In case of a series, the formula becomes df[series] = df[series].function(params)
-    console.log('CG: Caller is Series object');
-    // Replace the callerobject series placeholder with the value from the column parameter
-    const seriesString = '"' + formData['column'] + '"';
-    callerObject = callerObject.replace('Series',seriesString);
+  if (typeof callerObject !== 'undefined'){
+    if(callerObject.includes('DataFrame') == true){
+    // If there is no dataframe selection, calling from pandas
+      console.log('CG: Caller is Dataframe object');
+      callerObject = callerObject.replace('DataFrame',dataframeSelection);
+    }
+    if(callerObject.includes('Series') == true){
+    // In case of a series, the formula becomes df[series] = df[series].function(params)
+      console.log('CG: Caller is Series object');
+      // Replace the callerobject series placeholder with the value from the column parameter
+      const seriesString = '"' + formData['column'] + '"';
+      callerObject = callerObject.replace('Series',seriesString);
+    }
   }
 
   // In the initial state to load data, no explicit transformation has been selected by the user
@@ -136,7 +138,9 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
 
   if (transformationType.localeCompare('property')==0){
     formula = callerObject + '.' + transformationSelection; 
-  }else{
+  }else if (typeof callerObject === 'undefined'){
+    formula = transformationSelection + '('; 
+  }else {
     formula = callerObject + '.' + transformationSelection + '('; 
   }
 

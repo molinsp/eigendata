@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.25",
+  "version" : "0.0.26",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -132,6 +132,49 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
+      }
+    },
+    "airtable_base_to_df" : {
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "form" : {
+        "properties" : {
+          "base" : {
+            "description" : "You can get the id from airtable.com/api.",
+            "type" : "string",
+            "title" : "id of the base"
+          },
+          "table" : {
+            "type" : "string",
+            "title" : "name of the table",
+            "description" : "Name of the table as shown in Airtable UI."
+          },
+          "key" : {
+            "type" : "string",
+            "title" : "api key",
+            "description" : "You can get the id from airtable.com/api (selecting show API key on the top right)."
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "base",
+          "table",
+          "key"
+        ],
+        "title" : "Read Airtable",
+        "type" : "object",
+        "function" : "airtable_base_to_df",
+        "transformationType" : "dataLoading",
+        "description" : "Load airtable base"
+      },
+      "library" : {
+        "name" : "fastdata.integrations",
+        "importStatement" : "from fastdata.integrations import *"
       }
     },
     "to_csv" : {
@@ -588,7 +631,7 @@
         "callerObject" : "DataFrame",
         "type" : "object",
         "title" : "Join tables",
-        "description": "Join tables on one or more columns."
+        "description" : "Join tables on one or more columns."
       },
       "uischema" : {
         "classNames" : "side-by-side-fields",
@@ -1003,14 +1046,14 @@
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
         },
-        "columns": {
-          "items": {
-            "classNames": "side-by-side-fields",
-            "column": {
-              "classNames": "left-field"
+        "columns" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
             },
-            "newname": {
-              "classNames": "right-field"
+            "newname" : {
+              "classNames" : "right-field"
             }
           }
         }
