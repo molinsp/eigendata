@@ -697,7 +697,7 @@ export class Backend {
   // Use multi import call strategy
   private kernelInspectorRequest = `
   call_backend_functions([
-   {'name': 'ed_variableinspector_dict_list', 'parameters': {}},
+   {'name': 'ed_get_dfs', 'parameters': {}},
    {'name': 'ed_get_imported_modules', 'parameters': {}}    
   ])
   `;
@@ -915,6 +915,42 @@ export class Backend {
     //console.log('New columns', columns);
 
     return columns;
+  }
+
+
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Get list of variables
+  -> Returns: Array of variable info
+  -> Writes: _codeToIgnore
+  -----------------------------------------------------------------------------------------------------*/
+  public async pythonGetVariables() {
+    const codeToRun =`
+    variables = call_backend_functions([
+     {'name': 'ed_get_nondf_variables', 'parameters': {}}])
+    `;
+    // Flag as code to ignore avoid triggering the pythonRequestDataframes function
+    this._codeToIgnore = codeToRun;
+    //console.log('Request expression', codeToRun);
+
+    // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+    const result = await Backend.sendKernelRequest(
+      this._currentNotebook.sessionContext.session.kernel,
+      codeToRun,
+      { variables: 'variables' }
+    );
+    // Retriev the data behind the javascript object where the result is saved
+    let content = result.variables.data['text/plain'];
+
+    // Clean the JSON result that python returns
+    if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
+      content = content.slice(1, -1);
+      // Replace \' with ', \" with " and \xa0 with \\xa0
+      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
+    }
+
+    const variables = JSON.parse(content);
+
+    return variables['ed_get_nondf_variables'];
   }
 
   /*---------------------------------------------------------------------------------------------------- 
@@ -1163,7 +1199,7 @@ export class Backend {
 
       const kerneldata = JSON.parse(content);
       //console.log('Kernel Inspector: Result', kerneldata)
-      const dataframes = kerneldata['ed_variableinspector_dict_list'];
+      const dataframes = kerneldata['ed_get_dfs'];
       //console.log('Number of dataframes:', dataframes.length);
       
       if (dataframes.length == 0) {
@@ -1177,8 +1213,8 @@ export class Backend {
         (dataframes as Array<any>).forEach((item, index) => {
           //console.log(item, index);
           const dataframe_item = {
-            value: item['varName'],
-            label: item['varName']
+            value: item,
+            label: item
           };
           dataframe_list.push(dataframe_item);
         });

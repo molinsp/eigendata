@@ -26,13 +26,33 @@ def ed_keep_dataframes(v):
         return False
     except:
         return False
-
-def ed_variableinspector_dict_list():
+    
+def ed_keep_nondf_variables(v):
+    try:
+        obj = eval(v)
+        if isinstance(obj, str):
+            return True
+        elif isinstance(obj, int):
+            return True
+        elif isinstance(obj, float):
+            return True
+        elif isinstance(obj, list):
+            return True
+        else:
+            return False
+    except:
+        pass
+    
+def ed_get_nondf_variables():
     values = _jupyterlab_variableinspector_nms.who_ls()
-    vardic = [{'varName': _v} for _v in values if ed_keep_dataframes(_v)]
-    return vardic
+    variables = [{'name': _v,
+      'type': type(eval(_v)).__name__,
+      'value' : eval(_v)
+     } for _v in values if ed_keep_nondf_variables(_v)]
+    
+    return variables
 
-def ed_variableinspector_array():
+def ed_get_dfs():
     values = _jupyterlab_variableinspector_nms.who_ls()
     vararray = [_v for _v in values if ed_keep_dataframes(_v)]
     return vararray
