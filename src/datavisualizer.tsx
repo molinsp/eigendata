@@ -208,19 +208,22 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                     className="tr"
                     role="tr"
                   >
+                    <div className="header-white-row" />
                     {headerGroup.headers.map((column, index) => (
                       <div
                         {...column.getHeaderProps()}
                         className="th"
                         role="th"
                       >
-                        <div>{column.render('Header')}</div>
-                        <div
-                          {...column.getResizerProps()}
-                          className="delimiter-wrapper"
-                        >
-                          <div className="delimiter" />
-                        </div>
+                        <div className="th">{column.render('Header')}</div>
+                        {index !== headerGroup.headers.length - 1 && (
+                          <div
+                            {...column.getResizerProps()}
+                            className="delimiter-wrapper"
+                          >
+                            <div className="delimiter" />
+                          </div>
+                        )}
                         <div className="data-type-info">
                           {columnTypes[index] && columnTypes[index].type}
                         </div>
@@ -238,7 +241,11 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         return (
                           <div
                             {...cell.getCellProps()}
-                            title={cell.value}
+                            title={
+                              typeof cell.value === 'number'
+                                ? getModifiedValue(cell.value)
+                                : String(cell.value)
+                            }
                             className="td"
                             role="td"
                           >
