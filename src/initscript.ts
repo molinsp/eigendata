@@ -30,7 +30,10 @@ def ed_keep_dataframes(v):
 def ed_keep_nondf_variables(v):
     try:
         obj = eval(v)
-        if isinstance(obj, str):
+        # Ignore internal variables
+        if v.startswith('ed_'):
+            return False
+        elif isinstance(obj, str):
             return True
         elif isinstance(obj, int):
             return True

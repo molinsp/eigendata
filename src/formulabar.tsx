@@ -890,7 +890,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataframeColumns(rightParameter: string) {
     const codeToRun =
-      'form = ed_get_json_column_values(' + rightParameter + ')';
+      'ed_form = ed_get_json_column_values(' + rightParameter + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     //console.log('Request expression', codeToRun);
@@ -899,7 +899,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { form: 'form' }
+      { form: 'ed_form' }
     );
     // Retriev the data behind the javascript object where the result is saved
     let content = result.form.data['text/plain'];
@@ -925,7 +925,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetVariables() {
     const codeToRun =`
-    variables = call_backend_functions([
+    ed_variables = call_backend_functions([
      {'name': 'ed_get_nondf_variables', 'parameters': {}}])
     `;
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
@@ -936,7 +936,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { variables: 'variables' }
+      { variables: 'ed_variables' }
     );
     // Retriev the data behind the javascript object where the result is saved
     let content = result.variables.data['text/plain'];
@@ -960,7 +960,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGenerateQuerybuilderConfig(dataframe: string) {
     const codeToRun =
-      'queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';
+      'ed_queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('Request expression', codeToRun);
@@ -969,7 +969,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { queryconfig: 'queryconfig' }
+      { queryconfig: 'ed_queryconfig' }
     );
     // Retriev the data behind the javascript object where the result is saved
     let content = result.queryconfig.data['text/plain'];
@@ -996,7 +996,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataForVisualization(dataframe: string) {
     const codeToRun =
-      '_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';
+      'ed_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
@@ -1006,7 +1006,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { data: '_visualizer_data', columns: '_visualizer_columns' }
+      { data: 'ed_visualizer_data'}
     );
 
     let content = result.data.data['text/plain'];
