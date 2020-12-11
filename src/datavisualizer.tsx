@@ -18,6 +18,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   //console.log('------> Rendering Data Visualizer UI');
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
+  const [variables, setVariables] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [columnTypes, setColumnTypes] = useState([]);
@@ -32,20 +33,40 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     return stringNumber;
   };
 
+  const getModifiedValue = (value: any): string => {
+    return typeof value === 'number'
+      ? value.toLocaleString('USD')
+      : String(value);
+  };
+
   if (props.logic._resetStateDatavisualizerFlag === true) {
     console.log('RESETING DATA VISUALIZER STATE');
     setColumns([]);
     setData([]);
     setShowTable(false);
     setActiveTab(0);
+    setVariables([]);
     props.logic._resetStateDatavisualizerFlag = false;
   }
-  const getModifiedValue = (value: number): string => {
-    return value.toLocaleString('USD');
-  };
-
+  //Rerender variables table
   useEffect(() => {
-    const getDataForVisualization = async () => {
+    const variables = props.logic.variablesLoaded;
+    setVariables([...variables]);
+    if (activeTab === -1) {
+      const keys = Object.keys(variables[0]);
+      const columns = keys.map(key => ({
+        accessor: key,
+        Header: key,
+        Cell: (props): string => getModifiedValue(props.value)
+      }));
+      setColumns([...columns]);
+      setData([...variables]);
+    }
+  }, [activeTab, props.logic.variablesLoaded]);
+
+  //Rerender other tables
+  useEffect(() => {
+    const getDataForVisualization = async (): Promise<void> => {
       try {
         const dfs = props.logic.dataframesLoaded;
         console.log('Dataframes', dfs);
@@ -54,10 +75,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             dfs[activeTab].value
           );
           const columns = result['columns'].map(column => {
-            column.Cell = (props): string =>
-              typeof props.value === 'number'
-                ? getModifiedValue(props.value)
-                : String(props.value);
+            column.Cell = (props): string => getModifiedValue(props.value);
             return column;
           });
           setShowTable(true);
@@ -73,6 +91,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     };
     getDataForVisualization();
   }, [props.logic.dataframesLoaded, activeTab]);
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -122,12 +141,26 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       closeDropdownMenu(element);
     }
   };
+
   return (
     <div className="full-height-container">
       {showTable ? (
         <div className="full-height-container">
           <nav className="scroll-nav">
             <div className="dropdown-container">
+              {variables.length > 0 && (
+                <button
+                  type="button"
+                  className={`tab-button ${activeTab === -1 &&
+                    'tab-button_active'} variables-button`}
+                  onClick={(): void => {
+                    setActiveTab(-1);
+                    console.log('hey ho', activeTab);
+                  }}
+                >
+                  Variables
+                </button>
+              )}
               {props.logic.dataframesLoaded.map((dataframe, index) => {
                 return (
                   <div
@@ -142,7 +175,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                           ? 'tab-button_active'
                           : 'tab-button_inactive'
                       }`}
-                      onClick={() => {
+                      onClick={(): void => {
                         setActiveTab(index);
                         if (
                           props.logic._production &&
@@ -189,11 +222,17 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                 );
               })}
             </div>
-            <p className={'disclaimer'}>
-              Data shape: {separateThousands(shape['rows'])} rows and{' '}
-              {shape['columns']} columns. Preview: first {data.length} rows and{' '}
-              {shape['displayedColumns']} columns.
-            </p>
+            {activeTab === -1 ? (
+              <p className="disclaimer">
+                Data shape: {separateThousands(variables.length)} rows.
+              </p>
+            ) : (
+              <p className="disclaimer">
+                Data shape: {separateThousands(shape['rows'])} rows and{' '}
+                {shape['columns']} columns. Preview: first {data.length} rows
+                and {shape['displayedColumns']} columns.
+              </p>
+            )}
           </nav>
           <div className="tab-item">
             <div
@@ -208,22 +247,27 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                     className="tr"
                     role="tr"
                   >
+                    {activeTab !== -1 && <div className="header-white-row" />}
                     {headerGroup.headers.map((column, index) => (
                       <div
                         {...column.getHeaderProps()}
                         className="th"
                         role="th"
                       >
-                        <div>{column.render('Header')}</div>
-                        <div
-                          {...column.getResizerProps()}
-                          className="delimiter-wrapper"
-                        >
-                          <div className="delimiter" />
-                        </div>
-                        <div className="data-type-info">
-                          {columnTypes[index] && columnTypes[index].type}
-                        </div>
+                        <div className="th">{column.render('Header')}</div>
+                        {index !== headerGroup.headers.length - 1 && (
+                          <div
+                            {...column.getResizerProps()}
+                            className="delimiter-wrapper"
+                          >
+                            <div className="delimiter" />
+                          </div>
+                        )}
+                        {activeTab !== -1 && (
+                          <div className="data-type-info">
+                            {columnTypes[index] && columnTypes[index].type}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -238,7 +282,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         return (
                           <div
                             {...cell.getCellProps()}
-                            title={cell.value}
+                            title={getModifiedValue(cell.value)}
                             className="td"
                             role="td"
                           >
