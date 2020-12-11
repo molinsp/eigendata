@@ -314,11 +314,6 @@
   color: #ffffff;
 }
 
-/* Row style for thead-dark */
-.thead-dark .tr {
-  border-bottom: 1px solid grey;
-}
-
 /* Add padding to all .th children*/
 .th > *{
   padding: .35rem;
@@ -327,15 +322,14 @@
 /* Style for data type info */
 .data-type-info {
   color: grey;
-  background-color: white;
   width: 100%;
   font-size: 11px;
+  z-index: 1;
 }
 
 /* Cell's style */
 .td{
   padding: .75rem;
-  border-top: 1px solid #dee2e6;
   font-size: 12px;
 }
 
@@ -356,6 +350,23 @@
   white-space: nowrap;
   overflow: hidden;
   cursor: text;
+}
+
+.tr {
+  width: 100% !important;
+  border-top: 1px solid #dee2e6;
+}
+
+/* White absolute positioning row for data types background */
+.header-white-row {
+  background-color: white;
+  width: 100%;
+  height: 50%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  border-bottom: 1px solid grey;
 }
 
 .delimiter-wrapper {
