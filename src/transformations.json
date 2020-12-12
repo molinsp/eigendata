@@ -704,7 +704,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "expand",
+        "explode",
+        "separate"
+      ]
     },
     "merge" : {
       "form" : {
