@@ -151,11 +151,13 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     // Add keywords to search
     //console.log('Option', option.value);
     let keywords = '';
-    if (
-      option.value != 'query' &&
-      logic._transformationsConfig[option.value]['keywords']
-    ) {
-      keywords = logic._transformationsConfig[option.value]['keywords'];
+    if ( option.value === 'query' ) {
+      // Query is handled differently
+      keywords = ['filter', 'more', 'less', 'equal'].join(' ');
+    } else if (option.value === 'notfound'){
+      return true;
+    } else if (logic._transformationsConfig[option.value]['keywords']) {
+      keywords = logic._transformationsConfig[option.value]['keywords'].join(' ');
     }
 
     const textToSearch =
@@ -269,7 +271,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Save the input of the transformation seleciton in the UI to the state
   const handleTransformationSelectionChange = (input: any) => {
-    console.log('Transformatino', input);
+    // console.log('Transformatino', input);
     // Event tracking
     if (logic._production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: select transformation', {
@@ -283,7 +285,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     } else if (
       logic._transformationsConfig[input.value]['form'][
         'transformationType'
-      ] === 'dataLoading'
+      ] === 'dataLoading' || input.value == 'notfound'
     ) {
       console.log('Data loading transformation');
       setState(state => ({
@@ -350,6 +352,30 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Generate python code and write in the notebook
   const callGeneratePythonCode = async (formReponse: any) => {
     console.log('SUBMIT WAS PRESSED');
+    /*-----------------------------------------------
+    Handle not found case
+    -----------------------------------------------*/
+    if(state.transformationSelection.value === 'notfound'){
+      // Remove transformation selection and hide form
+      setState(state => ({
+        ...state,
+        transformationSelection: null,
+        showForm: false,
+        error: null
+      }));
+
+      //console.log('Loge event', formReponse.formData.description);
+      
+      // Log event
+      if (logic._production && logic.shareProductData) {
+        amplitude.getInstance().logEvent('Formulabar: request transformation', {
+          userRequest: formReponse.formData.description
+        });
+      }
+
+      return
+    }
+
     // Track submitted transformations
     let dataframeSelection: string;
     if (state.dataframeSelection) {
@@ -358,6 +384,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       dataframeSelection = null;
     }
     const formula = generatePythonCode(formReponse, dataframeSelection);
+    // Event tracking
     if (logic._production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: submit transformation', {
         function: formReponse.schema.function,

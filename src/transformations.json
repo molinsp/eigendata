@@ -3160,6 +3160,23 @@
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
       }
+    },
+    "notfound" : {
+      "form" : {
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "description" : "Tell us which functionality you are missing."
+          }
+        },
+        "title" : "Can't find what you want?",
+        "type" : "object"
+      },
+      "uischema" : {
+        "description" : {
+          "ui:widget" : "textarea"
+        }
+      }
     }
   }
 }
