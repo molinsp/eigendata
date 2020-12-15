@@ -365,9 +365,13 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         generatedCode: formula
       });
     }
-    // Perform imports if neccessary
+    /*-----------------------------------------------
+    Import libraries
+    -----------------------------------------------*/
     const library =
       logic._transformationsConfig[formReponse.schema.function]['library'];
+    
+    // Check if the library is already imported or not
     if (logic.packagesImported.includes(library['name'])) {
       console.log('CG: Package already imported');
     } else {
@@ -375,9 +379,19 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         'CG: Not importes, using statement',
         library['importStatement']
       );
-      await logic.pythonImport(library['importStatement']);
+      
+      try {
+        await logic.pythonImportLibraries(library['importStatement']);      
+      }catch(error){
+        console.log(error);
+      }
+      
     }
 
+    /*-----------------------------------------------
+    Generate & execute code
+    -----------------------------------------------*/
+    
     try {
       await logic.writeToNotebookAndExecute(formula);
       // Write and execute the formula in the notebook
@@ -402,6 +416,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         error: error
       }));
     }
+    
   };
 
   /*--------------------------------------
@@ -880,7 +895,12 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute(code: string) {
     // Calculate index of last cell
-    const last_cell_index = this._currentNotebook.content.widgets.length - 1;
+    let last_cell_index = this._currentNotebook.content.widgets.length - 1;
+    /*
+    if (last_cell_index == 0){
+      last_cell_index += 1;
+    }
+    */
     console.log('Last cell index', last_cell_index);
 
     // Run and insert using cell utilities
@@ -1037,13 +1057,42 @@ export class Backend {
   /*---------------------------------------------------------------------------------------------------- 
   [FUNCTION] Import library with given statment
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonImport(importStatement: string) {
-    // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+  public async pythonImportLibraries(importStatement: string) {
+    // Execude the import in the kernel
     await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       importStatement,
       {}
     );
+
+    // Get content of first cell, which by convention is for the imports
+    let importsCell = CellUtilities.getCell(this._currentNotebook.content, 0);
+    const importsCellContent = importsCell.value.text;
+    let importsCellNewContent = '';
+    console.log('imports cell' , importsCellContent);
+    
+    // If the cell is empty, write the imports
+    if (importsCellContent === ''){
+      importsCellNewContent = importStatement;
+      CellUtilities.insertRunShow(
+        this._currentNotebook,
+        0,
+        importsCellNewContent,
+        true
+      );
+    }
+    // If it has text, add the import in a new line
+    else{
+      importsCellNewContent = importsCellContent + '\n' + importStatement;
+      importsCell.value.text = importsCellNewContent;
+    }
+
+    console.log('imports cell new content' , importsCellNewContent);
+    
+    // Write in the first cell
+    //this._currentNotebook.content.model.cells.get(0).value.text = importsCellNewContent;
+    //await CellUtilities.injectCodeAtIndex(this._currentNotebook.content, 0, importsCellNewContent);
+
   }
 
   // -------------------------------------------------------------------------------------------------------------
