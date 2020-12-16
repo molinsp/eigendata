@@ -46,6 +46,8 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import ChatWidget from '@papercups-io/chat-widget';
 
+import ReactGA from "react-ga";
+
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.0';
 let _transformationsConfig = localTransformationsConfig;
@@ -365,7 +367,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       }));
 
       //console.log('Loge event', formReponse.formData.description);
-      
       // Log event
       if (logic._production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: request transformation', {
@@ -726,6 +727,8 @@ export class Backend {
         // Tracking setup
         if (this._production && this.shareProductData) {
           amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
+          ReactGA.initialize('UA-111934622-2');
+          ReactGA.pageview('EigendataApp');
           amplitude.getInstance().setVersionName(packageVersion);
         }
       },
