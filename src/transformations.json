@@ -520,7 +520,24 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "count",
+        "mean",
+        "sum",
+        "maximum",
+        "minimum",
+        "median",
+        "first",
+        "last",
+        "standard",
+        "variance",
+        "unique",
+        "deviation",
+        "value",
+        "for",
+        "each"
+      ]
     },
     "transpose" : {
       "form" : {
@@ -723,10 +740,16 @@
           "how" : {
             "type" : "string",
             "enum" : [
+              "inner",
               "left",
               "right",
-              "outer",
-              "inner"
+              "outer"
+            ],
+            "enumNames" : [
+              "Inner: Keep only when left and right match",
+              "Left: Return all rows from the left",
+              "Right: Keep all rows from the right",
+              "Outer: Return all rows from left & right"
             ],
             "default" : "inner",
             "description" : "Type of join to be performed."
@@ -738,6 +761,11 @@
           "right_on" : {
             "$ref" : "#/definitions/right_columns",
             "title" : "right column"
+          },
+          "suffixes" : {
+            "type" : "string",
+            "description" : "Add suffixes to the column names after the join. Format needs to be like  (“_x”, “_y”)",
+            "codegenstyle" : "variable"
           },
           "new table name" : {
             "type" : "string"
@@ -1654,7 +1682,10 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "average"
+      ]
     },
     "sum" : {
       "form" : {
