@@ -377,15 +377,21 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       return
     }
 
-    // Track submitted transformations
+    /*-----------------------------------------------
+    Generate formula
+    -----------------------------------------------*/
+
     let dataframeSelection: string;
     if (state.dataframeSelection) {
       dataframeSelection = state.dataframeSelection.value;
     } else {
       dataframeSelection = null;
     }
-    const formula = generatePythonCode(formReponse, dataframeSelection);
-    // Event tracking
+    const {formula, result_variable, returnType} = generatePythonCode(formReponse, dataframeSelection);
+    
+    /*-----------------------------------------------
+    Tracking in amplitude
+    -----------------------------------------------*/
     if (logic._production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: submit transformation', {
         function: formReponse.schema.function,
@@ -394,7 +400,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       });
     }
     /*-----------------------------------------------
-    Import libraries
+    Import libraries if needed
     -----------------------------------------------*/
     const library =
       logic._transformationsConfig[formReponse.schema.function]['library'];
@@ -423,13 +429,24 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     try {
       await logic.writeToNotebookAndExecute(formula);
       // Write and execute the formula in the notebook
-      setState(state => ({
-        ...state,
-        transformationSelection: null,
-        showForm: false,
-        error: null
-      }));
+      if(returnType === 'dataframe'){
+        setState(state => ({
+          ...state,
+          dataframeSelection: {'label': result_variable, 'value': result_variable},
+          transformationSelection: null,
+          showForm: false,
+          error: null
+        }));
+      }else{
+        setState(state => ({
+          ...state,
+          transformationSelection: null,
+          showForm: false,
+          error: null
+        }));
+      }
     } catch (error) {
+      // Log transformation errors
       if (logic._production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: transformation error', {
           function: formReponse.schema.function,
@@ -487,6 +504,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           }}
           id="transformationselect"
           filterOption={getKeywordsForFilter}
+          maxMenuHeight={400}
         />
       </fieldset>
       {state.showForm && (

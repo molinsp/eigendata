@@ -355,5 +355,5 @@ export const generatePythonCode = ( formReponse: any, dataframeSelection: string
   }
 
   console.log('FORMULA: ', formula);
-  return formula;
+  return {'formula': formula, 'result_variable': result_variable, 'returnType': returnType};
  };
