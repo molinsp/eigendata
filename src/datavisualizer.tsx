@@ -9,13 +9,13 @@ import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
 import { Backend } from './formulabar';
 
 import amplitude from 'amplitude-js';
+import { GroupType } from 'react-select';
 /**
  * React component for a counter.
  *
  * @returns The React component
  */
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
-  //console.log('------> Rendering Data Visualizer UI');
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
   const [variables, setVariables] = useState([]);
@@ -48,6 +48,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     setVariables([]);
     props.logic._resetStateDatavisualizerFlag = false;
   }
+
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
@@ -100,7 +101,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     prepareRow
   } = useTable({ columns, data }, useBlockLayout, useResizeColumns);
 
-  const cutString = (string, requiredLength) => {
+  const cutString = (string, requiredLength): string => {
     return string.length > requiredLength
       ? `${string.slice(0, requiredLength)}...`
       : string;
@@ -142,6 +143,18 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
+  const isLastRow = (row: number): boolean => {
+    return row === headerGroups.length - 1;
+  };
+
+  const isVariableTab = (tab: number): boolean => {
+    return tab === -1;
+  };
+
+  const isLastCell = (cell: number, row: GroupType<any>): boolean => {
+    return cell === row.headers.length - 1;
+  };
+
   return (
     <div className="full-height-container">
       {showTable ? (
@@ -151,11 +164,10 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               {variables.length > 0 && (
                 <button
                   type="button"
-                  className={`tab-button ${activeTab === -1 &&
+                  className={`tab-button ${isVariableTab(activeTab) &&
                     'tab-button_active'} variables-button`}
                   onClick={(): void => {
                     setActiveTab(-1);
-                    console.log('hey ho', activeTab);
                   }}
                 >
                   Variables
@@ -241,13 +253,15 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               role="table"
             >
               <div className="thead-dark sticky" role="thead">
-                {headerGroups.map(headerGroup => (
+                {headerGroups.map((headerGroup, rowIndex) => (
                   <div
                     {...headerGroup.getHeaderGroupProps()}
                     className="tr"
                     role="tr"
                   >
-                    {activeTab !== -1 && <div className="header-white-row" />}
+                    {isLastRow(rowIndex) && !isVariableTab(activeTab) && (
+                      <div className="header-white-row" />
+                    )}
                     {headerGroup.headers.map((column, index) => (
                       <div
                         {...column.getHeaderProps()}
@@ -255,7 +269,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         role="th"
                       >
                         <div className="th">{column.render('Header')}</div>
-                        {index !== headerGroup.headers.length - 1 && (
+                        {!isLastCell(index, headerGroup) && (
                           <div
                             {...column.getResizerProps()}
                             className="delimiter-wrapper"
@@ -263,9 +277,13 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                             <div className="delimiter" />
                           </div>
                         )}
-                        {activeTab !== -1 && (
-                          <div className="data-type-info">
-                            {columnTypes[index] && columnTypes[index].type}
+                        {isLastRow(rowIndex) && (
+                          <div>
+                            {!isVariableTab(activeTab) && (
+                              <div className="data-type-info">
+                                {columnTypes[index] && columnTypes[index].type}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

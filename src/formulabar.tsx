@@ -32,7 +32,7 @@ import CellUtilities from './CellUtilities';
 import _ from 'lodash';
 
 // Awesome querybuilder
-import Demo from './querybuilder';
+import QueryBuilder from './querybuilder';
 //import QueryBuilder from 'react-querybuilder';
 
 import 'bootstrap/dist/css/bootstrap.css';
@@ -46,7 +46,7 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import ChatWidget from '@papercups-io/chat-widget';
 
-import ReactGA from "react-ga";
+import ReactGA from 'react-ga';
 
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.0';
@@ -153,13 +153,15 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     // Add keywords to search
     //console.log('Option', option.value);
     let keywords = '';
-    if ( option.value === 'query' ) {
+    if (option.value === 'query') {
       // Query is handled differently
       keywords = ['filter', 'more', 'less', 'equal'].join(' ');
-    } else if (option.value === 'notfound'){
+    } else if (option.value === 'notfound') {
       return true;
     } else if (logic._transformationsConfig[option.value]['keywords']) {
-      keywords = logic._transformationsConfig[option.value]['keywords'].join(' ');
+      keywords = logic._transformationsConfig[option.value]['keywords'].join(
+        ' '
+      );
     }
 
     const textToSearch =
@@ -287,7 +289,8 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     } else if (
       logic._transformationsConfig[input.value]['form'][
         'transformationType'
-      ] === 'dataLoading' || input.value == 'notfound'
+      ] === 'dataLoading' ||
+      input.value == 'notfound'
     ) {
       console.log('Data loading transformation');
       setState(state => ({
@@ -357,7 +360,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     /*-----------------------------------------------
     Handle not found case
     -----------------------------------------------*/
-    if(state.transformationSelection.value === 'notfound'){
+    if (state.transformationSelection.value === 'notfound') {
       // Remove transformation selection and hide form
       setState(state => ({
         ...state,
@@ -374,7 +377,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         });
       }
 
-      return
+      return;
     }
 
     /*-----------------------------------------------
@@ -387,8 +390,11 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     } else {
       dataframeSelection = null;
     }
-    const {formula, result_variable, returnType} = generatePythonCode(formReponse, dataframeSelection);
-    
+    const { formula, result_variable, returnType } = generatePythonCode(
+      formReponse,
+      dataframeSelection
+    );
+
     /*-----------------------------------------------
     Tracking in amplitude
     -----------------------------------------------*/
@@ -404,7 +410,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     -----------------------------------------------*/
     const library =
       logic._transformationsConfig[formReponse.schema.function]['library'];
-    
+
     // Check if the library is already imported or not
     if (logic.packagesImported.includes(library['name'])) {
       console.log('CG: Package already imported');
@@ -413,31 +419,33 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         'CG: Not importes, using statement',
         library['importStatement']
       );
-      
+
       try {
-        await logic.pythonImportLibraries(library['importStatement']);      
-      }catch(error){
+        await logic.pythonImportLibraries(library['importStatement']);
+      } catch (error) {
         console.log(error);
       }
-      
     }
 
     /*-----------------------------------------------
     Generate & execute code
     -----------------------------------------------*/
-    
+
     try {
       await logic.writeToNotebookAndExecute(formula);
       // Write and execute the formula in the notebook
-      if(returnType === 'dataframe'){
+      if (returnType === 'dataframe') {
         setState(state => ({
           ...state,
-          dataframeSelection: {'label': result_variable, 'value': result_variable},
+          dataframeSelection: {
+            label: result_variable,
+            value: result_variable
+          },
           transformationSelection: null,
           showForm: false,
           error: null
         }));
-      }else{
+      } else {
         setState(state => ({
           ...state,
           transformationSelection: null,
@@ -461,7 +469,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         error: error
       }));
     }
-    
   };
 
   /*--------------------------------------
@@ -519,7 +526,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         />
       )}
       {state.queryConfig && (
-        <Demo
+        <QueryBuilder
           queryConfig={state.queryConfig}
           dataframeSelection={state.dataframeSelection.value}
           backend={logic}
@@ -943,7 +950,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute(code: string) {
     // Calculate index of last cell
-    let last_cell_index = this._currentNotebook.content.widgets.length - 1;
+    const last_cell_index = this._currentNotebook.content.widgets.length - 1;
     /*
     if (last_cell_index == 0){
       last_cell_index += 1;
@@ -1114,13 +1121,13 @@ export class Backend {
     );
 
     // Get content of first cell, which by convention is for the imports
-    let importsCell = CellUtilities.getCell(this._currentNotebook.content, 0);
+    const importsCell = CellUtilities.getCell(this._currentNotebook.content, 0);
     const importsCellContent = importsCell.value.text;
     let importsCellNewContent = '';
-    console.log('imports cell' , importsCellContent);
-    
+    console.log('imports cell', importsCellContent);
+
     // If the cell is empty, write the imports
-    if (importsCellContent === ''){
+    if (importsCellContent === '') {
       importsCellNewContent = importStatement;
       CellUtilities.insertRunShow(
         this._currentNotebook,
@@ -1130,17 +1137,16 @@ export class Backend {
       );
     }
     // If it has text, add the import in a new line
-    else{
+    else {
       importsCellNewContent = importsCellContent + '\n' + importStatement;
       importsCell.value.text = importsCellNewContent;
     }
 
-    console.log('imports cell new content' , importsCellNewContent);
-    
+    console.log('imports cell new content', importsCellNewContent);
+
     // Write in the first cell
     //this._currentNotebook.content.model.cells.get(0).value.text = importsCellNewContent;
     //await CellUtilities.injectCodeAtIndex(this._currentNotebook.content, 0, importsCellNewContent);
-
   }
 
   // -------------------------------------------------------------------------------------------------------------

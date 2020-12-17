@@ -3,36 +3,31 @@ import React, { Component } from 'react';
 import {
   Query,
   Builder,
-  //BasicConfig,
   Utils as QbUtils,
   //types:
   ImmutableTree,
   Config,
-  BuilderProps
+  BuilderProps,
+  JsonGroup
 } from 'react-awesome-query-builder';
-//import AntdConfig from 'react-awesome-query-builder/lib/config/antd';
 import 'react-awesome-query-builder/lib/css/styles.css';
-//import 'react-awesome-query-builder/lib/css/compact_styles.css'; //optional, for more compact styles
 import { Backend } from './formulabar';
 import customConfig from './querybuilder_config';
 import Select from 'react-select';
-//const InitialConfig = BasicConfig; // or BasicConfig
-
 import amplitude from 'amplitude-js';
 
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
 // Default empty query value
-const queryValue = { id: QbUtils.uuid(), type: 'group' };
+const queryValue: JsonGroup = { id: QbUtils.uuid(), type: 'group' };
 
-export default class DemoQueryBuilder extends Component<
-  DemoQueryBuilderProps,
-  DemoQueryBuilderState
+export default class QueryBuilder extends Component<
+  IQueryBuilderProps,
+  IQueryBuilderState
 > {
-  constructor(props: DemoQueryBuilderProps) {
+  constructor(props: IQueryBuilderProps) {
     super(props);
     const config = { ...customConfig, fields: { ...this.props.queryConfig } };
     this.state = {
-      // @ts-ignore
       tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
       config: config,
       logic: props.backend,
@@ -46,28 +41,27 @@ export default class DemoQueryBuilder extends Component<
     { value: 'eval', label: 'Create true/false indicators' }
   ];
 
-  setQueryType = (input: any) => {
+  setQueryType = (input: any): void => {
     //console.log('Dropdown changed', input);
     this.setState(state => ({ ...state, queryType: input.value }));
   };
 
-  handleChange = event => {
+  handleChange = (event): void => {
     this.setState({ ...this.state, newTableName: event.target.value });
   };
 
-  componentDidUpdate(prevProps: Readonly<DemoQueryBuilderProps>) {
+  componentDidUpdate(prevProps: Readonly<IQueryBuilderProps>): void {
     if (this.props.queryConfig !== prevProps.queryConfig) {
       const config = { ...customConfig, fields: { ...this.props.queryConfig } };
       this.setState(state => ({
         ...this.state,
-        // @ts-ignore
         tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
         config: config
       }));
     }
   }
 
-  render = () => (
+  render = (): JSX.Element => (
     <form id="query-form">
       <div className="form-group">
         <fieldset>
@@ -117,7 +111,7 @@ export default class DemoQueryBuilder extends Component<
     </form>
   );
 
-  renderBuilder = (props: BuilderProps) => (
+  renderBuilder = (props: BuilderProps): JSX.Element => (
     <div className="query-builder-container">
       <div className="query-builder qb-lite">
         <Builder {...props} />
@@ -238,13 +232,13 @@ export default class DemoQueryBuilder extends Component<
   };
 }
 
-interface DemoQueryBuilderProps {
+interface IQueryBuilderProps {
   queryConfig: object;
   backend: Backend;
   dataframeSelection: string;
 }
 
-interface DemoQueryBuilderState {
+interface IQueryBuilderState {
   tree: ImmutableTree;
   config: Config;
   logic: Backend;
