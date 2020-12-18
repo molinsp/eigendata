@@ -828,7 +828,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "vlookup",
+        "index",
+        "match"
+      ]
     },
     "append" : {
       "form" : {
@@ -2198,6 +2203,9 @@
                     ],
                     "default" : "ns",
                     "description" : "Unit of the date column."
+                  },
+                  "new column name" : {
+                    "type" : "string"
                   }
                 }
               }
