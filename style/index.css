@@ -354,6 +354,10 @@
 .th > *{
   padding: .35rem;
 }
+/* Add different style to index column */
+.index-column-header {
+  background-color: #585757;
+}
 
 /* Style for data type info */
 .data-type-info {
@@ -404,7 +408,7 @@
   bottom: 0;
   left: 0;
   align-items: center;
-  z-index: 0;
+  z-index: 1;
   border-bottom: 1px solid grey;
 }
 
@@ -413,9 +417,10 @@
   width: 20px;
   position: absolute;
   top: 0;
-  right: 0;
+  right: -4px;
   padding: 0;
   height: 100%;
+  z-index: 5;
 }
 
 .delimiter {
@@ -429,6 +434,7 @@
 .delimiter:hover {
   cursor: col-resize;
 }
+
 /* <------------------------- */
 
 /* <----------------------------------------------------------- */
