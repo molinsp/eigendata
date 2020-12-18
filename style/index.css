@@ -1,4 +1,4 @@
-/* |----------------------- Common style rules --------------------------------------------------------------------> */
+/* |----------------------- COMMON STYLE RULES --------------------------------------------------------------------> */
 
 .jp-ReactWidget {
   color: var(--jp-ui-font-color1);
@@ -20,10 +20,33 @@
 .full-height-container {
   height: 100%;
 }
+
+/* Any element that needs margin */
+.margin-right {
+  margin-right: 10px;
+}
+
+/* Any short element */
+.short {
+  height: 26px !important;
+  padding: 0 12px !important;
+}
+
+/* Any centered element */
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Make element visible and flexible */
+.show_flex {
+  display: flex !important;
+}
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 
-/* |----------------------- Side-by-side fields rules -------------------------------------------------------------> */
+/* |----------------------- SIDE-BY-SIDE FIELDS RULES -------------------------------------------------------------> */
 
 /* Side-by-side container */
 .side-by-side-fields > fieldset {
@@ -57,7 +80,7 @@
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 
-/* |----------------------- Rewrite items at array level of transformations.json ----------------------------------> */
+/* |----------------------- REWRITE ITEMS AT ARRAY LEVEL OF TRANSFORMATIONS.JSON ----------------------------------> */
 
 /* Item container */
 .array-item {
@@ -72,7 +95,7 @@
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 
-/* |----------------------- Rewrite query builder style rules -----------------------------------------------------> */
+/* |----------------------- REWRITE QUERY BUILDER STYLE RULES -----------------------------------------------------> */
 
 #query-form .group-or-rule-container {
   padding-right: 0;
@@ -178,7 +201,7 @@
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 
-/* |----------------------- Data visualizer rules -----------------------------------------------------------------> */
+/* |----------------------- DATA VISUALIZER RULES -----------------------------------------------------------------> */
 
 /* |----------- Navigation --------------------------------------->*/
 /* Navigation bar */
@@ -358,7 +381,7 @@
   top: 0;
 }
 
-/* ---> Add ellipsis to cells */
+/* Add ellipsis to cells */
 .th, .td {
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -410,4 +433,64 @@
 
 /* <----------------------------------------------------------- */
 
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |-------------------------------- FEEDBACK BUTTONS STYLE RULES -------------------------------------------------> */
+
+.BinaryFeedback__container,
+.BinaryFeedback__actions {
+  width: 100%;
+}
+
+.BinaryFeedback__positive,
+.BinaryFeedback__negative {
+  width: 50%;
+  border-color: #cccccc !important;
+  justify-content: flex-start !important;
+  padding: 2px 10px !important;
+  min-height: 26px;
+}
+
+.BinaryFeedback__positive {
+  border-radius: 5px 0 0 5px !important;
+}
+.BinaryFeedback__negative {
+  border-radius: 0 5px 5px 0 !important;
+}
+
+.BinaryFeedback__negative:hover p,
+.BinaryFeedback__positive:hover p,
+.BinaryFeedback__selected p,
+.BinaryFeedback__disabled p{
+  color: white !important;
+}
+
+#feedback {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+#feedback__negative-description {
+  display: none;
+  width: 66%;
+}
+
+#feedback__buttons {
+  width: 33%;
+}
+
+.feedback__content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.feedback__buttons-text {
+  margin: 0;
+  margin-left: 5px;
+  white-space: nowrap;
+}
 /* <---------------------------------------------------------------------------------------------------------------| */

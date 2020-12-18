@@ -1,6 +1,12 @@
-import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
+import {
+  Dialog,
+  ISessionContext,
+  ReactWidget,
+  showDialog,
+  UseSignal
+} from '@jupyterlab/apputils';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import Form from '@rjsf/core';
 
@@ -8,11 +14,9 @@ import Select from 'react-select';
 
 import { JSONSchema7 } from 'json-schema';
 
-import { NotebookPanel, INotebookTracker } from '@jupyterlab/notebook';
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 
-import { KernelMessage, Kernel } from '@jupyterlab/services';
-
-import { ISessionContext, Dialog, showDialog } from '@jupyterlab/apputils';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 import { ISignal, Signal } from '@lumino/signaling';
 
@@ -33,7 +37,9 @@ import _ from 'lodash';
 
 // Awesome querybuilder
 import QueryBuilder from './querybuilder';
-//import QueryBuilder from 'react-querybuilder';
+
+// Feedback buttons library
+import { BinaryFeedback } from 'react-simple-user-feedback';
 
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -47,6 +53,9 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import ChatWidget from '@papercups-io/chat-widget';
 
 import ReactGA from 'react-ga';
+
+// Thumbs svg for feedback buttons
+import { thumbDown, thumbUp } from './assets/svgs';
 
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.0';
@@ -124,10 +133,23 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     error: null
   });
 
+  // Separate state for feedback buttons (for to not expand the common state)
+  const [feedbackState, setFeedbackState] = useState({
+    negativeDescription: '',
+    submittedTransformation: null
+  });
+
+  // Hide feedback buttons if there is transformation or query builder form
+  useEffect((): void => {
+    if (state.showForm || state.queryConfig) {
+      setFeedbackState({ ...feedbackState, submittedTransformation: null });
+    }
+  }, [state.showForm, state.queryConfig]);
+
   /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
   -----------------------------------*/
-  if (logic._resetStateFormulabarFlag == true) {
+  if (logic._resetStateFormulabarFlag === true) {
     console.log('RESETING FORMULABAR STATE');
     setState({
       transformationForm: transformationForm,
@@ -143,15 +165,11 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     logic._resetStateFormulabarFlag = false;
   }
 
-  //console.log('FB: State:', state);
-  //console.log('------> FB: Rendering Formulabar UI');
-
   /*-----------------------------------
   Custom search for transformations
   -----------------------------------*/
   const getKeywordsForFilter = (option, rawInput) => {
     // Add keywords to search
-    //console.log('Option', option.value);
     let keywords = '';
     if (option.value === 'query') {
       // Query is handled differently
@@ -180,25 +198,21 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   -----------------------------------*/
   // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
   // To-do: Move custom components to separate files
-  const CustomSelect = function(props: any) {
+  const CustomSelect = function(props: any): JSX.Element {
     //console.log('Props custom select: ', props);
 
-    const processSingleSelect = (selection: any) => {
+    const processSingleSelect = (selection: any): any => {
       const { value } = selection;
-      //console.log('Signle select change', selection);
       return value;
     };
 
-    const processMultiSelect = (selection: any) => {
+    const processMultiSelect = (selection: any): any => {
       // Handle the case when the user removes selections
       if (selection === null) {
-        //console.log('Return null');
         return [];
       }
 
-      const result = selection.map((item: any) => item.value);
-      //console.log('Result from selection',result);
-      return result;
+      return selection.map((item: any) => item.value);
     };
 
     // If defined as array, use the multi-select
@@ -206,7 +220,9 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       return (
         <Select
           options={props.options.enumOptions}
-          onChange={selection => props.onChange(processMultiSelect(selection))}
+          onChange={(selection): void =>
+            props.onChange(processMultiSelect(selection))
+          }
           isMulti={true}
         />
       );
@@ -214,7 +230,9 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       return (
         <Select
           options={props.options.enumOptions}
-          onChange={selection => props.onChange(processSingleSelect(selection))}
+          onChange={(selection): void =>
+            props.onChange(processSingleSelect(selection))
+          }
           //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
           //defaultValue={props.value}
           defaultValue={props.options.enumOptions.filter(
@@ -231,8 +249,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
-  const handleFormChange = async (data: any) => {
-    //console.log('Form data changed', data);
+  const handleFormChange = async (data: any): Promise<void> => {
     /*-------------------------------
      MERGE
      -------------------------------*/
@@ -242,7 +259,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       typeof data.formData['right'] !== 'undefined' &&
       // Only trigger if the state does not have the data (undefined) or if the state has different data (selected another right)
       (typeof state.formData['right'] === 'undefined' ||
-        data.formData['right'] != state.formData['right'])
+        data.formData['right'] !== state.formData['right'])
     ) {
       console.log('Dynamic forms: Changed right in merge');
       // Get the columns from the backend
@@ -250,20 +267,20 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         data.formData['right']
       );
       // Perform deep copy of the object, otherwise it does not re-render
-      const new_state = _.cloneDeep(state.transformationForm);
+      const newState = _.cloneDeep(state.transformationForm);
       // Add the queried columns to the state
-      new_state['definitions']['right_columns']['items']['enum'] = columns;
+      newState['definitions']['right_columns']['items']['enum'] = columns;
       setState(state => ({
         ...state,
-        transformationForm: new_state,
+        transformationForm: newState,
         formData: data.formData,
         error: null
       }));
     }
   };
 
-  // Save the input of the Dataframe seleciton in the UI to the state
-  const handleDataframeSelectionChange = (input: any) => {
+  // Save the input of the Dataframe selection in the UI to the state
+  const handleDataframeSelectionChange = (input: any): void => {
     //console.log(this);
     if (state.transformationSelection) {
       console.log('Formulabar: get transformation to state');
@@ -273,16 +290,14 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
-  // Save the input of the transformation seleciton in the UI to the state
-  const handleTransformationSelectionChange = (input: any) => {
-    // console.log('Transformatino', input);
+  // Save the input of the transformation selection in the UI to the state
+  const handleTransformationSelectionChange = (input: any): void => {
     // Event tracking
     if (logic._production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: select transformation', {
         userSelection: input.value
       });
     }
-
     if (state.dataframeSelection) {
       console.log('all defined');
       getTransformationFormToState(state.dataframeSelection, input);
@@ -290,7 +305,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       logic._transformationsConfig[input.value]['form'][
         'transformationType'
       ] === 'dataLoading' ||
-      input.value == 'notfound'
+      input.value === 'notfound'
     ) {
       console.log('Data loading transformation');
       setState(state => ({
@@ -312,13 +327,12 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
-  // Pupulates the transformation form into the state
+  // Populates the transformation form into the state
   const getTransformationFormToState = async (
     dataframeSelection: any,
     transformationSelection: any
-  ) => {
-    // Querybuilder placeholder
-    if (transformationSelection.value.localeCompare('query') == 0) {
+  ): Promise<void> => {
+    if (transformationSelection.value.localeCompare('query') === 0) {
       console.log('Querybuilder');
       const queryConfig = await logic.pythonGenerateQuerybuilderConfig(
         dataframeSelection.value
@@ -342,6 +356,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         transformationSelection.value
       );
       setState({
+        ...state,
         transformationForm: newFormSchema,
         transformationUI: newUISchema,
         showForm: true,
@@ -355,11 +370,17 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   // Generate python code and write in the notebook
-  const callGeneratePythonCode = async (formReponse: any) => {
+  const callGeneratePythonCode = async (formResponse: any): Promise<void> => {
     console.log('SUBMIT WAS PRESSED');
     /*-----------------------------------------------
     Handle not found case
     -----------------------------------------------*/
+    // Add submitted transformation to the feedback state
+    setFeedbackState({
+      ...feedbackState,
+      submittedTransformation: state.transformationSelection
+    });
+
     if (state.transformationSelection.value === 'notfound') {
       // Remove transformation selection and hide form
       setState(state => ({
@@ -369,11 +390,11 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         error: null
       }));
 
-      //console.log('Loge event', formReponse.formData.description);
+      //console.log('Loge event', formResponse.formData.description);
       // Log event
       if (logic._production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: request transformation', {
-          userRequest: formReponse.formData.description
+          userRequest: formResponse.formData.description
         });
       }
 
@@ -391,7 +412,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       dataframeSelection = null;
     }
     const { formula, result_variable, returnType } = generatePythonCode(
-      formReponse,
+      formResponse,
       dataframeSelection
     );
 
@@ -400,8 +421,8 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     -----------------------------------------------*/
     if (logic._production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: submit transformation', {
-        function: formReponse.schema.function,
-        formInput: formReponse.formData,
+        function: formResponse.schema.function,
+        formInput: formResponse.formData,
         generatedCode: formula
       });
     }
@@ -409,7 +430,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     Import libraries if needed
     -----------------------------------------------*/
     const library =
-      logic._transformationsConfig[formReponse.schema.function]['library'];
+      logic._transformationsConfig[formResponse.schema.function]['library'];
 
     // Check if the library is already imported or not
     if (logic.packagesImported.includes(library['name'])) {
@@ -457,8 +478,8 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       // Log transformation errors
       if (logic._production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: transformation error', {
-          function: formReponse.schema.function,
-          formInput: formReponse.formData,
+          function: formResponse.schema.function,
+          formInput: formResponse.formData,
           generatedCode: formula,
           errorMessage: error.message
         });
@@ -479,6 +500,80 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const extraErrors = state.error
     ? { form: { __errors: [state.error.message] } }
     : undefined;
+
+  // Content of feedback buttons
+  const getFeedBackContent = (
+    thumb: JSX.Element,
+    text: string,
+    textColor: string
+  ): JSX.Element => {
+    return (
+      <div className="feedback__content">
+        {thumb}
+        <p
+          className="full-width  feedback__buttons-text"
+          style={{ color: textColor }}
+        >
+          {text}
+        </p>
+      </div>
+    );
+  };
+
+  // Action when click "Worked" button
+  const onNegativeClick = (): void => {
+    console.log('Logged: ', feedbackState.submittedTransformation.value);
+    // Log result
+    if (logic._production && logic.shareProductData) {
+      amplitude
+        .getInstance()
+        .logEvent('Formulabar: transformation did not work', {
+          transformation: feedbackState.submittedTransformation.value
+        });
+    }
+    // Show the block with text input
+    const elem = document.getElementById('feedback__negative-description');
+    elem.className = 'show_flex';
+  };
+
+  // Action when click "Didn't work" button
+  const onPositiveClick = (): void => {
+    console.log('Logged: ', feedbackState.submittedTransformation.value);
+    // Log result
+    if (logic._production && logic.shareProductData) {
+      amplitude.getInstance().logEvent('Formulabar: transformation worked', {
+        transformation: feedbackState.submittedTransformation.value
+      });
+    }
+    // Hide the feedback buttons
+    setFeedbackState({ ...feedbackState, submittedTransformation: null });
+  };
+
+  // Action when click "Submit" in the block for negative description
+  const onSubmitDescription = (e): void => {
+    e.preventDefault();
+    const text = feedbackState.negativeDescription;
+    console.log('Logged: ', feedbackState.submittedTransformation.value, text);
+    // Log result
+    if (logic._production && logic.shareProductData) {
+      amplitude
+        .getInstance()
+        .logEvent('Formulabar: transformation did not work', {
+          transformation: feedbackState.submittedTransformation.value,
+          description: text
+        });
+    }
+    // Hide the feedback buttons and clear text input content
+    setFeedbackState({
+      submittedTransformation: null,
+      negativeDescription: ''
+    });
+  };
+
+  // Update feedback state when type something in the text input
+  const onTextChange = (e): void => {
+    setFeedbackState({ ...feedbackState, negativeDescription: e.target.value });
+  };
 
   return (
     <div className="side-by-side-fields">
@@ -506,8 +601,8 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           onChange={handleTransformationSelectionChange}
           className="right-field"
           components={{
-            DropdownIndicator: () => null,
-            IndicatorSeparator: () => null
+            DropdownIndicator: (): null => null,
+            IndicatorSeparator: (): null => null
           }}
           id="transformationselect"
           filterOption={getKeywordsForFilter}
@@ -531,6 +626,37 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           dataframeSelection={state.dataframeSelection.value}
           backend={logic}
         />
+      )}
+      {/* If transformation was submit show the feedback buttons */}
+      {feedbackState.submittedTransformation && (
+        <form id="feedback" onSubmit={onSubmitDescription}>
+          <div id="feedback__buttons">
+            <BinaryFeedback
+              onPositiveClick={onPositiveClick}
+              onNegativeClick={onNegativeClick}
+              positiveContent={getFeedBackContent(thumbUp, 'Worked', '#93C47d')}
+              negativeContent={getFeedBackContent(
+                thumbDown,
+                "Didn't work",
+                '#E06666'
+              )}
+              singleSelect
+            />
+          </div>
+          <div id="feedback__negative-description">
+            <input
+              placeholder="Share the issue so we can fix it!"
+              type="text"
+              className="short form-control margin-right"
+              onChange={onTextChange}
+            />
+            <input
+              type="submit"
+              className="short btn btn-info"
+              disabled={feedbackState.negativeDescription === ''}
+            />
+          </div>
+        </form>
       )}
       <div>
         <ChatWidget
@@ -656,7 +782,7 @@ export class Backend {
       this
     );
 
-    const readTransformationConfig = () => {
+    const readTransformationConfig = (): void => {
       this._transformationsConfig = _transformationsConfig['transformations'];
       console.log(
         'TRANSFORMATIONS VERSION:',
@@ -687,14 +813,13 @@ export class Backend {
         'Authorization',
         'Bearer yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0'
       );
-      const requestOptions = {
+      const requestOptions: RequestInit = {
         method: 'GET',
         headers: myHeaders,
         redirect: 'follow'
       };
       fetch(
         'https://eigendata-auth.herokuapp.com/transformations.json',
-        //@ts-ignore
         requestOptions
       )
         .then(response => {
@@ -718,7 +843,7 @@ export class Backend {
     -------------------------------*/
     settingRegistry.load('@molinsp/eigendata:plugin').then(
       (settings: ISettingRegistry.ISettings) => {
-        if (settings.get('answeredProductDataDialog').composite == false) {
+        if (settings.get('answeredProductDataDialog').composite === false) {
           showDialog({
             title: 'Welcome to Eigendata',
             body:
@@ -733,7 +858,7 @@ export class Backend {
               settings.set('answeredProductDataDialog', true);
               const clickedButtonLabel = result.button.label;
               console.log('Analytics: Clicked', clickedButtonLabel);
-              if (clickedButtonLabel == 'Accept') {
+              if (clickedButtonLabel === 'Accept') {
                 console.log('Analytics: Accepted permission');
                 settings.set('shareProductData', true);
                 this.shareProductData = true;
