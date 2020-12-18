@@ -286,7 +286,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         role="th"
                       >
                         <div
-                          className={`th ${index === 0 &&
+                          className={`th ${index === 0 && column.Header === 'index' &&
                             'index-column-header'}`}
                         >
                           {column.render('Header')}
