@@ -55,7 +55,8 @@ import ChatWidget from '@papercups-io/chat-widget';
 import ReactGA from 'react-ga';
 
 // Thumbs svg for feedback buttons
-import { thumbDown, thumbUp } from './assets/svgs';
+import { magnifier, tableIcon, thumbDown, thumbUp } from './assets/svgs';
+import { formulabarMainSelect } from './styles/reactSelectStyles';
 
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.0';
@@ -587,6 +588,11 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           onChange={handleDataframeSelectionChange}
           className="left-field"
           id="dataselect"
+          components={{
+            DropdownIndicator: (): JSX.Element => tableIcon,
+            IndicatorSeparator: (): null => null
+          }}
+          styles={formulabarMainSelect}
         />
         <Select
           name="Select transformation"
@@ -601,12 +607,13 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           onChange={handleTransformationSelectionChange}
           className="right-field"
           components={{
-            DropdownIndicator: (): null => null,
+            DropdownIndicator: (): JSX.Element => magnifier,
             IndicatorSeparator: (): null => null
           }}
           id="transformationselect"
           filterOption={getKeywordsForFilter}
           maxMenuHeight={400}
+          styles={formulabarMainSelect}
         />
       </fieldset>
       {state.showForm && (
