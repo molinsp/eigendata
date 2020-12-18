@@ -75,7 +75,11 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           const result = await props.logic.pythonGetDataForVisualization(
             dfs[activeTab].value
           );
-          const columns = result['columns'].map(column => {
+          // Add missing methods and properties
+          const columns = result['columns'].map((column, index) => {
+            if (index === 0) {
+              column.width = 55;
+            }
             column.Cell = (props): string => getModifiedValue(props.value);
             return column;
           });
@@ -93,13 +97,26 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     getDataForVisualization();
   }, [props.logic.dataframesLoaded, activeTab]);
 
+  // Default size of columns
+  const defaultColumn = React.useMemo(
+    () => ({
+      minWidth: 30,
+      width: 80
+    }),
+    []
+  );
+
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     rows,
     prepareRow
-  } = useTable({ columns, data }, useBlockLayout, useResizeColumns);
+  } = useTable(
+    { columns, data, defaultColumn },
+    useBlockLayout,
+    useResizeColumns
+  );
 
   const cutString = (string, requiredLength): string => {
     return string.length > requiredLength
@@ -268,7 +285,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         className="th"
                         role="th"
                       >
-                        <div className="th">{column.render('Header')}</div>
+                        <div
+                          className={`th ${index === 0 &&
+                            'index-column-header'}`}
+                        >
+                          {column.render('Header')}
+                        </div>
                         {!isLastCell(index, headerGroup) && (
                           <div
                             {...column.getResizerProps()}
