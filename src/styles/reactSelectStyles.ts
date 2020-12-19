@@ -20,12 +20,12 @@ export const formulabarMainSelect = {
   // The main container of Select
   control: (base, { isFocused }): object => ({
     ...base,
-    borderColor: isFocused ? '#252FFF' : '#666DFF',
+    borderColor: isFocused ? '#2684FF' : '#A6A6A6',
     borderWidth: 2,
     borderRadius: 10,
 
     ':hover': {
-      borderColor: isFocused ? '#252FFF' : '#5d64d0'
+      borderColor: isFocused ? '#2684FF' : '#777777'
     }
   }),
   //Indicator container

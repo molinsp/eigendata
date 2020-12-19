@@ -4,7 +4,7 @@
   color: var(--jp-ui-font-color1);
   background: var(--jp-layout-color1);
   align-items: center;
-  padding-top: 10px;
+  padding-top: 20px;
   padding-right: 20px;
   padding-bottom: 10px;
   padding-left: 20px;
@@ -43,10 +43,26 @@
 .show_flex {
   display: flex !important;
 }
+
 /* <---------------------------------------------------------------------------------------------------------------| */
 
+/* |----------------------- FORMULABAR: GENERAL STYLING -----------------------------------------------------------> */
 
-/* |----------------------- SIDE-BY-SIDE FIELDS RULES -------------------------------------------------------------> */
+.formulaFormDivider{
+  border-bottom: 1px solid black;
+  width: 100%;
+  border-color: #B2B2B2;
+  margin-bottom: 10px;
+}
+
+#root__title{
+  border-bottom-width: 0px;
+  margin-bottom: 5px;
+}
+
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |----------------------- FORMULABAR: SIDE-BY-SIDE FIELDS RULES -------------------------------------------------> */
 
 /* Side-by-side container */
 .side-by-side-fields > fieldset {
@@ -76,11 +92,12 @@
 /* Rules for description inside of side-by-side container */
 .side-by-side-fields .field-description {
   width: 100%;
+  margin-bottom: 10px;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 
-/* |----------------------- REWRITE ITEMS AT ARRAY LEVEL OF TRANSFORMATIONS.JSON ----------------------------------> */
+/* |----------------------- FORMULABAR: REWRITE ITEMS AT ARRAY LEVEL OF TRANSFORMATIONS.JSON ----------------------> */
 
 /* Item container */
 .array-item {
@@ -306,14 +323,14 @@
 /* Rules for variables button */
 .variables-button {
   margin-right: 4px;
-  border: 1px solid #a596e6;
+  border: 1px solid #CDDCA8;
   border-top-right-radius: 4px;
-  background-color: #bcaff5;
-  color: white;
+  background-color: #f6f6f6;
+  color: #959494;
 }
 
 .variables-button:hover {
-  background-color: #b29cef;
+  background-color: #EEEEEE;
 }
 /* <--------------------------------------------------------------|*/
 

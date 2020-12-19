@@ -616,6 +616,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           styles={formulabarMainSelect}
         />
       </fieldset>
+      <div className="centered formulaFormDivider" />
       {state.showForm && (
         <Form
           formData={state.formData}
@@ -796,7 +797,7 @@ export class Backend {
         _transformationsConfig['version']
       );
       const transformationList = [
-        { value: 'query', label: 'Filter/Query dataframe' }
+        { value: 'query', label: 'Filter dataframe' }
       ];
       for (const transformation in _transformationsConfig['transformations']) {
         //console.log('type', transformation);
