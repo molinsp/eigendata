@@ -157,7 +157,30 @@ const types: Types = {
         ]
       }
     }
-  }
+  },
+  boolean: {
+    defaultOperator: "equal",
+    valueSources: ['value'],
+    widgets: {
+      boolean: {
+        operators: [
+          "equal",
+          "not_equal",
+        ],
+        widgetProps: {
+          //you can enable this if you don't use fields as value sources
+          // hideOperator: true,
+          // operatorInlineLabel: "is",
+        }
+      },
+      field: {
+        operators: [
+          "equal",
+          "not_equal",
+        ],
+      }
+    },
+  },
 };
 
 const widgets: Widgets = {
