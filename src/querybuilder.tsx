@@ -130,33 +130,39 @@ export default class QueryBuilder extends Component<
       undefined,
       2
     );
-    sql_query = sql_query.replace(/ = /g, '==');
-    sql_query = sql_query.replace(/<>/g, '!=');
+    sql_query = sql_query.replace(/ IS EMPTY/g, '.isnull()');
+    sql_query = sql_query.replace(/ IS NOT EMPTY/g, '.notnull()');
     sql_query = sql_query.replace(/AND/g, 'and');
     sql_query = sql_query.replace(/OR/g, 'or');
     sql_query = sql_query.replace(/true/g, 'True');
     sql_query = sql_query.replace(/false/g, 'False');
+    sql_query = sql_query.replace(/NOT/g, '~');
+    sql_query = sql_query.replace(/IN/g, 'in');
     // Handle the case of any in ['a','b'] instead of in ('a', 'b')
     sql_query = sql_query.replace(/\('/g, "['");
     sql_query = sql_query.replace(/'\)/g, "']");
-    sql_query = sql_query.replace(/ IS EMPTY/g, '.isnull()');
-    sql_query = sql_query.replace(/ IS NOT EMPTY/g, '.notnull()');
-    sql_query = sql_query.replace(/NOT/g, '~');
-    sql_query = sql_query.replace(/IN/g, 'in');
-    sql_query = sql_query.replace(
-      /\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+\s\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+/g,
-      '`$&`'
-    );
+    sql_query = sql_query.replace(/ = /g, '==');
+    sql_query = sql_query.replace(/<>/g, '!=');
 
-    //console.log('Querybuilder: Config fields', this.state.config.fields);
-    for (const i in this.state.config.fields) {
-      const col_name = String(i);
-
+    const colNames = Object.entries(this.state.config.fields).map(([k, v]) => v.label);
+    //console.log('Querybuilder: Config fields type', typeof colNames);
+    //console.log('Querybuilder: Config fields', colNames);
+    const colNamesSorted = colNames.sort((a, b) => b.length - a.length);
+    //console.log('Querybuilder: Config fields sorted', colNamesSorted);
+    
+    for (const i of colNamesSorted) {
+      const col_name = i;
+      console.log('Col name', col_name);
       // Check if there is any blank space in the column names
       if (/\s/.test(col_name)) {
         // It has any kind of whitespace
         // Replace with backticks to ensure pandas does not generate an error
-        const re = new RegExp(col_name, 'g');
+        console.log('replacing');
+        // Match any string finishing with space and a characte
+        // except a space and the word in (special keyword)
+        const regex = col_name + '(?!( (?!in)\\S))';
+        console.log('Regex',regex);
+        const re = new RegExp(regex, 'g');
         const replace_to = '`' + col_name + '`';
         sql_query = sql_query.replace(re, replace_to);
       }
