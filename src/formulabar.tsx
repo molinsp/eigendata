@@ -58,6 +58,8 @@ import ReactGA from 'react-ga';
 import { magnifier, tableIcon, thumbDown, thumbUp } from './assets/svgs';
 import { formulabarMainSelect } from './styles/reactSelectStyles';
 
+import Joyride from 'react-joyride';
+
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.0';
 let _transformationsConfig = localTransformationsConfig;
@@ -144,8 +146,82 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   useEffect((): void => {
     if (state.showForm || state.queryConfig) {
       setFeedbackState({ ...feedbackState, submittedTransformation: null });
-    }
+    }   
   }, [state.showForm, state.queryConfig]);
+
+  /*-----------------------------------
+  PRODUCT TOUR
+  -----------------------------------*/
+  const [productTourState, setProductTourState] = useState({
+    run: false
+  });
+
+  const productTourSteps = [
+    {
+      content: (
+        <div>
+          <p>This is the magic formula bar, your gateway to data superpowers</p>
+        </div>
+        ),
+      target: '.data-transformation-form',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true,
+      placement: 'bottom-start' as 'bottom-start'
+    },
+    {
+      content: 'On the left you select which dataset you want to transform',
+      target: '#dataselect',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: (
+        <div>
+          <p>On the right you search for data transformations.</p> 
+          <p>We will start by loading a csv file.</p>
+        </div>
+        ),
+      target: '#transformationselect',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: 'Here is where you enter the parameters, like the csv file name.',
+      target: '#root_filepath_or_buffer',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: (
+        <div>
+          <p>To get the name of the csv files, you can use the file browser on the left.</p> 
+          <p>You can also hide it by clicking the browser icon</p>
+        </div>
+        ),
+      target: '#filebrowser',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true,
+      placement: 'left' as 'left'
+    },
+    {
+      content: 'After entering the file-name, press Submit to run your transformations.',
+      target: '.btn-info',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: (
+        <div>
+          <p>The data will be displayed in the data visualizer.</p> 
+          <p>Enjoy your data.</p>
+        </div>
+        ),
+      target: '.full-height-container',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true,
+      placement: 'left' as 'left'
+    }
+  ];
 
   /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
@@ -164,6 +240,15 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     });
 
     logic._resetStateFormulabarFlag = false;
+
+    // This starts the product tour. It's here because it needs to load after the rest of the lements
+    if(logic.completedProductTour == false){
+      setProductTourState({run:true});
+      // Change the settings for it not to run next time (next refresh)
+      logic.eigendataSettings.set('completedProductTour', true);
+      // Set to true for it not to run again in the current session
+      logic.completedProductTour = true;
+    }
   }
 
   /*-----------------------------------
@@ -577,104 +662,123 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   return (
-    <div className="side-by-side-fields">
-      <fieldset className="data-transformation-form">
-        <Select
-          name="Select dataframe"
-          placeholder="No data loaded"
-          options={logic.dataframesLoaded}
-          value={state.dataframeSelection}
-          label="Select data"
-          onChange={handleDataframeSelectionChange}
-          className="left-field"
-          id="dataselect"
-          components={{
-            DropdownIndicator: (): JSX.Element => tableIcon,
-            IndicatorSeparator: (): null => null
+    <div className="app">
+      <Joyride 
+          steps={productTourSteps}
+          continuous={true}
+          run={productTourState.run}
+          hideBackButton={true}
+          disableScrollParentFix={true}
+          showSkipButton={true}
+          locale={{ back: 'Back', close: 'Close', last: 'Finish', next: 'Next', skip: 'Skip' }}
+          styles={{
+            options: {
+              zIndex: 1000,
+              primaryColor: '#3698DC'
+              }
           }}
-          styles={formulabarMainSelect}
         />
-        <Select
-          name="Select transformation"
-          placeholder="select data loading transformation"
-          options={
-            logic.dataframesLoaded.length !== 0
-              ? logic.transformationsList
-              : loadingTransformations()
-          }
-          value={state.transformationSelection}
-          label="Select transformation"
-          onChange={handleTransformationSelectionChange}
-          className="right-field"
-          components={{
-            DropdownIndicator: (): JSX.Element => magnifier,
-            IndicatorSeparator: (): null => null
-          }}
-          id="transformationselect"
-          filterOption={getKeywordsForFilter}
-          maxMenuHeight={400}
-          styles={formulabarMainSelect}
-        />
-      </fieldset>
-      <div className="centered formulaFormDivider" />
-      {state.showForm && (
-        <Form
-          formData={state.formData}
-          schema={state.transformationForm}
-          onSubmit={callGeneratePythonCode}
-          onChange={handleFormChange}
-          widgets={widgets}
-          uiSchema={state.transformationUI}
-          extraErrors={extraErrors}
-        />
-      )}
-      {state.queryConfig && (
-        <QueryBuilder
-          queryConfig={state.queryConfig}
-          dataframeSelection={state.dataframeSelection.value}
-          backend={logic}
-        />
-      )}
-      {/* If transformation was submit show the feedback buttons */}
-      {feedbackState.submittedTransformation && (
-        <form id="feedback" onSubmit={onSubmitDescription}>
-          <div id="feedback__buttons">
-            <BinaryFeedback
-              onPositiveClick={onPositiveClick}
-              onNegativeClick={onNegativeClick}
-              positiveContent={getFeedBackContent(thumbUp, 'Worked', '#93C47d')}
-              negativeContent={getFeedBackContent(
-                thumbDown,
-                "Didn't work",
-                '#E06666'
-              )}
-              singleSelect
-            />
-          </div>
-          <div id="feedback__negative-description">
-            <input
-              placeholder="Share the issue so we can fix it!"
-              type="text"
-              className="short form-control margin-right"
-              onChange={onTextChange}
-            />
-            <input
-              type="submit"
-              className="short btn btn-info"
-              disabled={feedbackState.negativeDescription === ''}
-            />
-          </div>
-        </form>
-      )}
-      <div>
-        <ChatWidget
-          // Pass in your Papercups account token here after signing up
-          accountId="784f140c-6c85-4613-bfd0-9869026cd1cb"
-          title="Welcome to Eigendata"
-          subtitle="We are here to help you become a data superhero"
-          newMessagePlaceholder="Start typing..."
-          primaryColor="#13c2c2"
-        />
+      <div className="side-by-side-fields">
+        <div className="centered">
+        </div>
+        <fieldset className="data-transformation-form">
+          <Select
+            name="Select dataframe"
+            placeholder="No data"
+            options={logic.dataframesLoaded}
+            value={state.dataframeSelection}
+            label="Select data"
+            onChange={handleDataframeSelectionChange}
+            className="left-field"
+            id="dataselect"
+            components={{
+              DropdownIndicator: (): JSX.Element => tableIcon,
+              IndicatorSeparator: (): null => null
+            }}
+            styles={formulabarMainSelect}
+          />
+          <Select
+            name="Select transformation"
+            placeholder="select data loading transformation"
+            options={
+              logic.dataframesLoaded.length !== 0
+                ? logic.transformationsList
+                : loadingTransformations()
+            }
+            value={state.transformationSelection}
+            label="Select transformation"
+            onChange={handleTransformationSelectionChange}
+            className="right-field"
+            components={{
+              DropdownIndicator: (): JSX.Element => magnifier,
+              IndicatorSeparator: (): null => null
+            }}
+            id="transformationselect"
+            filterOption={getKeywordsForFilter}
+            maxMenuHeight={400}
+            styles={formulabarMainSelect}
+          />
+        </fieldset>
+        <div className="centered formulaFormDivider" />
+        {state.showForm && (
+          <Form
+            formData={state.formData}
+            schema={state.transformationForm}
+            onSubmit={callGeneratePythonCode}
+            onChange={handleFormChange}
+            widgets={widgets}
+            uiSchema={state.transformationUI}
+            extraErrors={extraErrors}
+          />
+        )}
+        {state.queryConfig && (
+          <QueryBuilder
+            queryConfig={state.queryConfig}
+            dataframeSelection={state.dataframeSelection.value}
+            backend={logic}
+          />
+        )}
+        {/* If transformation was submit show the feedback buttons */}
+        {feedbackState.submittedTransformation && (
+          <form id="feedback" onSubmit={onSubmitDescription}>
+            <div id="feedback__buttons">
+              <BinaryFeedback
+                onPositiveClick={onPositiveClick}
+                onNegativeClick={onNegativeClick}
+                positiveContent={getFeedBackContent(thumbUp, 'Worked', '#93C47d')}
+                negativeContent={getFeedBackContent(
+                  thumbDown,
+                  "Didn't work",
+                  '#E06666'
+                )}
+                singleSelect
+              />
+            </div>
+            <div id="feedback__negative-description">
+              <input
+                placeholder="Share the issue so we can fix it!"
+                type="text"
+                className="short form-control margin-right"
+                onChange={onTextChange}
+              />
+              <input
+                type="submit"
+                className="short btn btn-info"
+                disabled={feedbackState.negativeDescription === ''}
+              />
+            </div>
+          </form>
+        )}
+        <div>
+          <ChatWidget
+            // Pass in your Papercups account token here after signing up
+            accountId="784f140c-6c85-4613-bfd0-9869026cd1cb"
+            title="Welcome to Eigendata"
+            subtitle="We are here to help you become a data superhero"
+            newMessagePlaceholder="Start typing..."
+            primaryColor="#13c2c2"
+          />
+        </div>
       </div>
     </div>
   );
@@ -755,6 +859,8 @@ export class Backend {
   public shareProductData;
 
   public variablesLoaded: any = [];
+
+  public completedProductTour: boolean;
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -774,6 +880,8 @@ export class Backend {
   public _resetStateDatavisualizerFlag = false;
 
   public _production = false;
+
+  public eigendataSettings: ISettingRegistry.ISettings;
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -880,6 +988,12 @@ export class Backend {
           this.shareProductData = settings.get('shareProductData')
             .composite as boolean;
         }
+
+        this.completedProductTour = settings.get('completedProductTour').composite as boolean;
+        console.log('Settings: completedProductTour', this.completedProductTour);
+        
+        // Save the settings object to be used. Use case is to change settings after product tour
+        this.eigendataSettings = settings;
 
         console.log('Analytics: Product tracking data', this.shareProductData);
         // Tracking setup

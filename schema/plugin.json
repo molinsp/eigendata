@@ -20,6 +20,12 @@
       "title": "User consent requested",
       "description": "Property to validate that user consent for product data has been asked",
       "default": false
+    },
+    "completedProductTour": {
+      "type": "boolean",
+      "title": "Completed Product Tour",
+      "description": "Turn true if you want to see the initial tutorial again",
+      "default": false
     }
   }
 }
