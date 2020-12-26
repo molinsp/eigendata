@@ -224,6 +224,36 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   ];
 
   /*-----------------------------------
+  REACT SELECT LOG SEARCH
+  -----------------------------------*/
+  let prevInput: string = '';
+  const handleInputChange = function(inputValue){    
+    if(inputValue.length == 0 && prevInput.length !=0){
+      console.log('Formulabar search: search and select - ', prevInput);
+
+      if (logic._production && logic.shareProductData) {
+        amplitude.getInstance().logEvent('Formulabar search: search and select', {
+          searchString: prevInput
+        });
+      }
+      
+    }else if(inputValue.length < prevInput.length){
+      //console.log('Formulabar Search: Deleted text', prevInput);
+    }else if(inputValue.endsWith(' ')){
+      console.log('Formulabar search: search keyword - ', prevInput);
+      
+      if (logic._production && logic.shareProductData) {
+        amplitude.getInstance().logEvent('Formulabar search: search and select', {
+          searchString: prevInput
+        });
+      }
+
+    }
+
+    prevInput = inputValue;
+  }
+
+  /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
   -----------------------------------*/
   if (logic._resetStateFormulabarFlag === true) {
@@ -708,6 +738,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
             value={state.transformationSelection}
             label="Select transformation"
             onChange={handleTransformationSelectionChange}
+            onInputChange={handleInputChange}
             className="right-field"
             components={{
               DropdownIndicator: (): JSX.Element => magnifier,
