@@ -105,6 +105,14 @@ def ed_generate_querybuilder_config(df):
                     'label' : col_name,
                     'type' : 'text'
                 }
+        elif col_type == 'category':
+            queryprops[col_name] = {
+                'label' : col_name,
+                'type' : 'select',
+                'fieldSettings' : {
+                    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
+                    }
+                }
         elif col_type == 'datetime64[ns]':
             # Check if it contains only dates
             if ((df[col_name].dt.floor('d') == df[col_name]) | (df[col_name].isnull())).all():
