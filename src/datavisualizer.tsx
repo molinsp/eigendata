@@ -24,6 +24,10 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columnTypes, setColumnTypes] = useState([]);
   const [shape, setShape] = useState({});
 
+  const url = window.location.href;
+  const binderUrl = url.includes('mybinder.org');
+  console.log('Current URL', url);
+
   const separateThousands = number => {
     let stringNumber = number + '';
     const rgx = /(\d+)(\d{3})/;
@@ -174,6 +178,15 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
   return (
     <div className="full-height-container">
+      {binderUrl && (
+        <div className='binderButtonSeparator'>
+          <a
+            href="https://calendly.com/molinsp/eigendata-demo"
+            className="binderButton"
+          >BOOK A DEMO
+          </a>
+        </div>
+      )}
       {showTable ? (
         <div className="full-height-container">
           <nav className="scroll-nav">
