@@ -6,7 +6,7 @@ import {
   UseSignal
 } from '@jupyterlab/apputils';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import Form from '@rjsf/core';
 
@@ -141,13 +141,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     negativeDescription: '',
     submittedTransformation: null
   });
-
-  // Hide feedback buttons if there is transformation or query builder form
-  useEffect((): void => {
-    if (state.showForm || state.queryConfig) {
-      setFeedbackState({ ...feedbackState, submittedTransformation: null });
-    }   
-  }, [state.showForm, state.queryConfig]);
 
   /*-----------------------------------
   PRODUCT TOUR
@@ -491,12 +484,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     /*-----------------------------------------------
     Handle not found case
     -----------------------------------------------*/
-    // Add submitted transformation to the feedback state
-    setFeedbackState({
-      ...feedbackState,
-      submittedTransformation: state.transformationSelection
-    });
-
     if (state.transformationSelection.value === 'notfound') {
       // Remove transformation selection and hide form
       setState(state => ({
@@ -571,6 +558,12 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     try {
       await logic.writeToNotebookAndExecute(formula);
       // Write and execute the formula in the notebook
+      // Add submitted transformation to the feedback state
+      setFeedbackState({
+        ...feedbackState,
+        submittedTransformation: state.transformationSelection
+      });
+
       if (returnType === 'dataframe') {
         setState(state => ({
           ...state,
@@ -770,7 +763,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           />
         )}
         {/* If transformation was submit show the feedback buttons */}
-        {feedbackState.submittedTransformation && (
+        {feedbackState.submittedTransformation && !(state.showForm || state.queryConfig) && (
           <form id="feedback" onSubmit={onSubmitDescription}>
             <div id="feedback__buttons">
               <BinaryFeedback
