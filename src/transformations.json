@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.27",
+  "version" : "0.0.28",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -43,7 +43,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "csv",
+        "load",
+        "read"
+      ]
     },
     "read_excel" : {
       "form" : {
@@ -132,7 +137,14 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "excel",
+        "load",
+        "xlsx",
+        "xls",
+        "read"
+      ]
     },
     "airtable_base_to_df" : {
       "uischema" : {
@@ -175,7 +187,13 @@
       "library" : {
         "name" : "fastdata.integrations",
         "importStatement" : "from fastdata.integrations import *"
-      }
+      },
+      "keywords" : [
+        "base",
+        "load",
+        "airtable",
+        "read"
+      ]
     },
     "df_to_airtable_base" : {
       "uischema" : {
@@ -235,6 +253,54 @@
         "write",
         "upload",
         "connect"
+      ]
+    },
+    "gsheet_to_df" : {
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "form" : {
+        "properties" : {
+          "url" : {
+            "title" : "URL of the sheet",
+            "type" : "string"
+          },
+          "start_row" : {
+            "title" : "start row number",
+            "description" : "Row number for first row of headers or data.",
+            "type" : "number",
+            "default" : 1
+          },
+          "sheet" : {
+            "type" : "number",
+            "default" : 0,
+            "title" : "sheet number",
+            "description" : "Sheet number that will be pulled as a table."
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "url"
+        ],
+        "title" : "Read Google Sheets",
+        "type" : "object",
+        "function" : "gsheet_to_df",
+        "transformationType" : "dataLoading",
+        "description" : "Load airtable base"
+      },
+      "library" : {
+        "name" : "fastdata.integrations",
+        "importStatement" : "from fastdata.integrations import *"
+      },
+      "keywords" : [
+        "sheet",
+        "google",
+        "load",
+        "read"
       ]
     },
     "to_csv" : {
@@ -536,7 +602,9 @@
         "deviation",
         "value",
         "for",
-        "each"
+        "each",
+        "group",
+        "by"
       ]
     },
     "transpose" : {
@@ -573,7 +641,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "switch",
+        "rows",
+        "columns"
+      ]
     },
     "get_dummies" : {
       "form" : {
@@ -637,7 +710,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "1",
+        "0",
+        "columns"
+      ]
     },
     "split_list_to_columns" : {
       "form" : {
@@ -803,7 +881,7 @@
         "callerObject" : "DataFrame",
         "type" : "object",
         "title" : "Join tables",
-        "description" : "Join tables on one or more columns."
+        "description" : "Join the selected table with another table."
       },
       "uischema" : {
         "classNames" : "side-by-side-fields",
@@ -832,7 +910,8 @@
       "keywords" : [
         "vlookup",
         "index",
-        "match"
+        "match",
+        "lookup"
       ]
     },
     "append" : {
@@ -871,48 +950,10 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
-    },
-    "insert" : {
-      "form" : {
-        "required" : [
-          "loc",
-          "column",
-          "value"
-        ],
-        "title" : "Insert column with constant value",
-        "type" : "object",
-        "callerObject" : "DataFrame",
-        "function" : "insert",
-        "description" : "Insert new column with a constant value (same value in all rows).",
-        "properties" : {
-          "loc" : {
-            "type" : "number",
-            "default" : 0,
-            "description" : "Position at which the column will be created (0 is to the left). If the number is larger than number of columns it will return an error."
-          },
-          "column" : {
-            "type" : "string",
-            "title" : "new column name",
-            "description" : ""
-          },
-          "value" : {
-            "type" : "string",
-            "codegenstyle" : "variable",
-            "description" : "Value to be inserted in the column. Use quotation marks for text."
-          }
-        },
-        "returnType" : "none"
       },
-      "uischema" : {
-        "value" : {
-          "ui:placeholder" : "E.g. \"text\" / 45"
-        }
-      },
-      "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
-      }
+      "keywords" : [
+        "stack"
+      ]
     },
     "sort_values" : {
       "form" : {
@@ -964,7 +1005,10 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "arrange"
+      ]
     },
     "drop" : {
       "form" : {
@@ -990,7 +1034,7 @@
             "type" : "string"
           }
         },
-        "title" : "Drop/exclude columns",
+        "title" : "Drop columns",
         "description" : "Drop columns from the table.",
         "type" : "object",
         "callerObject" : "DataFrame",
@@ -1004,7 +1048,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "remove",
+        "exclude"
+      ]
     },
     "filter" : {
       "form" : {
@@ -1044,7 +1092,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "keep",
+        "columns",
+        "column"
+      ]
     },
     "fillna" : {
       "form" : {
@@ -1133,7 +1186,8 @@
         "nan",
         "na",
         "null",
-        "empty"
+        "empty",
+        "replace"
       ],
       "library" : {
         "name" : "pandas",
@@ -1178,7 +1232,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "hierarchical",
+        "index"
+      ]
     },
     "rename" : {
       "form" : {
@@ -1238,7 +1296,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "change",
+        "rename"
+      ]
     },
     "astype" : {
       "form" : {
@@ -1295,6 +1357,17 @@
       "uischema" : {
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "dtype" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "type" : {
+              "classNames" : "right-field"
+            }
+          }
         }
       },
       "keywords" : [
@@ -1375,7 +1448,14 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "nan",
+        "na",
+        "null",
+        "empty",
+        "remove"
+      ]
     },
     "extract_number_from_string" : {
       "form" : {
@@ -1422,6 +1502,56 @@
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
       }
+    },
+    "insert" : {
+      "form" : {
+        "required" : [
+          "loc",
+          "column",
+          "value"
+        ],
+        "title" : "[Column] Insert column with constant value",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "insert",
+        "description" : "Insert new column with a constant value (same value in all rows).",
+        "properties" : {
+          "loc" : {
+            "type" : "number",
+            "default" : 0,
+            "description" : "Position at which the column will be created (0 is to the left). If the number is larger than number of columns it will return an error."
+          },
+          "column" : {
+            "type" : "string",
+            "title" : "new column name",
+            "description" : ""
+          },
+          "value" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Value to be inserted in the column. Use quotation marks for text."
+          }
+        },
+        "returnType" : "none"
+      },
+      "uischema" : {
+        "value" : {
+          "ui:placeholder" : "E.g. \"text\" / 45"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "add",
+        "append",
+        "insert",
+        "create",
+        "new",
+        "static",
+        "constant"
+      ]
     },
     "round" : {
       "form" : {
@@ -1525,7 +1655,58 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "find",
+        "locate",
+        "check"
+      ]
+    },
+    "extract" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "pat" : {
+            "title" : "pattern",
+            "description" : "Find this pattern in the column (includes partial matches)",
+            "type" : "string"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column",
+          "pat"
+        ],
+        "title" : "[Column] Extract text from column",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "extract",
+        "description" : "Extract capture groups in the regex pat as columns."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "substring"
+      ]
     },
     "find" : {
       "form" : {
@@ -1576,7 +1757,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "position",
+        "locate"
+      ]
     },
     "replace" : {
       "form" : {
@@ -1650,7 +1835,10 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "change"
+      ]
     },
     "mean" : {
       "form" : {
@@ -1931,7 +2119,7 @@
             ]
           }
         },
-        "title" : "[Column] Bin/Bucket columns",
+        "title" : "[Column] Bucket columns",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "bin_column",
         "type" : "object",
@@ -1946,7 +2134,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "bin",
+        "bucket",
+        "group"
+      ]
     },
     "fill_empty" : {
       "form" : {
@@ -2044,7 +2237,8 @@
         "nan",
         "na",
         "null",
-        "empty"
+        "empty",
+        "replace"
       ],
       "library" : {
         "name" : "pandas",
@@ -2227,7 +2421,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "convert",
+        "date"
+      ]
     },
     "year" : {
       "form" : {
@@ -2768,7 +2966,10 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "sum"
+      ]
     },
     "subtract" : {
       "form" : {
@@ -2856,7 +3057,10 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "minus"
+      ]
     },
     "replace_based_on_condition" : {
       "form" : {
@@ -2921,7 +3125,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "new",
+        "true",
+        "false"
+      ]
     },
     "rename_categories" : {
       "form" : {
@@ -2967,7 +3176,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "change",
+        "name",
+        "category"
+      ]
     },
     "factorize" : {
       "form" : {
@@ -3023,7 +3237,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "to",
+        "numbers"
+      ]
     },
     "strip" : {
       "form" : {
@@ -3107,7 +3325,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "left",
+        "from"
+      ]
     },
     "rstrip" : {
       "form" : {
@@ -3149,7 +3371,11 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "right",
+        "from"
+      ]
     },
     "slice" : {
       "form" : {
@@ -3198,7 +3424,13 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "substring",
+        "mid",
+        "left",
+        "right"
+      ]
     },
     "notfound" : {
       "form" : {
