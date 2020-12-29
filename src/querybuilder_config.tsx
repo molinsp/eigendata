@@ -166,6 +166,8 @@ const types: Types = {
         operators: [
           "equal",
           "not_equal",
+          'is_empty',
+          'is_not_empty'
         ],
         widgetProps: {
           //you can enable this if you don't use fields as value sources

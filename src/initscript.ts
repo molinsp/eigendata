@@ -68,6 +68,7 @@ def ed_get_json_column_values(df):
     return json.dumps(df.columns.tolist(), ensure_ascii=False)
 
 # ---------------- QUERYBUILDER BACKEND ----------------
+from pandas.api.types import is_categorical_dtype, is_integer_dtype, is_float_dtype, is_bool_dtype, is_object_dtype
 def ed_get_percentage_unique_column(df, col_name):
     return df[col_name].nunique() / df[col_name].count() * 100.0 
 
@@ -75,22 +76,17 @@ def ed_generate_querybuilder_config(df):
     queryprops = {}
     for i,col_type in enumerate(df.dtypes):
         col_name = df.columns[i]
-        if col_type == 'int64':      
+        if is_integer_dtype(df[col_name]) or is_float_dtype(df[col_name]):      
             queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'number'
             }
-        elif col_type == 'float64':
-            queryprops[col_name] = {
-                'label' : col_name,
-                'type' : 'number'
-            }
-        elif col_type == 'bool':
+        elif is_bool_dtype(df[col_name]):
             queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'boolean'
             }
-        elif col_type == 'object':
+        elif is_object_dtype(df[col_name]):
             # Categorical if less than 10% of values are unique
             if (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
@@ -105,7 +101,7 @@ def ed_generate_querybuilder_config(df):
                     'label' : col_name,
                     'type' : 'text'
                 }
-        elif col_type == 'category':
+        elif is_categorical_dtype(df[col_name]):
             queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'select',
@@ -113,7 +109,7 @@ def ed_generate_querybuilder_config(df):
                     'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
                     }
                 }
-        elif col_type == 'datetime64[ns]':
+        elif is_datetime64_any_dtype(df[col_name]):
             # Check if it contains only dates
             if ((df[col_name].dt.floor('d') == df[col_name]) | (df[col_name].isnull())).all():
                 queryprops[col_name] = {
