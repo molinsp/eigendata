@@ -9,6 +9,7 @@ import {
 
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
+import { querySelectStyles } from './styles/reactSelectStyles';
 
 const InitialConfig = BasicConfig; // or BasicConfig or MaterialConfig
 
@@ -148,10 +149,40 @@ const types: Types = {
     valueSources: ['value'],
     widgets: {
       multiselect: {
-        operators: ['select_any_in', 'select_not_any_in','is_empty','is_not_empty']
+        operators: [
+          'select_any_in',
+          'select_not_any_in',
+          'is_empty',
+          'is_not_empty'
+        ]
       }
     }
-  }
+  },
+  boolean: {
+    defaultOperator: "equal",
+    valueSources: ['value'],
+    widgets: {
+      boolean: {
+        operators: [
+          "equal",
+          "not_equal",
+          'is_empty',
+          'is_not_empty'
+        ],
+        widgetProps: {
+          //you can enable this if you don't use fields as value sources
+          // hideOperator: true,
+          // operatorInlineLabel: "is",
+        }
+      },
+      field: {
+        operators: [
+          "equal",
+          "not_equal",
+        ],
+      }
+    },
+  },
 };
 
 const widgets: Widgets = {
@@ -212,25 +243,6 @@ const customConfig: any = {
 
 export default customConfig;
 
-const selectHeight = 30;
-
-const customStyles = {
-  menuPortal: (base): object => ({ ...base, zIndex: 9999 }),
-  control: (base): object => ({
-    ...base,
-    minHeight: selectHeight
-  }),
-  valueContainer: (base): object => ({
-    ...base,
-    minHeight: selectHeight
-  }),
-  input: (base): object => ({ ...base, margin: 0 }),
-  indicatorsContainer: (base): object => ({
-    ...base,
-    minHeight: selectHeight
-  })
-};
-
 const CustomMultiSelect = (props): JSX.Element => {
   const [options, setOptions] = useState([]);
   useEffect(() => {
@@ -248,7 +260,7 @@ const CustomMultiSelect = (props): JSX.Element => {
       isMulti
       options={options}
       menuPortalTarget={document.body}
-      styles={customStyles}
+      styles={querySelectStyles}
     />
   );
 };
@@ -272,7 +284,7 @@ const CustomSelect = (props): JSX.Element => {
       }}
       options={options}
       menuPortalTarget={document.body}
-      styles={customStyles}
+      styles={querySelectStyles}
     />
   );
 };

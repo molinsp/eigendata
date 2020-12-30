@@ -1,35 +1,32 @@
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 import { ISignal } from '@lumino/signaling';
 
-import { useTable } from 'react-table';
+import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
 
 import { Backend } from './formulabar';
 
 import amplitude from 'amplitude-js';
+import { GroupType } from 'react-select';
 /**
  * React component for a counter.
  *
  * @returns The React component
  */
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
-  //console.log('------> Rendering Data Visualizer UI');
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
+  const [variables, setVariables] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [columnTypes, setColumnTypes] = useState([]);
   const [shape, setShape] = useState({});
-  const [columnTypesTop, setColumnTypesTop] = useState(0);
-  const darkHeadRef = useRef(null);
 
-  useEffect(() => {
-    if (darkHeadRef.current) {
-      setColumnTypesTop(darkHeadRef.current.clientHeight - 2);
-    }
-  });
+  const url = window.location.href;
+  const binderUrl = url.includes('mybinder.org');
+  console.log('Current URL', url);
 
   const separateThousands = number => {
     let stringNumber = number + '';
@@ -40,17 +37,41 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     return stringNumber;
   };
 
+  const getModifiedValue = (value: any): string => {
+    return typeof value === 'number'
+      ? value.toLocaleString('USD')
+      : String(value);
+  };
+
   if (props.logic._resetStateDatavisualizerFlag === true) {
     console.log('RESETING DATA VISUALIZER STATE');
     setColumns([]);
     setData([]);
     setShowTable(false);
     setActiveTab(0);
+    setVariables([]);
     props.logic._resetStateDatavisualizerFlag = false;
   }
 
+  //Rerender variables table
   useEffect(() => {
-    const getDataForVisualization = async () => {
+    const variables = props.logic.variablesLoaded;
+    setVariables([...variables]);
+    if (activeTab === -1) {
+      const keys = Object.keys(variables[0]);
+      const columns = keys.map(key => ({
+        accessor: key,
+        Header: key,
+        Cell: (props): string => getModifiedValue(props.value)
+      }));
+      setColumns([...columns]);
+      setData([...variables]);
+    }
+  }, [activeTab, props.logic.variablesLoaded]);
+
+  //Rerender other tables
+  useEffect(() => {
+    const getDataForVisualization = async (): Promise<void> => {
       try {
         const dfs = props.logic.dataframesLoaded;
         console.log('Dataframes', dfs);
@@ -58,8 +79,16 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           const result = await props.logic.pythonGetDataForVisualization(
             dfs[activeTab].value
           );
+          // Add missing methods and properties
+          const columns = result['columns'].map((column, index) => {
+            if (index === 0) {
+              column.width = 55;
+            }
+            column.Cell = (props): string => getModifiedValue(props.value);
+            return column;
+          });
           setShowTable(true);
-          setColumns([...result['columns']]);
+          setColumns([...columns]);
           setData([...result['data']]);
           setColumnTypes([...result['columnTypes']]);
           setShape({ ...result['shape'] });
@@ -72,15 +101,28 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     getDataForVisualization();
   }, [props.logic.dataframesLoaded, activeTab]);
 
+  // Default size of columns
+  const defaultColumn = React.useMemo(
+    () => ({
+      minWidth: 30,
+      width: 80
+    }),
+    []
+  );
+
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     rows,
     prepareRow
-  } = useTable({ columns, data });
+  } = useTable(
+    { columns, data, defaultColumn },
+    useBlockLayout,
+    useResizeColumns
+  );
 
-  const cutString = (string, requiredLength) => {
+  const cutString = (string, requiredLength): string => {
     return string.length > requiredLength
       ? `${string.slice(0, requiredLength)}...`
       : string;
@@ -122,12 +164,45 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
+  const isLastRow = (row: number): boolean => {
+    return row === headerGroups.length - 1;
+  };
+
+  const isVariableTab = (tab: number): boolean => {
+    return tab === -1;
+  };
+
+  const isLastCell = (cell: number, row: GroupType<any>): boolean => {
+    return cell === row.headers.length - 1;
+  };
+
   return (
     <div className="full-height-container">
+      {binderUrl && (
+        <div className='binderButtonSeparator'>
+          <a
+            href="https://calendly.com/molinsp/eigendata-demo"
+            className="binderButton"
+          >BOOK A DEMO
+          </a>
+        </div>
+      )}
       {showTable ? (
         <div className="full-height-container">
           <nav className="scroll-nav">
             <div className="dropdown-container">
+              {variables.length > 0 && (
+                <button
+                  type="button"
+                  className={`tab-button ${isVariableTab(activeTab) &&
+                    'tab-button_active'} variables-button`}
+                  onClick={(): void => {
+                    setActiveTab(-1);
+                  }}
+                >
+                  Variables
+                </button>
+              )}
               {props.logic.dataframesLoaded.map((dataframe, index) => {
                 return (
                   <div
@@ -142,7 +217,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                           ? 'tab-button_active'
                           : 'tab-button_inactive'
                       }`}
-                      onClick={() => {
+                      onClick={(): void => {
                         setActiveTab(index);
                         if (
                           props.logic._production &&
@@ -189,58 +264,90 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                 );
               })}
             </div>
-            <p className={'disclaimer'}>
-              Data shape: {separateThousands(shape['rows'])} rows and{' '}
-              {shape['columns']} columns. Preview: first {data.length} rows and{' '}
-              {shape['displayedColumns']} columns.
-            </p>
+            {activeTab === -1 ? (
+              <p className="disclaimer">
+                Data shape: {separateThousands(variables.length)} rows.
+              </p>
+            ) : (
+              <p className="disclaimer">
+                Data shape: {separateThousands(shape['rows'])} rows and{' '}
+                {shape['columns']} columns. Preview: first {data.length} rows
+                and {shape['displayedColumns']} columns.
+              </p>
+            )}
           </nav>
           <div className="tab-item">
-            <table
+            <div
               {...getTableProps()}
-              className="table table-striped table-hover"
+              className="div-table div-table-striped"
+              role="table"
             >
-              <thead className="thead-dark">
-                {headerGroups.map(headerGroup => (
-                  <tr ref={darkHeadRef} {...headerGroup.getHeaderGroupProps()}>
-                    {headerGroup.headers.map(column => (
-                      <th {...column.getHeaderProps()}>
-                        {column.render('Header')}
-                      </th>
+              <div className="thead-dark sticky" role="thead">
+                {headerGroups.map((headerGroup, rowIndex) => (
+                  <div
+                    {...headerGroup.getHeaderGroupProps()}
+                    className="tr"
+                    role="tr"
+                  >
+                    {isLastRow(rowIndex) && !isVariableTab(activeTab) && (
+                      <div className="header-white-row" />
+                    )}
+                    {headerGroup.headers.map((column, index) => (
+                      <div
+                        {...column.getHeaderProps()}
+                        className="th"
+                        role="th"
+                      >
+                        <div
+                          className={`th ${index === 0 && column.Header === 'index' &&
+                            'index-column-header'}`}
+                        >
+                          {column.render('Header')}
+                        </div>
+                        {!isLastCell(index, headerGroup) && (
+                          <div
+                            {...column.getResizerProps()}
+                            className="delimiter-wrapper"
+                          >
+                            <div className="delimiter" />
+                          </div>
+                        )}
+                        {isLastRow(rowIndex) && (
+                          <div>
+                            {!isVariableTab(activeTab) && (
+                              <div className="data-type-info">
+                                {columnTypes[index] && columnTypes[index].type}
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     ))}
-                  </tr>
+                  </div>
                 ))}
-                <tr role="row" className="data-type-info">
-                  {columnTypes.map((columnType, index) => (
-                    <td
-                      role="cell"
-                      key={index}
-                      style={{
-                        top: columnTypesTop
-                      }}
-                    >
-                      {columnType.type}
-                    </td>
-                  ))}
-                </tr>
-              </thead>
-              <tbody {...getTableBodyProps()}>
+              </div>
+              <div {...getTableBodyProps()} className="tbody" role="tbody">
                 {rows.map(row => {
                   prepareRow(row);
                   return (
-                    <tr {...row.getRowProps()}>
+                    <div {...row.getRowProps()} className="tr" role="tr">
                       {row.cells.map(cell => {
                         return (
-                          <td {...cell.getCellProps()} title={cell.value}>
+                          <div
+                            {...cell.getCellProps()}
+                            title={getModifiedValue(cell.value)}
+                            className="td"
+                            role="td"
+                          >
                             {cell.render('Cell')}
-                          </td>
+                          </div>
                         );
                       })}
-                    </tr>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
+              </div>
+            </div>
           </div>
         </div>
       ) : (

@@ -3,36 +3,31 @@ import React, { Component } from 'react';
 import {
   Query,
   Builder,
-  //BasicConfig,
   Utils as QbUtils,
   //types:
   ImmutableTree,
   Config,
-  BuilderProps
+  BuilderProps,
+  JsonGroup
 } from 'react-awesome-query-builder';
-//import AntdConfig from 'react-awesome-query-builder/lib/config/antd';
 import 'react-awesome-query-builder/lib/css/styles.css';
-//import 'react-awesome-query-builder/lib/css/compact_styles.css'; //optional, for more compact styles
 import { Backend } from './formulabar';
 import customConfig from './querybuilder_config';
 import Select from 'react-select';
-//const InitialConfig = BasicConfig; // or BasicConfig
-
 import amplitude from 'amplitude-js';
 
 // You can load query value from your backend storage (for saving see `Query.onChange()`)
 // Default empty query value
-const queryValue = { id: QbUtils.uuid(), type: 'group' };
+const queryValue: JsonGroup = { id: QbUtils.uuid(), type: 'group' };
 
-export default class DemoQueryBuilder extends Component<
-  DemoQueryBuilderProps,
-  DemoQueryBuilderState
+export default class QueryBuilder extends Component<
+  IQueryBuilderProps,
+  IQueryBuilderState
 > {
-  constructor(props: DemoQueryBuilderProps) {
+  constructor(props: IQueryBuilderProps) {
     super(props);
     const config = { ...customConfig, fields: { ...this.props.queryConfig } };
     this.state = {
-      // @ts-ignore
       tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
       config: config,
       logic: props.backend,
@@ -46,28 +41,27 @@ export default class DemoQueryBuilder extends Component<
     { value: 'eval', label: 'Create true/false indicators' }
   ];
 
-  setQueryType = (input: any) => {
+  setQueryType = (input: any): void => {
     //console.log('Dropdown changed', input);
     this.setState(state => ({ ...state, queryType: input.value }));
   };
 
-  handleChange = event => {
+  handleChange = (event): void => {
     this.setState({ ...this.state, newTableName: event.target.value });
   };
 
-  componentDidUpdate(prevProps: Readonly<DemoQueryBuilderProps>) {
+  componentDidUpdate(prevProps: Readonly<IQueryBuilderProps>): void {
     if (this.props.queryConfig !== prevProps.queryConfig) {
       const config = { ...customConfig, fields: { ...this.props.queryConfig } };
       this.setState(state => ({
         ...this.state,
-        // @ts-ignore
         tree: QbUtils.checkTree(QbUtils.loadTree(queryValue), config),
         config: config
       }));
     }
   }
 
-  render = () => (
+  render = (): JSX.Element => (
     <form id="query-form">
       <div className="form-group">
         <fieldset>
@@ -117,7 +111,7 @@ export default class DemoQueryBuilder extends Component<
     </form>
   );
 
-  renderBuilder = (props: BuilderProps) => (
+  renderBuilder = (props: BuilderProps): JSX.Element => (
     <div className="query-builder-container">
       <div className="query-builder qb-lite">
         <Builder {...props} />
@@ -136,32 +130,39 @@ export default class DemoQueryBuilder extends Component<
       undefined,
       2
     );
-    sql_query = sql_query.replace(/ = /g, '==');
-    sql_query = sql_query.replace(/<>/g, '!=');
+    console.log('SQL query', sql_query);
+    sql_query = sql_query.replace(/ IS EMPTY/g, '.isnull()');
+    sql_query = sql_query.replace(/ IS NOT EMPTY/g, '.notnull()');
     sql_query = sql_query.replace(/AND/g, 'and');
     sql_query = sql_query.replace(/OR/g, 'or');
     sql_query = sql_query.replace(/true/g, 'True');
     sql_query = sql_query.replace(/false/g, 'False');
-    sql_query = sql_query.replace(/\(/g, '[');
-    sql_query = sql_query.replace(/\)/g, ']');
-    sql_query = sql_query.replace(/ IS EMPTY/g, '.isnull()');
-    sql_query = sql_query.replace(/ IS NOT EMPTY/g, '.notnull()');
+    // Handle the case of any in ['a','b'] instead of IN ('a', 'b')
+    sql_query = sql_query.replace(/NOT IN\s\((.*?)\)/g, "not in [$1]");
+    sql_query = sql_query.replace(/IN\s\((.*?)\)/g, "in [$1]");
     sql_query = sql_query.replace(/NOT/g, '~');
-    sql_query = sql_query.replace(/IN/g, 'in');
-    sql_query = sql_query.replace(
-      /\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+\s\b(?!(?:and|or|true|false|isnull|notnull|in)\b)\w+/g,
-      '`$&`'
-    );
+    sql_query = sql_query.replace(/ = /g, '==');
+    sql_query = sql_query.replace(/ <> /g, '!=');
 
-    //console.log('Querybuilder: Config fields', this.state.config.fields);
-    for (const i in this.state.config.fields) {
-      const col_name = String(i);
-
+    const colNames = Object.entries(this.state.config.fields).map(([k, v]) => v.label);
+    //console.log('Querybuilder: Config fields type', typeof colNames);
+    //console.log('Querybuilder: Config fields', colNames);
+    const colNamesSorted = colNames.sort((a, b) => b.length - a.length);
+    //console.log('Querybuilder: Config fields sorted', colNamesSorted);
+    
+    for (const i of colNamesSorted) {
+      const col_name = i;
+      console.log('Col name', col_name);
       // Check if there is any blank space in the column names
       if (/\s/.test(col_name)) {
         // It has any kind of whitespace
         // Replace with backticks to ensure pandas does not generate an error
-        const re = new RegExp(col_name, 'g');
+        console.log('replacing');
+        // Match any string finishing with space and a characte
+        // except a space and the word in (special keyword)
+        const regex = col_name + '(?!( (?!in)\\S))';
+        console.log('Regex',regex);
+        const re = new RegExp(regex, 'g');
         const replace_to = '`' + col_name + '`';
         sql_query = sql_query.replace(re, replace_to);
       }
@@ -238,13 +239,13 @@ export default class DemoQueryBuilder extends Component<
   };
 }
 
-interface DemoQueryBuilderProps {
+interface IQueryBuilderProps {
   queryConfig: object;
   backend: Backend;
   dataframeSelection: string;
 }
 
-interface DemoQueryBuilderState {
+interface IQueryBuilderState {
   tree: ImmutableTree;
   config: Config;
   logic: Backend;

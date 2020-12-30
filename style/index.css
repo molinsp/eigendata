@@ -1,14 +1,70 @@
+/* |----------------------- COMMON STYLE RULES --------------------------------------------------------------------> */
+
 .jp-ReactWidget {
   color: var(--jp-ui-font-color1);
   background: var(--jp-layout-color1);
   align-items: center;
-  padding-top: 10px;
+  padding-top: 20px;
   padding-right: 20px;
   padding-bottom: 10px;
   padding-left: 20px;
   overflow: auto;
 }
 
+/* Any element that fills its parent by width */
+.full-width {
+  width: 100%;
+}
+
+/* Any element that fills its parent by height */
+.full-height-container {
+  height: 100%;
+}
+
+/* Any element that needs margin */
+.margin-right {
+  margin-right: 10px;
+}
+
+/* Any short element */
+.short {
+  height: 26px !important;
+  padding: 0 12px !important;
+}
+
+/* Any centered element */
+.centered {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Make element visible and flexible */
+.show_flex {
+  display: flex !important;
+}
+
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |----------------------- FORMULABAR: GENERAL STYLING -----------------------------------------------------------> */
+
+.formulaFormDivider{
+  border-bottom: 1px solid black;
+  width: 100%;
+  border-color: #B2B2B2;
+  margin-bottom: 10px;
+}
+
+#root__title{
+  border-bottom-width: 0px;
+  margin-bottom: 5px;
+}
+
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |----------------------- FORMULABAR: SIDE-BY-SIDE FIELDS RULES -------------------------------------------------> */
+
+/* Side-by-side container */
 .side-by-side-fields > fieldset {
   display: flex;
   flex-wrap: wrap;
@@ -17,31 +73,46 @@
   margin-bottom: 10px;
 }
 
+/* Left and right fields of side-by-side container */
 .side-by-side-fields .left-field,
 .side-by-side-fields .right-field {
   width: 49%;
 }
 
-.side-by-side-fields .full-width {
-  width: 100%;
-}
-
-#root_aggfunc .array-item {
-  display: flex;
-  align-items: center;
-}
-
-#root_aggfunc .array-item-toolbox {
-  margin-bottom: 6px;
-}
-
+/* Rewrite left field rules for data-transformation-form */
 .data-transformation-form .left-field {
   width: 33%;
 }
 
+/* Rewrite right field rules for data-transformation-form */
 .data-transformation-form .right-field {
   width: 66%;
 }
+
+/* Rules for description inside of side-by-side container */
+.side-by-side-fields .field-description {
+  width: 100%;
+  margin-bottom: 10px;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+
+/* |----------------------- FORMULABAR: REWRITE ITEMS AT ARRAY LEVEL OF TRANSFORMATIONS.JSON ----------------------> */
+
+/* Item container */
+.array-item {
+  display: flex;
+  align-items: center;
+}
+
+/* Item buttons */
+.array-item-toolbox {
+  margin-bottom: 9px;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+
+/* |----------------------- REWRITE QUERY BUILDER STYLE RULES -----------------------------------------------------> */
 
 #query-form .group-or-rule-container {
   padding-right: 0;
@@ -56,135 +127,6 @@
   margin-bottom: 20px;
 }
 
-.thead-dark {
-  background-color: #212529;
-  color: #ffffff;
-}
-
-.full-height-container {
-  height: 100%;
-}
-
-.scroll-nav {
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-  position: relative;
-  z-index: 5;
-}
-
-.tab-button {
-  min-width: 77px;
-  height: 30px;
-  background: #FFFFFF;
-  border: 1px solid #DDDDDD;
-  border-right: 0;
-  box-sizing: border-box;
-  border-radius: 4px 0 0 0;
-  font-size: 14px;
-  line-height: 21px;
-  display: inline-block;
-  transition: 0.2s ease;
-}
-
-.tab-button:hover,
-.dropdown-button:hover
-{
-  background-color: #EEEEEE;
-}
-
-.tab-button_active {
-  background-color: #ffffff;
-  color: #353EFF;
-}
-
-.tab-button_inactive {
-  color: #959494;
-  background-color: #f6f6f6;
-}
-
-.dropdown {
-  display: flex;
-  min-width: 97px;
-}
-
-.dropdown-container {
-  display: flex;
-}
-
-.dropdown-button {
-  height: 30px;
-  padding: 2px 4px;
-  margin-right: 3px;
-  border: 1px solid #DDDDDD;
-  border-left: 0;
-  border-radius: 0 4px 0 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.dropdown-menu {
-  padding: 0 !important;
-  margin: 0 !important;
-  border-top-left-radius: 0 !important;
-  border-top-right-radius: 0 !important;
-}
-
-.dropdown-item {
-  display: block;
-  padding: 2px 10px;
-  color: #212529;
-  width: 100%;
-  text-decoration: none;
-}
-
-.dropdown-item:hover {
-  background-color: #f3f3f3;
-  text-decoration: none;
-  color: #212529;
-}
-
-.dropdown-arrow {
-  height: 0;
-  width: 0;
-  border-top: .3em solid;
-  border-right: .3em solid transparent;
-  border-bottom: 0;
-  border-left: .3em solid transparent;
-}
-
-.tab-item {
-  width: 100%;
-  margin-bottom: 15px;
-  overflow: auto;
-  border: 1px solid #ddd;
-  height: 83%;
-}
-
-.disclaimer {
-  font-size: 11px;
-  color: #2d2d2d;
-  padding: 8px;
-  margin: 0
-}
-
-table td, table th {
-  font-size: 12px;
-}
-
-.group--actions.group--actions--tr {
-  opacity: 1 !important;
-}
-
-.group--actions.group--actions--tr > button {
-  margin-right: 5px;
-}
-
-.group--actions.group--actions--tr > button:last-child {
-  margin-right: 0;
-}
-
 .query-builder-container button {
   color: #fff;
   background-color: #337ab7;
@@ -197,59 +139,27 @@ table td, table th {
   border-radius: 4px;
 }
 
+/* Make action buttons always visible */
+.group--actions.group--actions--tr {
+  opacity: 1 !important;
+}
+
+/* Style for action buttons */
+.group--actions.group--actions--tr > button {
+  margin-right: 5px;
+}
+
+.group--actions.group--actions--tr > button:last-child {
+  margin-right: 0;
+}
+
 .rule--header > button,
 .group--actions.group--actions--tr > button:nth-child(3) {
   background: #dc2222;
   border-color: #dc2222;
 }
 
-.data-type-info {
-  color: grey;
-  background-color: white !important;
-  border-bottom: 2px solid grey;
-
-}
-
-.data-type-info > * {
-  font-size: 11px;
-  padding-bottom: 0;
-  margin-top: -2px;
-}
-
-.thead-dark th {
-  background-color: #212529;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  height: 50%;
-}
-.thead-dark {
-  background-color: white;
-}
-.sticky {
-  position: sticky;
-  top: 0;
-}
-
-.thead-dark td {
-  background-color: white;
-  position: sticky;
-  z-index: 1;
-}
-
-.table tbody {
-  z-index: 0;
-}
-/* ---> Add ellipsis to cells */
-.table th, .table td {
-  text-overflow: ellipsis;
-  max-width: 100px;
-  white-space: nowrap;
-  overflow: hidden;
-  cursor: text;
-}
-/* <------------------------- */
-
+/* Styles for rule fields */
 .rule--field,
 .rule--value,
 .rule--operator {
@@ -272,7 +182,18 @@ table td, table th {
   width: 100%;
 }
 
-/* -------------> Rewrite existing rules for boolean widget */
+/* -------------> Rewrite existing rules for widgets */
+.rule--widget--MULTISELECT,
+.rule--widget--MULTISELECT .widget--widget {
+  width: 100%;
+}
+.rule--widget--NUMBER,
+.rule--widget--NUMBER .widget--widget,
+.rule--widget--TEXT,
+.rule--widget--TEXT .widget--widget{
+  height: 100%;
+  width: 100%;
+}
 /* Set specific width for external block */
 .rule--widget--BOOLEAN {
   max-width: 70%;
@@ -293,19 +214,348 @@ table td, table th {
   height: 20px;
   width: 20px;
 }
-/* <-------------------------------------------------------- */
-
-/* -------------> Rewrite existing rules for widgets */
-.rule--widget--MULTISELECT,
-.rule--widget--MULTISELECT .widget--widget {
-  width: 100%;
-}
-.rule--widget--NUMBER,
-.rule--widget--NUMBER .widget--widget,
-.rule--widget--TEXT,
-.rule--widget--TEXT .widget--widget{
-  height: 100%;
-  width: 100%;
-}
 /* <------------------------------------------------- */
+/* <---------------------------------------------------------------------------------------------------------------| */
 
+
+/* |----------------------- DATA VISUALIZER RULES -----------------------------------------------------------------> */
+
+/* |----------- Binder button --------------------------------------->*/
+
+.binderButtonSeparator{
+  margin-bottom: 10px;
+}
+
+.binderButton{
+  background-color: #4500D9;
+  color: #FFFFFF;
+  border-radius: 2rem;
+  border: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 15px;
+  padding-right: 15px;
+  height: 22px;
+}
+
+.binderButton:hover{
+  background-color: #00FFD1 !important;
+  text-decoration: none;
+}
+
+/* <--------------------------------------------------------------|*/
+
+/* |----------- Navigation --------------------------------------->*/
+/* Navigation bar */
+.scroll-nav {
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  position: relative;
+  z-index: 5;
+}
+
+/* Navigation tab (button) */
+.tab-button {
+  min-width: 77px;
+  height: 30px;
+  background: #FFFFFF;
+  border: 1px solid #DDDDDD;
+  border-right: 0;
+  box-sizing: border-box;
+  border-radius: 4px 0 0 0;
+  font-size: 14px;
+  line-height: 21px;
+  display: inline-block;
+  transition: 0.2s ease;
+}
+
+/* Navigation tab (button) style by hover */
+.tab-button:hover,
+.dropdown-button:hover
+{
+  background-color: #EEEEEE;
+}
+
+/* Navigation tab (button) style if active */
+.tab-button_active {
+  background-color: #ffffff;
+  color: #353EFF !important;
+}
+
+/* Navigation tab (button) style if inactive */
+.tab-button_inactive {
+  color: #959494;
+  background-color: #f6f6f6;
+}
+
+/* Containers for dropdown button */
+.dropdown-container {
+  display: flex;
+}
+
+.dropdown {
+  display: flex;
+  min-width: 97px;
+}
+
+/* Dropdown button container */
+.dropdown-button {
+  height: 30px;
+  padding: 2px 4px;
+  margin-right: 3px;
+  border: 1px solid #DDDDDD;
+  border-left: 0;
+  border-radius: 0 4px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Rewrite bootstrap's dropdown menu */
+.dropdown-menu {
+  padding: 0 !important;
+  margin: 0 !important;
+  border-top-left-radius: 0 !important;
+  border-top-right-radius: 0 !important;
+}
+
+/* Rewrite bootstrap's dropdown menu item */
+.dropdown-item {
+  display: block;
+  padding: 2px 10px;
+  color: #212529;
+  width: 100%;
+  text-decoration: none;
+}
+
+.dropdown-item:hover {
+  background-color: #f3f3f3;
+  text-decoration: none;
+  color: #212529;
+}
+
+/* CSS arrow for dropdown container */
+.dropdown-arrow {
+  height: 0;
+  width: 0;
+  border-top: .3em solid;
+  border-right: .3em solid transparent;
+  border-bottom: 0;
+  border-left: .3em solid transparent;
+}
+
+/* Rules for variables button */
+.variables-button {
+  margin-right: 4px;
+  border: 1px solid #CDDCA8;
+  border-top-right-radius: 4px;
+  background-color: #f6f6f6;
+  color: #959494;
+}
+
+.variables-button:hover {
+  background-color: #EEEEEE;
+}
+/* <--------------------------------------------------------------|*/
+
+/* Container for table */
+.tab-item {
+  width: 100%;
+  margin-bottom: 15px;
+  overflow: auto;
+  border: 1px solid #ddd;
+  height: 83%;
+}
+
+.disclaimer {
+  font-size: 11px;
+  color: #2d2d2d;
+  padding: 8px;
+  margin: 0
+}
+
+/* ---> Table rules ------------------------------------------- */
+
+/* Table style */
+.div-table {
+  width: 100%;
+  border-collapse: collapse;
+  display: table;
+  border-color: grey;
+  border-spacing: 2px;
+}
+
+/* Dark header style */
+.thead-dark {
+  background-color: #212529;
+  color: #ffffff;
+}
+
+/* Add padding to all .th children*/
+.th > *{
+  padding: .35rem;
+}
+/* Add different style to index column */
+.index-column-header {
+  background-color: #585757;
+}
+
+/* Style for data type info */
+.data-type-info {
+  color: grey;
+  width: 100%;
+  font-size: 11px;
+  z-index: 1;
+  position: relative;
+}
+
+/* Cell's style */
+.td{
+  padding: .75rem;
+  font-size: 12px;
+}
+
+/* Striped table style */
+.div-table-striped .tbody .tr:nth-of-type(odd) {
+  background-color: rgba(0,0,0,.05);
+}
+
+/* Sticky position for header */
+.sticky {
+  position: sticky;
+  top: 0;
+}
+
+/* Add ellipsis to cells */
+.th, .td {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: text;
+}
+
+.tr {
+  width: 100% !important;
+  border-top: 1px solid #dee2e6;
+}
+
+/* White row for data types background */
+.header-white-row {
+  background-color: white;
+  width: 100%;
+  height: 25px;
+  display: flex;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  align-items: center;
+  z-index: 1;
+  border-bottom: 1px solid grey;
+}
+
+.delimiter-wrapper {
+  background-color: transparent;
+  width: 20px;
+  position: absolute;
+  top: 0;
+  right: -4px;
+  padding: 0;
+  height: 100%;
+  z-index: 5;
+}
+
+.delimiter {
+  width: 1px;
+  height: 100%;
+  background-color: rgba(128, 128, 128, 0.2);
+  position: absolute;
+  right: 20%;
+}
+
+.delimiter:hover {
+  cursor: col-resize;
+}
+
+/* <------------------------- */
+
+/* <----------------------------------------------------------- */
+
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |-------------------------------- FEEDBACK BUTTONS STYLE RULES -------------------------------------------------> */
+
+.BinaryFeedback__container,
+.BinaryFeedback__actions {
+  width: 100%;
+}
+
+.BinaryFeedback__positive,
+.BinaryFeedback__negative {
+  width: 50%;
+  border-color: #cccccc !important;
+  justify-content: flex-start !important;
+  padding: 2px 10px !important;
+  min-height: 26px;
+}
+
+.BinaryFeedback__positive {
+  border-radius: 5px 0 0 5px !important;
+}
+.BinaryFeedback__negative {
+  border-radius: 0 5px 5px 0 !important;
+}
+
+.BinaryFeedback__negative:hover p,
+.BinaryFeedback__positive:hover p,
+.BinaryFeedback__selected p,
+.BinaryFeedback__disabled p{
+  color: white !important;
+}
+
+#feedback {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+
+#feedback__negative-description {
+  display: none;
+  width: 66%;
+}
+
+#feedback__buttons {
+  width: 33%;
+}
+
+.feedback__content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.feedback__buttons-text {
+  margin: 0;
+  margin-left: 5px;
+  white-space: nowrap;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+/* |--------------------------------- STYLES FOR SVG ICONS --------------------------------------------------------> */
+.svg-icon {
+  width: 100%;
+  height: 100%;
+}
+
+.svg-icon path,
+.svg-icon polygon,
+.svg-icon rect {
+  fill: #4691f6;
+}
+
+.svg-icon circle {
+  stroke: #4691f6;
+  stroke-width: 1;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */

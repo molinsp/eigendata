@@ -1,4 +1,12 @@
 export const python_initialization_script = `
+# ---------------- Multi-backend caller ----------------
+def call_backend_functions(functions):
+    results = {}
+    for func in functions:
+        func_name = func['name']
+        results[func_name] = globals()[func_name](**func['parameters']) 
+        
+    return json.dumps(results)
 # ---------------- VARIABLE INSPECTOR ----------------
 import json
 import sys
@@ -18,22 +26,49 @@ def ed_keep_dataframes(v):
         return False
     except:
         return False
-
-def ed_variableinspector_dict_list():
+    
+def ed_keep_nondf_variables(v):
+    try:
+        obj = eval(v)
+        # Ignore internal variables
+        if v.startswith('ed_'):
+            return False
+        elif isinstance(obj, str):
+            return True
+        elif isinstance(obj, int):
+            return True
+        elif isinstance(obj, float):
+            return True
+        elif isinstance(obj, list):
+            return True
+        else:
+            return False
+    except:
+        pass
+    
+def ed_get_nondf_variables():
     values = _jupyterlab_variableinspector_nms.who_ls()
-    vardic = [{'varName': _v} for _v in values if ed_keep_dataframes(_v)]
-    return json.dumps(vardic, ensure_ascii=False)
+    variables = [{'name': _v,
+      'type': type(eval(_v)).__name__,
+      'value' : eval(_v)
+     } for _v in values if ed_keep_nondf_variables(_v)]
+    
+    return variables
 
-def ed_variableinspector_array():
+def ed_get_dfs():
     values = _jupyterlab_variableinspector_nms.who_ls()
     vararray = [_v for _v in values if ed_keep_dataframes(_v)]
     return vararray
+
+def ed_get_imported_modules():
+    return list(sys.modules.keys())
 
 # ---------------- GET DF COLUMNS AS JSON ----------------
 def ed_get_json_column_values(df):
     return json.dumps(df.columns.tolist(), ensure_ascii=False)
 
 # ---------------- QUERYBUILDER BACKEND ----------------
+from pandas.api.types import is_categorical_dtype, is_integer_dtype, is_float_dtype, is_bool_dtype, is_object_dtype
 def ed_get_percentage_unique_column(df, col_name):
     return df[col_name].nunique() / df[col_name].count() * 100.0 
 
@@ -41,22 +76,17 @@ def ed_generate_querybuilder_config(df):
     queryprops = {}
     for i,col_type in enumerate(df.dtypes):
         col_name = df.columns[i]
-        if col_type == 'int64':      
+        if is_integer_dtype(df[col_name]) or is_float_dtype(df[col_name]):      
             queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'number'
             }
-        elif col_type == 'float64':
-            queryprops[col_name] = {
-                'label' : col_name,
-                'type' : 'number'
-            }
-        elif col_type == 'bool':
+        elif is_bool_dtype(df[col_name]):
             queryprops[col_name] = {
                 'label' : col_name,
                 'type' : 'boolean'
             }
-        elif col_type == 'object':
+        elif is_object_dtype(df[col_name]):
             # Categorical if less than 10% of values are unique
             if (ed_get_percentage_unique_column(df, col_name) < 10):
                 queryprops[col_name] = {
@@ -71,7 +101,15 @@ def ed_generate_querybuilder_config(df):
                     'label' : col_name,
                     'type' : 'text'
                 }
-        elif col_type == 'datetime64[ns]':
+        elif is_categorical_dtype(df[col_name]):
+            queryprops[col_name] = {
+                'label' : col_name,
+                'type' : 'select',
+                'fieldSettings' : {
+                    'listValues' : [{'value': row, 'title': row} for row in df[col_name].unique() if type(row) == str]
+                    }
+                }
+        elif is_datetime64_any_dtype(df[col_name]):
             # Check if it contains only dates
             if ((df[col_name].dt.floor('d') == df[col_name]) | (df[col_name].isnull())).all():
                 queryprops[col_name] = {

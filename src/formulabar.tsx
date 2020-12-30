@@ -1,4 +1,10 @@
-import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
+import {
+  Dialog,
+  ISessionContext,
+  ReactWidget,
+  showDialog,
+  UseSignal
+} from '@jupyterlab/apputils';
 
 import React, { useState } from 'react';
 
@@ -8,11 +14,9 @@ import Select from 'react-select';
 
 import { JSONSchema7 } from 'json-schema';
 
-import { NotebookPanel, INotebookTracker } from '@jupyterlab/notebook';
+import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 
-import { KernelMessage, Kernel } from '@jupyterlab/services';
-
-import { ISessionContext, Dialog, showDialog } from '@jupyterlab/apputils';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 
 import { ISignal, Signal } from '@lumino/signaling';
 
@@ -32,8 +36,10 @@ import CellUtilities from './CellUtilities';
 import _ from 'lodash';
 
 // Awesome querybuilder
-import Demo from './querybuilder';
-//import QueryBuilder from 'react-querybuilder';
+import QueryBuilder from './querybuilder';
+
+// Feedback buttons library
+import { BinaryFeedback } from 'react-simple-user-feedback';
 
 import 'bootstrap/dist/css/bootstrap.css';
 
@@ -46,8 +52,16 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 import ChatWidget from '@papercups-io/chat-widget';
 
+import ReactGA from 'react-ga';
+
+// Thumbs svg for feedback buttons
+import { magnifier, tableIcon, thumbDown, thumbUp } from './assets/svgs';
+import { formulabarMainSelect } from './styles/reactSelectStyles';
+
+import Joyride from 'react-joyride';
+
 // Before deploying to production, we change this flag
-const packageVersion = '0.1.9';
+const packageVersion = '0.2.0';
 let _transformationsConfig = localTransformationsConfig;
 
 /*
@@ -122,10 +136,120 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     error: null
   });
 
+  // Separate state for feedback buttons (for to not expand the common state)
+  const [feedbackState, setFeedbackState] = useState({
+    negativeDescription: '',
+    submittedTransformation: null
+  });
+
+  /*-----------------------------------
+  PRODUCT TOUR
+  -----------------------------------*/
+  const [productTourState, setProductTourState] = useState({
+    run: false
+  });
+
+  const productTourSteps = [
+    {
+      content: (
+        <div>
+          <p>This is the magic formula bar, your gateway to data superpowers</p>
+        </div>
+        ),
+      target: '.data-transformation-form',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true,
+      placement: 'bottom-start' as 'bottom-start'
+    },
+    {
+      content: 'On the left you select which dataset you want to transform',
+      target: '#dataselect',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: (
+        <div>
+          <p>On the right you search for data transformations.</p> 
+          <p>We will start by loading a csv file.</p>
+        </div>
+        ),
+      target: '#transformationselect',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: 'Here is where you enter the parameters, like the csv file name.',
+      target: '#root_filepath_or_buffer',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: (
+        <div>
+          <p>To get the name of the csv files, you can use the file browser on the left.</p> 
+          <p>You can also hide it by clicking the browser icon</p>
+        </div>
+        ),
+      target: '#filebrowser',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true,
+      placement: 'left' as 'left'
+    },
+    {
+      content: 'After entering the file-name, press Submit to run your transformations.',
+      target: '.btn-info',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true
+    },
+    {
+      content: (
+        <div>
+          <p>The data will be displayed in the data visualizer.</p> 
+          <p>Enjoy your data.</p>
+        </div>
+        ),
+      target: '.full-height-container',
+      // Remove beacon with circle to enable autostart
+      disableBeacon: true,
+      placement: 'left' as 'left'
+    }
+  ];
+
+  /*-----------------------------------
+  REACT SELECT LOG SEARCH
+  -----------------------------------*/
+  let prevInput: string = '';
+  const handleInputChange = function(inputValue){    
+    if(inputValue.length == 0 && prevInput.length !=0){
+      console.log('Formulabar search: search and select - ', prevInput);
+
+      if (logic._production && logic.shareProductData) {
+        amplitude.getInstance().logEvent('Formulabar search: search and select', {
+          searchString: prevInput
+        });
+      }
+      
+    }else if(inputValue.length < prevInput.length){
+      //console.log('Formulabar Search: Deleted text', prevInput);
+    }else if(inputValue.endsWith(' ')){
+      console.log('Formulabar search: search keyword - ', prevInput);
+      
+      if (logic._production && logic.shareProductData) {
+        amplitude.getInstance().logEvent('Formulabar search: search and select', {
+          searchString: prevInput
+        });
+      }
+
+    }
+
+    prevInput = inputValue;
+  }
+
   /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
   -----------------------------------*/
-  if (logic._resetStateFormulabarFlag == true) {
+  if (logic._resetStateFormulabarFlag === true) {
     console.log('RESETING FORMULABAR STATE');
     setState({
       transformationForm: transformationForm,
@@ -139,56 +263,65 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     });
 
     logic._resetStateFormulabarFlag = false;
-  }
 
-  //console.log('FB: State:', state);
-  //console.log('------> FB: Rendering Formulabar UI');
+    // This starts the product tour. It's here because it needs to load after the rest of the lements
+    if(logic.completedProductTour == false){
+      setProductTourState({run:true});
+      // Change the settings for it not to run next time (next refresh)
+      logic.eigendataSettings.set('completedProductTour', true);
+      // Set to true for it not to run again in the current session
+      logic.completedProductTour = true;
+    }
+  }
 
   /*-----------------------------------
   Custom search for transformations
   -----------------------------------*/
   const getKeywordsForFilter = (option, rawInput) => {
     // Add keywords to search
-    //console.log('Option', option.value);
-    let keywords = ''
-    if(option.value != 'query' && logic._transformationsConfig[option.value]['keywords']){
-      keywords = logic._transformationsConfig[option.value]['keywords'];
+    let keywords = '';
+    if (option.value === 'query') {
+      // Query is handled differently
+      keywords = ['filter', 'more', 'less', 'equal'].join(' ');
+    } else if (option.value === 'notfound') {
+      return true;
+    } else if (logic._transformationsConfig[option.value]['keywords']) {
+      keywords = logic._transformationsConfig[option.value]['keywords'].join(
+        ' '
+      );
     }
 
-    const textToSearch = option.label + ' ' + keywords + ' ' + option.value.replace(/_/g, ' ');
+    const textToSearch =
+      option.label + ' ' + keywords + ' ' + option.value.replace(/_/g, ' ');
 
     const words = rawInput.split(' ');
     return words.reduce(
-      (acc, cur) => acc && textToSearch.toLowerCase().includes(cur.toLowerCase()),
-      true,
+      (acc, cur) =>
+        acc && textToSearch.toLowerCase().includes(cur.toLowerCase()),
+      true
     );
   };
-
 
   /*-----------------------------------
   CUSTOM SELECT: Use React select with JSONschema form
   -----------------------------------*/
   // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
   // To-do: Move custom components to separate files
-  const CustomSelect = function(props: any) {
+  const CustomSelect = function(props: any): JSX.Element {
     //console.log('Props custom select: ', props);
 
-    const processSingleSelect = (selection: any) => {
+    const processSingleSelect = (selection: any): any => {
       const { value } = selection;
-      //console.log('Signle select change', selection);
       return value;
     };
 
-    const processMultiSelect = (selection: any) => {
+    const processMultiSelect = (selection: any): any => {
       // Handle the case when the user removes selections
       if (selection === null) {
-        //console.log('Return null');
         return [];
       }
 
-      const result = selection.map((item: any) => item.value);
-      //console.log('Result from selection',result);
-      return result;
+      return selection.map((item: any) => item.value);
     };
 
     // If defined as array, use the multi-select
@@ -196,7 +329,9 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       return (
         <Select
           options={props.options.enumOptions}
-          onChange={selection => props.onChange(processMultiSelect(selection))}
+          onChange={(selection): void =>
+            props.onChange(processMultiSelect(selection))
+          }
           isMulti={true}
         />
       );
@@ -204,7 +339,9 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
       return (
         <Select
           options={props.options.enumOptions}
-          onChange={selection => props.onChange(processSingleSelect(selection))}
+          onChange={(selection): void =>
+            props.onChange(processSingleSelect(selection))
+          }
           //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
           //defaultValue={props.value}
           defaultValue={props.options.enumOptions.filter(
@@ -221,17 +358,17 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
-  const handleFormChange = async (data: any) => {
-    console.log('Form data changed', data);
+  const handleFormChange = async (data: any): Promise<void> => {
     /*-------------------------------
      MERGE
      -------------------------------*/
     if (
       data.schema.function === 'merge' &&
       // Do not trigger this when another parameter is set
-      typeof data.formData['right'] !== 'undefined'
+      typeof data.formData['right'] !== 'undefined' &&
       // Only trigger if the state does not have the data (undefined) or if the state has different data (selected another right)
-      && ((typeof state.formData['right'] === 'undefined') || (data.formData['right'] != state.formData['right']))
+      (typeof state.formData['right'] === 'undefined' ||
+        data.formData['right'] !== state.formData['right'])
     ) {
       console.log('Dynamic forms: Changed right in merge');
       // Get the columns from the backend
@@ -239,20 +376,20 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         data.formData['right']
       );
       // Perform deep copy of the object, otherwise it does not re-render
-      const new_state = _.cloneDeep(state.transformationForm);
+      const newState = _.cloneDeep(state.transformationForm);
       // Add the queried columns to the state
-      new_state['definitions']['right_columns']['items']['enum'] = columns;
+      newState['definitions']['right_columns']['items']['enum'] = columns;
       setState(state => ({
         ...state,
-        transformationForm: new_state,
+        transformationForm: newState,
         formData: data.formData,
         error: null
       }));
     }
   };
 
-  // Save the input of the Dataframe seleciton in the UI to the state
-  const handleDataframeSelectionChange = (input: any) => {
+  // Save the input of the Dataframe selection in the UI to the state
+  const handleDataframeSelectionChange = (input: any): void => {
     //console.log(this);
     if (state.transformationSelection) {
       console.log('Formulabar: get transformation to state');
@@ -262,21 +399,22 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
-  // Save the input of the transformation seleciton in the UI to the state
-  const handleTransformationSelectionChange = (input: any) => {
-    console.log('Transformatino', input);
+  // Save the input of the transformation selection in the UI to the state
+  const handleTransformationSelectionChange = (input: any): void => {
     // Event tracking
     if (logic._production && logic.shareProductData) {
-      amplitude.getInstance().logEvent('Formulabar: select transformation', { userSelection: input.value });
+      amplitude.getInstance().logEvent('Formulabar: select transformation', {
+        userSelection: input.value
+      });
     }
-
     if (state.dataframeSelection) {
       console.log('all defined');
       getTransformationFormToState(state.dataframeSelection, input);
     } else if (
       logic._transformationsConfig[input.value]['form'][
         'transformationType'
-      ] === 'dataLoading'
+      ] === 'dataLoading' ||
+      input.value === 'notfound'
     ) {
       console.log('Data loading transformation');
       setState(state => ({
@@ -298,13 +436,12 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
-  // Pupulates the transformation form into the state
+  // Populates the transformation form into the state
   const getTransformationFormToState = async (
     dataframeSelection: any,
     transformationSelection: any
-  ) => {
-    // Querybuilder placeholder
-    if (transformationSelection.value.localeCompare('query') == 0) {
+  ): Promise<void> => {
+    if (transformationSelection.value.localeCompare('query') === 0) {
       console.log('Querybuilder');
       const queryConfig = await logic.pythonGenerateQuerybuilderConfig(
         dataframeSelection.value
@@ -328,6 +465,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         transformationSelection.value
       );
       setState({
+        ...state,
         transformationForm: newFormSchema,
         transformationUI: newUISchema,
         showForm: true,
@@ -341,36 +479,116 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   // Generate python code and write in the notebook
-  const callGeneratePythonCode = async (formReponse: any) => {
-    // Track submitted transformations
-    let dataframeSelection: string;
-    if (state.dataframeSelection) {
-      dataframeSelection = state.dataframeSelection.value;
-    } else {
-      dataframeSelection = null;
-    }
-    const formula = generatePythonCode(formReponse, dataframeSelection);
-    if (logic._production && logic.shareProductData) {
-      amplitude.getInstance().logEvent('Formulabar: submit transformation', {
-        function: formReponse.schema.function,
-        formInput: formReponse.formData,
-        generatedCode: formula,
-      });
-    }
-    try {
-      await logic.writeToNotebookAndExecute(formula);
-      // Write and execute the formula in the notebook
+  const callGeneratePythonCode = async (formResponse: any): Promise<void> => {
+    console.log('SUBMIT WAS PRESSED');
+    /*-----------------------------------------------
+    Handle not found case
+    -----------------------------------------------*/
+    if (state.transformationSelection.value === 'notfound') {
+      // Remove transformation selection and hide form
       setState(state => ({
         ...state,
         transformationSelection: null,
         showForm: false,
         error: null
       }));
+
+      //console.log('Loge event', formResponse.formData.description);
+      // Log event
+      if (logic._production && logic.shareProductData) {
+        amplitude.getInstance().logEvent('Formulabar: request transformation', {
+          userRequest: formResponse.formData.description
+        });
+      }
+
+      return;
+    }
+
+    /*-----------------------------------------------
+    Generate formula
+    -----------------------------------------------*/
+
+    let dataframeSelection: string;
+    if (state.dataframeSelection) {
+      dataframeSelection = state.dataframeSelection.value;
+    } else {
+      dataframeSelection = null;
+    }
+    const { formula, result_variable, returnType } = generatePythonCode(
+      formResponse,
+      dataframeSelection
+    );
+
+    /*-----------------------------------------------
+    Tracking in amplitude
+    -----------------------------------------------*/
+    if (logic._production && logic.shareProductData) {
+      amplitude.getInstance().logEvent('Formulabar: submit transformation', {
+        function: formResponse.schema.function,
+        formInput: formResponse.formData,
+        generatedCode: formula
+      });
+    }
+    /*-----------------------------------------------
+    Import libraries if needed
+    -----------------------------------------------*/
+    const library =
+      logic._transformationsConfig[formResponse.schema.function]['library'];
+
+    // Check if the library is already imported or not
+    if (logic.packagesImported.includes(library['name'])) {
+      console.log('CG: Package already imported');
+    } else {
+      console.log(
+        'CG: Not importes, using statement',
+        library['importStatement']
+      );
+
+      try {
+        await logic.pythonImportLibraries(library['importStatement']);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    /*-----------------------------------------------
+    Generate & execute code
+    -----------------------------------------------*/
+
+    try {
+      await logic.writeToNotebookAndExecute(formula);
+      // Write and execute the formula in the notebook
+      // Add submitted transformation to the feedback state
+      setFeedbackState({
+        ...feedbackState,
+        submittedTransformation: state.transformationSelection
+      });
+
+      if (returnType === 'dataframe') {
+        setState(state => ({
+          ...state,
+          dataframeSelection: {
+            label: result_variable,
+            value: result_variable
+          },
+          transformationSelection: null,
+          showForm: false,
+          error: null
+        }));
+      } else {
+        setState(state => ({
+          ...state,
+          transformationSelection: null,
+          showForm: false,
+          error: null
+        }));
+      }
     } catch (error) {
+      // Log transformation errors
       if (logic._production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: transformation error', {
-          function: formReponse.schema.function,
-          formInput: formReponse.formData,
+          function: formResponse.schema.function,
+          formInput: formResponse.formData,
           generatedCode: formula,
           errorMessage: error.message
         });
@@ -392,68 +610,201 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     ? { form: { __errors: [state.error.message] } }
     : undefined;
 
-  return (
-    <div className="side-by-side-fields">
-      <fieldset className="data-transformation-form">
-        <Select
-          name="Select dataframe"
-          placeholder="No data loaded"
-          options={logic.dataframesLoaded}
-          value={state.dataframeSelection}
-          label="Select data"
-          onChange={handleDataframeSelectionChange}
-          className="left-field"
-          id="dataselect"
-        />
-        <Select
-          name="Select transformation"
-          placeholder="select data loading transformation"
-          options={
-            logic.dataframesLoaded.length !== 0
-              ? logic.transformationsList
-              : loadingTransformations()
-          }
-          value={state.transformationSelection}
-          label="Select transformation"
-          onChange={handleTransformationSelectionChange}
-          className="right-field"
-          components={{
-            DropdownIndicator: () => null,
-            IndicatorSeparator: () => null
-          }}
-          id="transformationselect"
-          filterOption={getKeywordsForFilter}
-        />
-      </fieldset>
-      {state.showForm && (
-        <Form
-          formData={state.formData}
-          schema={state.transformationForm}
-          onSubmit={callGeneratePythonCode}
-          onChange={handleFormChange}
-          widgets={widgets}
-          uiSchema={state.transformationUI}
-          extraErrors={extraErrors}
-        />
-      )}
-      {state.queryConfig && (
-        <Demo
-          queryConfig={state.queryConfig}
-          dataframeSelection={state.dataframeSelection.value}
-          backend={logic}
-        />
-      )}
-      <div>
-      <ChatWidget
-        // Pass in your Papercups account token here after signing up 
-        accountId='784f140c-6c85-4613-bfd0-9869026cd1cb'
-        title='Welcome to Eigendata'
-        subtitle='We are here to help you become a data superhero'
-        newMessagePlaceholder='Start typing...'
-        primaryColor='#13c2c2'
-      />
+  // Content of feedback buttons
+  const getFeedBackContent = (
+    thumb: JSX.Element,
+    text: string,
+    textColor: string
+  ): JSX.Element => {
+    return (
+      <div className="feedback__content">
+        {thumb}
+        <p
+          className="full-width  feedback__buttons-text"
+          style={{ color: textColor }}
+        >
+          {text}
+        </p>
       </div>
-    </div> 
+    );
+  };
+
+  // Action when click "Worked" button
+  const onNegativeClick = (): void => {
+    console.log('Logged: ', feedbackState.submittedTransformation.value);
+    // Log result
+    if (logic._production && logic.shareProductData) {
+      amplitude
+        .getInstance()
+        .logEvent('Formulabar: transformation did not work', {
+          transformation: feedbackState.submittedTransformation.value
+        });
+    }
+    // Show the block with text input
+    const elem = document.getElementById('feedback__negative-description');
+    elem.className = 'show_flex';
+  };
+
+  // Action when click "Didn't work" button
+  const onPositiveClick = (): void => {
+    console.log('Logged: ', feedbackState.submittedTransformation.value);
+    // Log result
+    if (logic._production && logic.shareProductData) {
+      amplitude.getInstance().logEvent('Formulabar: transformation worked', {
+        transformation: feedbackState.submittedTransformation.value
+      });
+    }
+    // Hide the feedback buttons
+    setFeedbackState({ ...feedbackState, submittedTransformation: null });
+  };
+
+  // Action when click "Submit" in the block for negative description
+  const onSubmitDescription = (e): void => {
+    e.preventDefault();
+    const text = feedbackState.negativeDescription;
+    console.log('Logged: ', feedbackState.submittedTransformation.value, text);
+    // Log result
+    if (logic._production && logic.shareProductData) {
+      amplitude
+        .getInstance()
+        .logEvent('Formulabar: transformation did not work', {
+          transformation: feedbackState.submittedTransformation.value,
+          description: text
+        });
+    }
+    // Hide the feedback buttons and clear text input content
+    setFeedbackState({
+      submittedTransformation: null,
+      negativeDescription: ''
+    });
+  };
+
+  // Update feedback state when type something in the text input
+  const onTextChange = (e): void => {
+    setFeedbackState({ ...feedbackState, negativeDescription: e.target.value });
+  };
+
+  return (
+    <div className="app">
+      <Joyride 
+          steps={productTourSteps}
+          continuous={true}
+          run={productTourState.run}
+          hideBackButton={true}
+          disableScrollParentFix={true}
+          showSkipButton={true}
+          locale={{ back: 'Back', close: 'Close', last: 'Finish', next: 'Next', skip: 'Skip' }}
+          styles={{
+            options: {
+              zIndex: 1000,
+              primaryColor: '#3698DC'
+              }
+          }}
+        />
+      <div className="side-by-side-fields">
+        <div className="centered">
+        </div>
+        <fieldset className="data-transformation-form">
+          <Select
+            name="Select dataframe"
+            placeholder="No data"
+            options={logic.dataframesLoaded}
+            value={state.dataframeSelection}
+            label="Select data"
+            onChange={handleDataframeSelectionChange}
+            className="left-field"
+            id="dataselect"
+            components={{
+              DropdownIndicator: (): JSX.Element => tableIcon,
+              IndicatorSeparator: (): null => null
+            }}
+            styles={formulabarMainSelect}
+          />
+          <Select
+            name="Select transformation"
+            placeholder="select data loading transformation"
+            options={
+              logic.dataframesLoaded.length !== 0
+                ? logic.transformationsList
+                : loadingTransformations()
+            }
+            value={state.transformationSelection}
+            label="Select transformation"
+            onChange={handleTransformationSelectionChange}
+            onInputChange={handleInputChange}
+            className="right-field"
+            components={{
+              DropdownIndicator: (): JSX.Element => magnifier,
+              IndicatorSeparator: (): null => null
+            }}
+            id="transformationselect"
+            filterOption={getKeywordsForFilter}
+            maxMenuHeight={400}
+            styles={formulabarMainSelect}
+          />
+        </fieldset>
+        <div className="centered formulaFormDivider" />
+        {state.showForm && (
+          <Form
+            formData={state.formData}
+            schema={state.transformationForm}
+            onSubmit={callGeneratePythonCode}
+            onChange={handleFormChange}
+            widgets={widgets}
+            uiSchema={state.transformationUI}
+            extraErrors={extraErrors}
+          />
+        )}
+        {state.queryConfig && (
+          <QueryBuilder
+            queryConfig={state.queryConfig}
+            dataframeSelection={state.dataframeSelection.value}
+            backend={logic}
+          />
+        )}
+        {/* If transformation was submit show the feedback buttons */}
+        {feedbackState.submittedTransformation && !(state.showForm || state.queryConfig) && (
+          <form id="feedback" onSubmit={onSubmitDescription}>
+            <div id="feedback__buttons">
+              <BinaryFeedback
+                onPositiveClick={onPositiveClick}
+                onNegativeClick={onNegativeClick}
+                positiveContent={getFeedBackContent(thumbUp, 'Worked', '#93C47d')}
+                negativeContent={getFeedBackContent(
+                  thumbDown,
+                  "Didn't work",
+                  '#E06666'
+                )}
+                singleSelect
+              />
+            </div>
+            <div id="feedback__negative-description">
+              <input
+                placeholder="Share the issue so we can fix it!"
+                type="text"
+                className="short form-control margin-right"
+                onChange={onTextChange}
+              />
+              <input
+                type="submit"
+                className="short btn btn-info"
+                disabled={feedbackState.negativeDescription === ''}
+              />
+            </div>
+          </form>
+        )}
+        <div>
+          <ChatWidget
+            // Pass in your Papercups account token here after signing up
+            accountId="784f140c-6c85-4613-bfd0-9869026cd1cb"
+            title="Welcome to Eigendata"
+            subtitle="We are here to help you become a data superhero"
+            newMessagePlaceholder="Start typing..."
+            primaryColor="#13c2c2"
+          />
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -523,6 +874,7 @@ export class Backend {
   // Keeps track of dataframes that can be transformed through the UI
   // Used to display forms
   public dataframesLoaded: any = [];
+  public packagesImported: any = [];
 
   // Data transformation functions
   public transformationsList = [];
@@ -530,6 +882,9 @@ export class Backend {
   // Flag to decide if we are going to share product data
   public shareProductData;
 
+  public variablesLoaded: any = [];
+
+  public completedProductTour: boolean;
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -550,6 +905,8 @@ export class Backend {
 
   public _production = true;
 
+  public eigendataSettings: ISettingRegistry.ISettings;
+
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
@@ -565,14 +922,14 @@ export class Backend {
       this
     );
 
-    const readTransformationConfig = () => {
+    const readTransformationConfig = (): void => {
       this._transformationsConfig = _transformationsConfig['transformations'];
       console.log(
         'TRANSFORMATIONS VERSION:',
         _transformationsConfig['version']
       );
       const transformationList = [
-        { value: 'query', label: 'Filter/Query dataframe' }
+        { value: 'query', label: 'Filter dataframe' }
       ];
       for (const transformation in _transformationsConfig['transformations']) {
         //console.log('type', transformation);
@@ -596,14 +953,13 @@ export class Backend {
         'Authorization',
         'Bearer yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0'
       );
-      const requestOptions = {
+      const requestOptions: RequestInit = {
         method: 'GET',
         headers: myHeaders,
         redirect: 'follow'
       };
       fetch(
         'https://eigendata-auth.herokuapp.com/transformations.json',
-        //@ts-ignore
         requestOptions
       )
         .then(response => {
@@ -627,7 +983,7 @@ export class Backend {
     -------------------------------*/
     settingRegistry.load('@molinsp/eigendata:plugin').then(
       (settings: ISettingRegistry.ISettings) => {
-        if (settings.get('answeredProductDataDialog').composite == false) {
+        if (settings.get('answeredProductDataDialog').composite === false) {
           showDialog({
             title: 'Welcome to Eigendata',
             body:
@@ -642,7 +998,7 @@ export class Backend {
               settings.set('answeredProductDataDialog', true);
               const clickedButtonLabel = result.button.label;
               console.log('Analytics: Clicked', clickedButtonLabel);
-              if (clickedButtonLabel == 'Accept') {
+              if (clickedButtonLabel === 'Accept') {
                 console.log('Analytics: Accepted permission');
                 settings.set('shareProductData', true);
                 this.shareProductData = true;
@@ -657,10 +1013,18 @@ export class Backend {
             .composite as boolean;
         }
 
+        this.completedProductTour = settings.get('completedProductTour').composite as boolean;
+        console.log('Settings: completedProductTour', this.completedProductTour);
+        
+        // Save the settings object to be used. Use case is to change settings after product tour
+        this.eigendataSettings = settings;
+
         console.log('Analytics: Product tracking data', this.shareProductData);
         // Tracking setup
         if (this._production && this.shareProductData) {
           amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
+          ReactGA.initialize('UA-111934622-2');
+          ReactGA.pageview('EigendataApp');
           amplitude.getInstance().setVersionName(packageVersion);
         }
       },
@@ -681,8 +1045,15 @@ export class Backend {
 
   private _initScripts: string;
 
-  // Returns a json object with all the dataframes
-  private _inspectorScript = 'ed_variableinspector_dict_list()';
+  // Returns a json object with all the dataframes & imported modules
+  // Use multi import call strategy
+  private kernelInspectorRequest = `
+  call_backend_functions([
+   {'name': 'ed_get_dfs', 'parameters': {}},
+   {'name': 'ed_get_imported_modules', 'parameters': {}},  
+   {'name': 'ed_get_nondf_variables', 'parameters': {}}
+  ])
+  `;
 
   // -------------------------------------------------------------------------------------------------------------
   // INTERNAL UTILITIES
@@ -785,8 +1156,10 @@ export class Backend {
           typeof definitions['column'] !== 'undefined'
         ) {
           console.log('TG: Transformation needs columns');
-          const columns = await this.pythonGetDataframeColumns(dataFrameSelection);
-          console.log('TG: fetched columns', columns)
+          const columns = await this.pythonGetDataframeColumns(
+            dataFrameSelection
+          );
+          console.log('TG: fetched columns', columns);
 
           // Check if multi-select columns defined
           if (
@@ -849,6 +1222,11 @@ export class Backend {
   public async writeToNotebookAndExecute(code: string) {
     // Calculate index of last cell
     const last_cell_index = this._currentNotebook.content.widgets.length - 1;
+    /*
+    if (last_cell_index == 0){
+      last_cell_index += 1;
+    }
+    */
     console.log('Last cell index', last_cell_index);
 
     // Run and insert using cell utilities
@@ -872,7 +1250,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataframeColumns(rightParameter: string) {
     const codeToRun =
-      'form = ed_get_json_column_values(' + rightParameter + ')';
+      'ed_form = ed_get_json_column_values(' + rightParameter + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     //console.log('Request expression', codeToRun);
@@ -881,7 +1259,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { form: 'form' }
+      { form: 'ed_form' }
     );
     // Retriev the data behind the javascript object where the result is saved
     let content = result.form.data['text/plain'];
@@ -890,7 +1268,10 @@ export class Backend {
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with " and \xa0 with \\xa0
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
+      content = content
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\xa0/g, '\\\\xa0');
     }
 
     const columns = JSON.parse(content);
@@ -906,7 +1287,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGenerateQuerybuilderConfig(dataframe: string) {
     const codeToRun =
-      'queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';
+      'ed_queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('Request expression', codeToRun);
@@ -915,7 +1296,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { queryconfig: 'queryconfig' }
+      { queryconfig: 'ed_queryconfig' }
     );
     // Retriev the data behind the javascript object where the result is saved
     let content = result.queryconfig.data['text/plain'];
@@ -924,11 +1305,13 @@ export class Backend {
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with "
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
+      content = content
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\xa0/g, '\\\\xa0');
     }
 
     console.log('Content', content);
-
 
     const query_config = JSON.parse(content);
     console.log('Query config', query_config);
@@ -942,7 +1325,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonGetDataForVisualization(dataframe: string) {
     const codeToRun =
-      '_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';
+      'ed_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
@@ -952,7 +1335,7 @@ export class Backend {
     const result = await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       codeToRun,
-      { data: '_visualizer_data', columns: '_visualizer_columns' }
+      { data: 'ed_visualizer_data' }
     );
 
     let content = result.data.data['text/plain'];
@@ -961,7 +1344,10 @@ export class Backend {
     if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with " and \xa0 with \\xa0
-      content = content.replace(/\\"/g, '"').replace(/\\'/g, "'").replace(/\\xa0/g,'\\\\xa0');
+      content = content
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\xa0/g, '\\\\xa0');
     }
 
     let parsed_data = {};
@@ -978,11 +1364,8 @@ export class Backend {
   }
 
   /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Get list of columns from Kernel for selected dataframe
-  -> Returns: Array of columns
-  -> Writes: _codeToIgnore
+  [FUNCTION] Remove table 
   -----------------------------------------------------------------------------------------------------*/
-
   public async pythonRemoveTable(table: string) {
     const codeToRun = 'del ' + table;
     console.log('Request expression', codeToRun);
@@ -995,6 +1378,46 @@ export class Backend {
     );
 
     console.log('Result', result);
+  }
+
+  /*---------------------------------------------------------------------------------------------------- 
+  [FUNCTION] Import library with given statment
+  -----------------------------------------------------------------------------------------------------*/
+  public async pythonImportLibraries(importStatement: string) {
+    // Execude the import in the kernel
+    await Backend.sendKernelRequest(
+      this._currentNotebook.sessionContext.session.kernel,
+      importStatement,
+      {}
+    );
+
+    // Get content of first cell, which by convention is for the imports
+    const importsCell = CellUtilities.getCell(this._currentNotebook.content, 0);
+    const importsCellContent = importsCell.value.text;
+    let importsCellNewContent = '';
+    console.log('imports cell', importsCellContent);
+
+    // If the cell is empty, write the imports
+    if (importsCellContent === '') {
+      importsCellNewContent = importStatement;
+      CellUtilities.insertRunShow(
+        this._currentNotebook,
+        0,
+        importsCellNewContent,
+        true
+      );
+    }
+    // If it has text, add the import in a new line
+    else {
+      importsCellNewContent = importsCellContent + '\n' + importStatement;
+      importsCell.value.text = importsCellNewContent;
+    }
+
+    console.log('imports cell new content', importsCellNewContent);
+
+    // Write in the first cell
+    //this._currentNotebook.content.model.cells.get(0).value.text = importsCellNewContent;
+    //await CellUtilities.injectCodeAtIndex(this._currentNotebook.content, 0, importsCellNewContent);
   }
 
   // -------------------------------------------------------------------------------------------------------------
@@ -1044,6 +1467,8 @@ export class Backend {
           this._resetStateDatavisualizerFlag = true;
           // Reset dataframes
           this.dataframesLoaded = [];
+          this.packagesImported = [];
+          this.variablesLoaded = [];
 
           // Restart init scripts
           const content: KernelMessage.IExecuteRequestMsg['content'] = {
@@ -1087,7 +1512,7 @@ export class Backend {
         const code = msg.content.code;
         // Check this is not my code running
         if (
-          !(code == this._inspectorScript) &&
+          !(code == this.kernelInspectorRequest) &&
           !(code == this._initScripts) &&
           !(code == this._codeToIgnore)
         ) {
@@ -1107,7 +1532,7 @@ export class Backend {
   private pythonRequestDataframes(): void {
     console.log('------> Get dataframe list');
     const content: KernelMessage.IExecuteRequestMsg['content'] = {
-      code: this._inspectorScript,
+      code: this.kernelInspectorRequest,
       stop_on_error: false,
       store_history: false
     };
@@ -1132,8 +1557,18 @@ export class Backend {
         content = content.slice(1, -1);
         content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
       }
-      const dataframes = JSON.parse(content);
-      console.log('Number of dataframes:', dataframes.length);
+
+      const kerneldata = JSON.parse(content);
+      //console.log('Kernel Inspector: Result', kerneldata)
+      const dataframes = kerneldata['ed_get_dfs'];
+      //console.log('Number of dataframes:', dataframes.length);
+
+      const variables = kerneldata['ed_get_nondf_variables'];
+
+      if (variables.length > 0) {
+        this.variablesLoaded = variables;
+      }
+
       if (dataframes.length == 0) {
         // If there is no data loaded, reset frontend component
         this._resetStateFormulabarFlag = true;
@@ -1145,13 +1580,14 @@ export class Backend {
         (dataframes as Array<any>).forEach((item, index) => {
           //console.log(item, index);
           const dataframe_item = {
-            value: item['varName'],
-            label: item['varName']
+            value: item,
+            label: item
           };
           dataframe_list.push(dataframe_item);
         });
 
         this.dataframesLoaded = dataframe_list;
+        this.packagesImported = kerneldata['ed_get_imported_modules'];
       }
       // Emit signal to re-render the component
       this.signal.emit();
