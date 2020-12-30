@@ -903,7 +903,7 @@ export class Backend {
   public _resetStateFormulabarFlag = false;
   public _resetStateDatavisualizerFlag = false;
 
-  public _production = false;
+  public _production = true;
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
