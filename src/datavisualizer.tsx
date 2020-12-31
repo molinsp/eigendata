@@ -25,7 +25,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [shape, setShape] = useState({});
 
   const url = window.location.href;
-  const binderUrl = url.includes('mybinder.org');
+  const binderUrl = url.includes('molinsp-eigendata-trial');
   console.log('Current URL', url);
 
   const separateThousands = number => {
