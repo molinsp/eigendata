@@ -61,7 +61,7 @@ import { formulabarMainSelect } from './styles/reactSelectStyles';
 import Joyride from 'react-joyride';
 
 // Before deploying to production, we change this flag
-const packageVersion = '0.2.0';
+const packageVersion = '0.2.1';
 let _transformationsConfig = localTransformationsConfig;
 
 /*
