@@ -11,7 +11,7 @@ import {
   JsonGroup
 } from 'react-awesome-query-builder';
 import 'react-awesome-query-builder/lib/css/styles.css';
-import { Backend } from './formulabar';
+import { Backend } from './backend';
 import customConfig from './querybuilder_config';
 import Select from 'react-select';
 import amplitude from 'amplitude-js';
@@ -119,7 +119,7 @@ export default class QueryBuilder extends Component<
     </div>
   );
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
     [FUNCTION] Take query input ange generate code in the notebook
     -> Writes: Notebook
     -----------------------------------------------------------------------------------------------------*/
@@ -138,18 +138,20 @@ export default class QueryBuilder extends Component<
     sql_query = sql_query.replace(/true/g, 'True');
     sql_query = sql_query.replace(/false/g, 'False');
     // Handle the case of any in ['a','b'] instead of IN ('a', 'b')
-    sql_query = sql_query.replace(/NOT IN\s\((.*?)\)/g, "not in [$1]");
-    sql_query = sql_query.replace(/IN\s\((.*?)\)/g, "in [$1]");
+    sql_query = sql_query.replace(/NOT IN\s\((.*?)\)/g, 'not in [$1]');
+    sql_query = sql_query.replace(/IN\s\((.*?)\)/g, 'in [$1]');
     sql_query = sql_query.replace(/NOT/g, '~');
     sql_query = sql_query.replace(/ = /g, '==');
     sql_query = sql_query.replace(/ <> /g, '!=');
 
-    const colNames = Object.entries(this.state.config.fields).map(([k, v]) => v.label);
+    const colNames = Object.entries(this.state.config.fields).map(
+      ([k, v]) => v.label
+    );
     //console.log('Querybuilder: Config fields type', typeof colNames);
     //console.log('Querybuilder: Config fields', colNames);
     const colNamesSorted = colNames.sort((a, b) => b.length - a.length);
     //console.log('Querybuilder: Config fields sorted', colNamesSorted);
-    
+
     for (const i of colNamesSorted) {
       const col_name = i;
       console.log('Col name', col_name);
@@ -161,7 +163,7 @@ export default class QueryBuilder extends Component<
         // Match any string finishing with space and a characte
         // except a space and the word in (special keyword)
         const regex = col_name + '(?!( (?!in)\\S))';
-        console.log('Regex',regex);
+        console.log('Regex', regex);
         const re = new RegExp(regex, 'g');
         const replace_to = '`' + col_name + '`';
         sql_query = sql_query.replace(re, replace_to);
@@ -223,7 +225,7 @@ export default class QueryBuilder extends Component<
     this.state.logic.writeToNotebookAndExecute(formula);
   };
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
     [FUNCTION] Save changes to state
     -> Writes: State
     -----------------------------------------------------------------------------------------------------*/
