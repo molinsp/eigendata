@@ -61,7 +61,7 @@ import { formulabarMainSelect } from './styles/reactSelectStyles';
 import Joyride from 'react-joyride';
 
 // Before deploying to production, we change this flag
-const packageVersion = '0.2.1';
+const packageVersion = '0.2.2';
 let _transformationsConfig = localTransformationsConfig;
 
 /*
@@ -903,7 +903,7 @@ export class Backend {
   public _resetStateFormulabarFlag = false;
   public _resetStateDatavisualizerFlag = false;
 
-  public _production = true;
+  public _production = false;
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
