@@ -1,7 +1,6 @@
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 import React, { useState, useEffect } from 'react';
 import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
-import { GroupType } from 'react-select';
 import amplitude from 'amplitude-js';
 import { ISignal } from '@lumino/signaling';
 import { Backend } from '../core/backend';
@@ -69,9 +68,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           const columns = result['columns'].map((column, index) => {
             if (index === 0) {
               column.width = 55;
-            }
-            if (index === result['columns'].length - 1) {
-              column.width = 'auto';
             }
             column.Cell = (props): string => getUSDString(props.value);
             return column;
@@ -153,10 +149,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
   const isVariableTab = (tab: number): boolean => {
     return tab === -1;
-  };
-
-  const isLastCell = (cell: number, row: GroupType<any>): boolean => {
-    return cell === row.headers.length - 1;
   };
 
   return (
@@ -289,14 +281,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         >
                           {column.render('Header')}
                         </div>
-                        {!isLastCell(index, headerGroup) && (
-                          <div
-                            {...column.getResizerProps()}
-                            className="delimiter-wrapper"
-                          >
-                            <div className="delimiter" />
-                          </div>
-                        )}
+                        <div
+                          {...column.getResizerProps()}
+                          className="delimiter-wrapper"
+                        >
+                          <div className="delimiter" />
+                        </div>
                         {isLastRow(rowIndex) && (
                           <div>
                             {!isVariableTab(activeTab) && (
