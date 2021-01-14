@@ -6,7 +6,7 @@ import { ISignal } from '@lumino/signaling';
 
 import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
 
-import { Backend } from './formulabar';
+import { Backend } from './backend';
 
 import amplitude from 'amplitude-js';
 import { GroupType } from 'react-select';
@@ -179,11 +179,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   return (
     <div className="full-height-container">
       {binderUrl && (
-        <div className='binderButtonSeparator'>
+        <div className="binderButtonSeparator">
           <a
             href="https://calendly.com/molinsp/eigendata-demo"
             className="binderButton"
-          >BOOK A DEMO
+          >
+            BOOK A DEMO
           </a>
         </div>
       )}
@@ -299,7 +300,8 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         role="th"
                       >
                         <div
-                          className={`th ${index === 0 && column.Header === 'index' &&
+                          className={`th ${index === 0 &&
+                            column.Header === 'index' &&
                             'index-column-header'}`}
                         >
                           {column.render('Header')}
