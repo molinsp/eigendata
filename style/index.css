@@ -257,6 +257,9 @@
 
 /* Navigation tab (button) */
 .tab-button {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   min-width: 77px;
   height: 30px;
   background: #FFFFFF;
