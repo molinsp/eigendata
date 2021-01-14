@@ -6,7 +6,7 @@ import { ISignal } from '@lumino/signaling';
 
 import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
 
-import { Backend } from './backend';
+import { Backend } from '../core/backend';
 
 import amplitude from 'amplitude-js';
 import { GroupType } from 'react-select';
