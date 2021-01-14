@@ -60,6 +60,12 @@ import { formulabarMainSelect } from './styles/reactSelectStyles';
 
 import Joyride from 'react-joyride';
 
+//Custom Select
+import CustomSelect from './components/customSelect';
+
+//Product tour
+import productTourSteps from './productTour';
+
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.2';
 let _transformationsConfig = localTransformationsConfig;
@@ -142,109 +148,42 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     submittedTransformation: null
   });
 
-  /*-----------------------------------
-  PRODUCT TOUR
-  -----------------------------------*/
+  // Separate state for product tour
   const [productTourState, setProductTourState] = useState({
     run: false
   });
 
-  const productTourSteps = [
-    {
-      content: (
-        <div>
-          <p>This is the magic formula bar, your gateway to data superpowers</p>
-        </div>
-        ),
-      target: '.data-transformation-form',
-      // Remove beacon with circle to enable autostart
-      disableBeacon: true,
-      placement: 'bottom-start' as 'bottom-start'
-    },
-    {
-      content: 'On the left you select which dataset you want to transform',
-      target: '#dataselect',
-      // Remove beacon with circle to enable autostart
-      disableBeacon: true
-    },
-    {
-      content: (
-        <div>
-          <p>On the right you search for data transformations.</p> 
-          <p>We will start by loading a csv file.</p>
-        </div>
-        ),
-      target: '#transformationselect',
-      // Remove beacon with circle to enable autostart
-      disableBeacon: true
-    },
-    {
-      content: 'Here is where you enter the parameters, like the csv file name.',
-      target: '#root_filepath_or_buffer',
-      // Remove beacon with circle to enable autostart
-      disableBeacon: true
-    },
-    {
-      content: (
-        <div>
-          <p>To get the name of the csv files, you can use the file browser on the left.</p> 
-          <p>You can also hide it by clicking the browser icon</p>
-        </div>
-        ),
-      target: '#filebrowser',
-      // Remove beacon with circle to enable autostart
-      disableBeacon: true,
-      placement: 'left' as 'left'
-    },
-    {
-      content: 'After entering the file-name, press Submit to run your transformations.',
-      target: '.btn-info',
-      // Remove beacon with circle to enable autostart
-      disableBeacon: true
-    },
-    {
-      content: (
-        <div>
-          <p>The data will be displayed in the data visualizer.</p> 
-          <p>Enjoy your data.</p>
-        </div>
-        ),
-      target: '.full-height-container',
-      // Remove beacon with circle to enable autostart
-      disableBeacon: true,
-      placement: 'left' as 'left'
-    }
-  ];
-
   /*-----------------------------------
   REACT SELECT LOG SEARCH
   -----------------------------------*/
-  let prevInput: string = '';
-  const handleInputChange = function(inputValue){    
-    if(inputValue.length == 0 && prevInput.length !=0){
+  let prevInput = '';
+  const handleInputChange = function(inputValue) {
+    if (inputValue.length == 0 && prevInput.length != 0) {
       console.log('Formulabar search: search and select - ', prevInput);
 
       if (logic._production && logic.shareProductData) {
-        amplitude.getInstance().logEvent('Formulabar search: search and select', {
-          searchString: prevInput
-        });
+        amplitude
+          .getInstance()
+          .logEvent('Formulabar search: search and select', {
+            searchString: prevInput
+          });
       }
-      
-    }else if(inputValue.length < prevInput.length){
+    } else if (inputValue.length < prevInput.length) {
       //console.log('Formulabar Search: Deleted text', prevInput);
-    }else if(inputValue.endsWith(' ')){
+    } else if (inputValue.endsWith(' ')) {
       console.log('Formulabar search: search keyword - ', prevInput);
-      
-      if (logic._production && logic.shareProductData) {
-        amplitude.getInstance().logEvent('Formulabar search: search and select', {
-          searchString: prevInput
-        });
-      }
 
+      if (logic._production && logic.shareProductData) {
+        amplitude
+          .getInstance()
+          .logEvent('Formulabar search: search and select', {
+            searchString: prevInput
+          });
+      }
     }
 
     prevInput = inputValue;
-  }
+  };
 
   /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
@@ -265,8 +204,8 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     logic._resetStateFormulabarFlag = false;
 
     // This starts the product tour. It's here because it needs to load after the rest of the lements
-    if(logic.completedProductTour == false){
-      setProductTourState({run:true});
+    if (logic.completedProductTour == false) {
+      setProductTourState({ run: true });
       // Change the settings for it not to run next time (next refresh)
       logic.eigendataSettings.set('completedProductTour', true);
       // Set to true for it not to run again in the current session
@@ -300,56 +239,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
         acc && textToSearch.toLowerCase().includes(cur.toLowerCase()),
       true
     );
-  };
-
-  /*-----------------------------------
-  CUSTOM SELECT: Use React select with JSONschema form
-  -----------------------------------*/
-  // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
-  // To-do: Move custom components to separate files
-  const CustomSelect = function(props: any): JSX.Element {
-    //console.log('Props custom select: ', props);
-
-    const processSingleSelect = (selection: any): any => {
-      const { value } = selection;
-      return value;
-    };
-
-    const processMultiSelect = (selection: any): any => {
-      // Handle the case when the user removes selections
-      if (selection === null) {
-        return [];
-      }
-
-      return selection.map((item: any) => item.value);
-    };
-
-    // If defined as array, use the multi-select
-    if (props.schema.type === 'array') {
-      return (
-        <Select
-          options={props.options.enumOptions}
-          onChange={(selection): void =>
-            props.onChange(processMultiSelect(selection))
-          }
-          isMulti={true}
-        />
-      );
-    } else {
-      return (
-        <Select
-          options={props.options.enumOptions}
-          onChange={(selection): void =>
-            props.onChange(processSingleSelect(selection))
-          }
-          //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
-          //defaultValue={props.value}
-          defaultValue={props.options.enumOptions.filter(
-            (option: any) => option.value === props.value
-          )}
-        />
-      );
-    }
   };
 
   // Add the behavior described above
@@ -686,24 +575,29 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   return (
     <div className="app">
-      <Joyride 
-          steps={productTourSteps}
-          continuous={true}
-          run={productTourState.run}
-          hideBackButton={true}
-          disableScrollParentFix={true}
-          showSkipButton={true}
-          locale={{ back: 'Back', close: 'Close', last: 'Finish', next: 'Next', skip: 'Skip' }}
-          styles={{
-            options: {
-              zIndex: 1000,
-              primaryColor: '#3698DC'
-              }
-          }}
-        />
+      <Joyride
+        steps={productTourSteps}
+        continuous={true}
+        run={productTourState.run}
+        hideBackButton={true}
+        disableScrollParentFix={true}
+        showSkipButton={true}
+        locale={{
+          back: 'Back',
+          close: 'Close',
+          last: 'Finish',
+          next: 'Next',
+          skip: 'Skip'
+        }}
+        styles={{
+          options: {
+            zIndex: 1000,
+            primaryColor: '#3698DC'
+          }
+        }}
+      />
       <div className="side-by-side-fields">
-        <div className="centered">
-        </div>
+        <div className="centered" />
         <fieldset className="data-transformation-form">
           <Select
             name="Select dataframe"
@@ -763,36 +657,41 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
           />
         )}
         {/* If transformation was submit show the feedback buttons */}
-        {feedbackState.submittedTransformation && !(state.showForm || state.queryConfig) && (
-          <form id="feedback" onSubmit={onSubmitDescription}>
-            <div id="feedback__buttons">
-              <BinaryFeedback
-                onPositiveClick={onPositiveClick}
-                onNegativeClick={onNegativeClick}
-                positiveContent={getFeedBackContent(thumbUp, 'Worked', '#93C47d')}
-                negativeContent={getFeedBackContent(
-                  thumbDown,
-                  "Didn't work",
-                  '#E06666'
-                )}
-                singleSelect
-              />
-            </div>
-            <div id="feedback__negative-description">
-              <input
-                placeholder="Share the issue so we can fix it!"
-                type="text"
-                className="short form-control margin-right"
-                onChange={onTextChange}
-              />
-              <input
-                type="submit"
-                className="short btn btn-info"
-                disabled={feedbackState.negativeDescription === ''}
-              />
-            </div>
-          </form>
-        )}
+        {feedbackState.submittedTransformation &&
+          !(state.showForm || state.queryConfig) && (
+            <form id="feedback" onSubmit={onSubmitDescription}>
+              <div id="feedback__buttons">
+                <BinaryFeedback
+                  onPositiveClick={onPositiveClick}
+                  onNegativeClick={onNegativeClick}
+                  positiveContent={getFeedBackContent(
+                    thumbUp,
+                    'Worked',
+                    '#93C47d'
+                  )}
+                  negativeContent={getFeedBackContent(
+                    thumbDown,
+                    "Didn't work",
+                    '#E06666'
+                  )}
+                  singleSelect
+                />
+              </div>
+              <div id="feedback__negative-description">
+                <input
+                  placeholder="Share the issue so we can fix it!"
+                  type="text"
+                  className="short form-control margin-right"
+                  onChange={onTextChange}
+                />
+                <input
+                  type="submit"
+                  className="short btn btn-info"
+                  disabled={feedbackState.negativeDescription === ''}
+                />
+              </div>
+            </form>
+          )}
         <div>
           <ChatWidget
             // Pass in your Papercups account token here after signing up
@@ -1013,9 +912,13 @@ export class Backend {
             .composite as boolean;
         }
 
-        this.completedProductTour = settings.get('completedProductTour').composite as boolean;
-        console.log('Settings: completedProductTour', this.completedProductTour);
-        
+        this.completedProductTour = settings.get('completedProductTour')
+          .composite as boolean;
+        console.log(
+          'Settings: completedProductTour',
+          this.completedProductTour
+        );
+
         // Save the settings object to be used. Use case is to change settings after product tour
         this.eigendataSettings = settings;
 
@@ -1059,7 +962,7 @@ export class Backend {
   // INTERNAL UTILITIES
   // -------------------------------------------------------------------------------------------------------------
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Sends request to Kernel
   -> Returns: User expressions
   Todo: Unique way of creating Kernel requests. Probably move to the kernel connector class
@@ -1117,7 +1020,7 @@ export class Backend {
   // API FOR REACT GUI
   // -------------------------------------------------------------------------------------------------------------
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Based on the user selection of dataframe and transformation returns form to render UI
   -> Returns: custom_transformation as JSONSchema7
   -> Writes: _codeToIgnore
@@ -1215,7 +1118,7 @@ export class Backend {
     }
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Write to the last cell of the notebook and execute
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
@@ -1243,7 +1146,7 @@ export class Backend {
     }
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Get list of columns from Kernel for selected dataframe
   -> Returns: Array of columns
   -> Writes: _codeToIgnore
@@ -1280,7 +1183,7 @@ export class Backend {
     return columns;
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Get the querybuilder configuration
   -> Returns: JSON object to pass to querybuiler
   -> Writes: _codeToIgnore
@@ -1318,8 +1221,8 @@ export class Backend {
     return query_config;
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Get the backendata in the visualizer 
+  /*----------------------------------------------------------------------------------------------------
+  [FUNCTION] Get the backendata in the visualizer
   -> Returns: JSON object to pass to querybuiler
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
@@ -1363,8 +1266,8 @@ export class Backend {
     return result_object;
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
-  [FUNCTION] Remove table 
+  /*----------------------------------------------------------------------------------------------------
+  [FUNCTION] Remove table
   -----------------------------------------------------------------------------------------------------*/
   public async pythonRemoveTable(table: string) {
     const codeToRun = 'del ' + table;
@@ -1380,7 +1283,7 @@ export class Backend {
     console.log('Result', result);
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Import library with given statment
   -----------------------------------------------------------------------------------------------------*/
   public async pythonImportLibraries(importStatement: string) {
@@ -1424,7 +1327,7 @@ export class Backend {
   // HANDLE CHANGE OF NOTEBOOK
   // -------------------------------------------------------------------------------------------------------------
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Update current notebook and create kernel connector
   -> Writes: _currentNotebook, _connector
   -----------------------------------------------------------------------------------------------------*/
@@ -1497,7 +1400,7 @@ export class Backend {
 
   // Overview: codeRunningOnNotebook ->  pythonRequestDataframes -> handleGetDataframesResponse
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Get list of dataframes through reqeuestDataframes when new code runs
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
@@ -1525,7 +1428,7 @@ export class Backend {
     }
   };
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Send request to the Kernel to get dataframes, processed with handleGetDataframesResponse
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
@@ -1539,7 +1442,7 @@ export class Backend {
     this._connector.fetch(content, this.handleGetDataframesResponse);
   }
 
-  /*---------------------------------------------------------------------------------------------------- 
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Send request to the Kernel to get dataframes, processed with handleGetDataframesResponse
   -> Writes: dataframesLoaded
   -----------------------------------------------------------------------------------------------------*/
