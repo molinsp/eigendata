@@ -11,7 +11,7 @@ import {
   JsonGroup
 } from 'react-awesome-query-builder';
 import 'react-awesome-query-builder/lib/css/styles.css';
-import { Backend } from './backend';
+import { Backend } from '../core/backend';
 import customConfig from './querybuilder_config';
 import Select from 'react-select';
 import amplitude from 'amplitude-js';

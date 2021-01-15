@@ -5,9 +5,9 @@ import {
 } from '@jupyterlab/application';
 
 import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
-import { FormWidget } from './formulabar';
-import { Backend } from './backend';
-import { DataVisualizerWidget } from './datavisualizer';
+import { FormWidget } from './formulabar/formulabar';
+import { Backend } from './core/backend';
+import { DataVisualizerWidget } from './datavisualizer/datavisualizer';
 import { inspectorIcon } from '@jupyterlab/ui-components';
 import { searchIcon } from '@jupyterlab/ui-components';
 

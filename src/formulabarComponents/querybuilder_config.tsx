@@ -9,7 +9,7 @@ import {
 
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
-import { querySelectStyles } from './styles/reactSelectStyles';
+import { querySelectStyles } from '../styles/reactSelectStyles';
 
 const InitialConfig = BasicConfig; // or BasicConfig or MaterialConfig
 
@@ -159,16 +159,11 @@ const types: Types = {
     }
   },
   boolean: {
-    defaultOperator: "equal",
+    defaultOperator: 'equal',
     valueSources: ['value'],
     widgets: {
       boolean: {
-        operators: [
-          "equal",
-          "not_equal",
-          'is_empty',
-          'is_not_empty'
-        ],
+        operators: ['equal', 'not_equal', 'is_empty', 'is_not_empty'],
         widgetProps: {
           //you can enable this if you don't use fields as value sources
           // hideOperator: true,
@@ -176,13 +171,10 @@ const types: Types = {
         }
       },
       field: {
-        operators: [
-          "equal",
-          "not_equal",
-        ],
+        operators: ['equal', 'not_equal']
       }
-    },
-  },
+    }
+  }
 };
 
 const widgets: Widgets = {

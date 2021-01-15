@@ -5,7 +5,7 @@ import Select from 'react-select';
 import { JSONSchema7 } from 'json-schema';
 import { ISignal } from '@lumino/signaling';
 import Joyride from 'react-joyride';
-import { generatePythonCode } from './code_generation';
+import { generatePythonCode } from '../code_generation';
 import ChatWidget from '@papercups-io/chat-widget';
 import 'bootstrap/dist/css/bootstrap.css';
 // Feedback buttons library
@@ -15,12 +15,12 @@ import amplitude from 'amplitude-js';
 // This is used to force refresh the form schema for dynamic forms with react-jsonschema-form
 import _ from 'lodash';
 // Awesome querybuilder
-import QueryBuilder from './querybuilder';
-import { magnifier, tableIcon, thumbDown, thumbUp } from './assets/svgs';
-import { formulabarMainSelect } from './styles/reactSelectStyles';
-import CustomSelect from './components/customSelect';
-import productTourSteps from './productTour';
-import { Backend } from './backend';
+import QueryBuilder from '../formulabarComponents/querybuilder';
+import { magnifier, tableIcon, thumbDown, thumbUp } from '../assets/svgs';
+import { formulabarMainSelect } from '../styles/reactSelectStyles';
+import CustomSelect from '../formulabarComponents/customSelect';
+import productTourSteps from '../productTour';
+import { Backend } from '../core/backend';
 
 /*
  Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
