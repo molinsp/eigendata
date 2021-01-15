@@ -206,6 +206,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                             });
                         }
                       }}
+                      title={dataframe.label}
                     >
                       {cutString(dataframe.label, 20)}
                     </button>
