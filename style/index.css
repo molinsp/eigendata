@@ -71,6 +71,7 @@
   justify-content: space-between;
   width: 100%;
   margin-bottom: 10px;
+  position: relative;
 }
 
 /* Left and right fields of side-by-side container */
@@ -561,5 +562,13 @@
 .svg-icon circle {
   stroke: #4691f6;
   stroke-width: 1;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- CHAT WIDGET STYLE -------------------------------------------------------------> */
+
+/* Rewrite native style */
+.Papercups-toggleButtonContainer,
+.Papercups-chatWindowContainer {
+  position: absolute !important;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
