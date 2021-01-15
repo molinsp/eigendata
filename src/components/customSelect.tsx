@@ -6,7 +6,7 @@
 import Select from 'react-select';
 import React from 'react';
 
-const CustomSelect = function(props: any): JSX.Element {
+const CustomSelect = (props: any): JSX.Element => {
   const processSingleSelect = (selection: any): any => {
     const { value } = selection;
     return value;

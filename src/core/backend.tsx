@@ -7,7 +7,7 @@ import { KernelConnector } from './kernelconnector';
 import { Signal } from '@lumino/signaling';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Initialization scripts. See file for more details.
-import { python_initialization_script } from './initscript';
+import { pythonInitializationScript } from './initscript';
 import { Dialog, ISessionContext, showDialog } from '@jupyterlab/apputils';
 import ReactGA from 'react-ga';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
@@ -18,7 +18,8 @@ import CellUtilities from './CellUtilities';
 // JSON configuration holding all information for the UI transformationsList
 import localTransformationsConfig from '../formulabar/transformations.json';
 import amplitude from 'amplitude-js';
-
+import { Column } from 'react-table';
+import { Config } from 'react-awesome-query-builder';
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.2';
 let _transformationsConfig = localTransformationsConfig;
@@ -44,8 +45,8 @@ export class Backend {
 
   // Keeps track of dataframes that can be transformed through the UI
   // Used to display forms
-  public dataframesLoaded: any = [];
-  public packagesImported: any = [];
+  public dataframesLoaded = [];
+  public packagesImported = [];
 
   // Data transformation functions
   public transformationsList = [];
@@ -53,7 +54,7 @@ export class Backend {
   // Flag to decide if we are going to share product data
   public shareProductData;
 
-  public variablesLoaded: any = [];
+  public variablesLoaded = [];
 
   public completedProductTour: boolean;
   /*---------------------------------
@@ -68,7 +69,7 @@ export class Backend {
     Configurations
   ----------------------------------*/
   // Custom data transformationsList defined in JSON file
-  public _transformationsConfig: any;
+  public _transformationsConfig;
 
   // Flag to reset the state of the frontend
   public _resetStateFormulabarFlag = false;
@@ -104,13 +105,15 @@ export class Backend {
       ];
       for (const transformation in _transformationsConfig['transformations']) {
         //console.log('type', transformation);
-        transformationList.push({
-          value: transformation,
-          label:
-            _transformationsConfig['transformations'][transformation]['form'][
-              'title'
-            ]
-        });
+        if (transformation) {
+          transformationList.push({
+            value: transformation,
+            label:
+              _transformationsConfig['transformations'][transformation]['form'][
+                'title'
+              ]
+          });
+        }
       }
       this.transformationsList = transformationList;
     };
@@ -147,7 +150,7 @@ export class Backend {
     }
 
     // Load python initialization script
-    this._initScripts = python_initialization_script;
+    this._initScripts = pythonInitializationScript;
 
     /*------------------------------
       Get user consent for analytics
@@ -165,16 +168,16 @@ export class Backend {
             ]
           })
             .catch(e => console.log(e))
-            .then((result: any) => {
-              settings.set('answeredProductDataDialog', true);
+            .then(async (result: any) => {
+              await settings.set('answeredProductDataDialog', true);
               const clickedButtonLabel = result.button.label;
               console.log('Analytics: Clicked', clickedButtonLabel);
               if (clickedButtonLabel === 'Accept') {
                 console.log('Analytics: Accepted permission');
-                settings.set('shareProductData', true);
+                await settings.set('shareProductData', true);
                 this.shareProductData = true;
               } else {
-                settings.set('shareProductData', false);
+                await settings.set('shareProductData', false);
                 this.shareProductData = false;
               }
             });
@@ -218,7 +221,7 @@ export class Backend {
   // This script will run in the kernel every time code runs
   // It returns an object so that it can be expanded with more info in the future, for example number of rows
 
-  private _initScripts: string;
+  private readonly _initScripts: string;
 
   // Returns a json object with all the dataframes & imported modules
   // Use multi import call strategy
@@ -294,7 +297,7 @@ export class Backend {
 
   /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Based on the user selection of dataframe and transformation returns form to render UI
-  -> Returns: custom_transformation as JSONSchema7
+  -> Returns: customTransformation as JSONSchema7
   -> Writes: _codeToIgnore
 
     Depends on:
@@ -303,7 +306,7 @@ export class Backend {
   public async getTransformationFormSchema(
     dataFrameSelection: string,
     transformationSelection: string
-  ) {
+  ): Promise<JSONSchema7> {
     // Check that there is a transformation selection and a dataframe selection
     console.log('------> Get transformation UI form');
     console.log('Transformation Selection', transformationSelection);
@@ -317,13 +320,13 @@ export class Backend {
       /*-------------------------------------------
         Read form from custom configuration
       -------------------------------------------*/
-      const custom_transformation = _.cloneDeep(
+      const customTransformation = _.cloneDeep(
         this._transformationsConfig[transformationSelection].form
       );
 
       // Check if there is a definitions object
-      if (typeof custom_transformation['definitions'] !== 'undefined') {
-        const definitions = custom_transformation['definitions'];
+      if (typeof customTransformation['definitions'] !== 'undefined') {
+        const definitions = customTransformation['definitions'];
 
         // Check if column or columns defined
         if (
@@ -338,39 +341,40 @@ export class Backend {
 
           // Check if multi-select columns defined
           if (
-            typeof custom_transformation['definitions']['columns'] !==
+            typeof customTransformation['definitions']['columns'] !==
             'undefined'
           ) {
-            custom_transformation['definitions']['columns']['items'][
+            customTransformation['definitions']['columns']['items'][
               'enum'
             ] = columns;
           }
 
           // Check if single select column defined
           if (
-            typeof custom_transformation['definitions']['column'] !==
-            'undefined'
+            typeof customTransformation['definitions']['column'] !== 'undefined'
           ) {
-            custom_transformation['definitions']['column']['enum'] = columns;
+            customTransformation['definitions']['column']['enum'] = columns;
           }
         }
 
         // Check if there is a dataframes select
         if (
-          typeof custom_transformation['definitions']['dataframes'] !==
+          typeof customTransformation['definitions']['dataframes'] !==
           'undefined'
         ) {
-          custom_transformation['definitions']['dataframes'][
+          customTransformation['definitions']['dataframes'][
             'enum'
-          ] = this.dataframesLoaded.map((item: any) => item.value);
+          ] = this.dataframesLoaded.map(item => item.value);
         }
       }
 
-      return custom_transformation as JSONSchema7;
+      return customTransformation as JSONSchema7;
     }
   }
 
-  public getTransfromationUISchema(transformationSelection: string) {
+  public getTransformationUISchema(
+    transformationSelection: string
+  ): JSONSchema7 {
     if (
       typeof this._transformationsConfig[transformationSelection] ===
       'undefined'
@@ -385,7 +389,7 @@ export class Backend {
       ) {
         return this._transformationsConfig[transformationSelection]['uischema'];
       } else {
-        console.log('TG: No transformation uischema defined');
+        console.log('TG: No transformation uiSchema defined');
       }
     }
   }
@@ -394,27 +398,27 @@ export class Backend {
   [FUNCTION] Write to the last cell of the notebook and execute
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
-  public async writeToNotebookAndExecute(code: string) {
+  public async writeToNotebookAndExecute(code: string): Promise<string> {
     // Calculate index of last cell
-    const last_cell_index = this._currentNotebook.content.widgets.length - 1;
+    const lastCellIndex = this._currentNotebook.content.widgets.length - 1;
     /*
-    if (last_cell_index == 0){
-      last_cell_index += 1;
+    if (lastCellIndex == 0){
+      lastCellIndex += 1;
     }
     */
-    console.log('Last cell index', last_cell_index);
+    console.log('Last cell index', lastCellIndex);
 
     // Run and insert using cell utilities
     try {
       await CellUtilities.insertRunShow(
         this._currentNotebook,
-        last_cell_index,
+        lastCellIndex,
         code,
         true
       );
       return 'success';
     } catch (error) {
-      throw error;
+      console.log(error);
     }
   }
 
@@ -423,7 +427,9 @@ export class Backend {
   -> Returns: Array of columns
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonGetDataframeColumns(rightParameter: string) {
+  public async pythonGetDataframeColumns(
+    rightParameter: string
+  ): Promise<Array<Column>> {
     const codeToRun =
       'ed_form = ed_get_json_column_values(' + rightParameter + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
@@ -440,7 +446,7 @@ export class Backend {
     let content = result.form.data['text/plain'];
 
     // Clean the JSON result that python returns
-    if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
+    if (content.slice(0, 1) === "'" || content.slice(0, 1) === '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with " and \xa0 with \\xa0
       content = content
@@ -449,10 +455,7 @@ export class Backend {
         .replace(/\\xa0/g, '\\\\xa0');
     }
 
-    const columns = JSON.parse(content);
-    //console.log('New columns', columns);
-
-    return columns;
+    return JSON.parse(content);
   }
 
   /*----------------------------------------------------------------------------------------------------
@@ -460,7 +463,9 @@ export class Backend {
   -> Returns: JSON object to pass to querybuiler
   -> Writes: _codeToIgnore
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonGenerateQuerybuilderConfig(dataframe: string) {
+  public async pythonGenerateQuerybuilderConfig(
+    dataframe: string
+  ): Promise<Config> {
     const codeToRun =
       'ed_queryconfig = ed_generate_querybuilder_config(' + dataframe + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
@@ -473,11 +478,11 @@ export class Backend {
       codeToRun,
       { queryconfig: 'ed_queryconfig' }
     );
-    // Retriev the data behind the javascript object where the result is saved
+    // Retrieve the data behind the javascript object where the result is saved
     let content = result.queryconfig.data['text/plain'];
 
     // Clean the JSON result that python returns
-    if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
+    if (content.slice(0, 1) === "'" || content.slice(0, 1) === '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with "
       content = content
@@ -488,9 +493,9 @@ export class Backend {
 
     console.log('Content', content);
 
-    const query_config = JSON.parse(content);
-    console.log('Query config', query_config);
-    return query_config;
+    const queryConfig = JSON.parse(content);
+    console.log('Query config', queryConfig);
+    return queryConfig;
   }
 
   /*----------------------------------------------------------------------------------------------------
@@ -504,7 +509,7 @@ export class Backend {
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this._codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
-    let result_object = {};
+    let resultObject = {};
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
     const result = await Backend.sendKernelRequest(
@@ -516,7 +521,7 @@ export class Backend {
     let content = result.data.data['text/plain'];
     //console.log('DataViz content', content.slice(0,100));
 
-    if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
+    if (content.slice(0, 1) === "'" || content.slice(0, 1) === '"') {
       content = content.slice(1, -1);
       // Replace \' with ', \" with " and \xa0 with \\xa0
       content = content
@@ -525,23 +530,23 @@ export class Backend {
         .replace(/\\xa0/g, '\\\\xa0');
     }
 
-    let parsed_data = {};
+    let parsedData = {};
     try {
-      parsed_data = JSON.parse(content);
+      parsedData = JSON.parse(content);
     } catch (e) {
       console.error('DataViz: (!) Cannot parse data', e);
     }
 
-    result_object = parsed_data;
-    console.log('DataViz: Backend visualizer object', result_object);
+    resultObject = parsedData;
+    console.log('DataViz: Backend visualizer object', resultObject);
 
-    return result_object;
+    return resultObject;
   }
 
   /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Remove table
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonRemoveTable(table: string) {
+  public async pythonRemoveTable(table: string): Promise<void> {
     const codeToRun = 'del ' + table;
     console.log('Request expression', codeToRun);
 
@@ -558,8 +563,8 @@ export class Backend {
   /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Import library with given statment
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonImportLibraries(importStatement: string) {
-    // Execude the import in the kernel
+  public async pythonImportLibraries(importStatement: string): Promise<void> {
+    // Execute the import in the kernel
     await Backend.sendKernelRequest(
       this._currentNotebook.sessionContext.session.kernel,
       importStatement,
@@ -575,7 +580,7 @@ export class Backend {
     // If the cell is empty, write the imports
     if (importsCellContent === '') {
       importsCellNewContent = importStatement;
-      CellUtilities.insertRunShow(
+      await CellUtilities.insertRunShow(
         this._currentNotebook,
         0,
         importsCellNewContent,
@@ -603,7 +608,10 @@ export class Backend {
   [FUNCTION] Update current notebook and create kernel connector
   -> Writes: _currentNotebook, _connector
   -----------------------------------------------------------------------------------------------------*/
-  private async updateCurrentNotebook(sender: any, nbPanel: NotebookPanel) {
+  private async updateCurrentNotebook(
+    sender: any,
+    nbPanel: NotebookPanel
+  ): Promise<void> {
     console.log('------> Notebook changed', nbPanel.content.title.label);
     // Update the current notebook
     this._currentNotebook = nbPanel;
@@ -687,9 +695,9 @@ export class Backend {
         const code = msg.content.code;
         // Check this is not my code running
         if (
-          !(code == this.kernelInspectorRequest) &&
-          !(code == this._initScripts) &&
-          !(code == this._codeToIgnore)
+          !(code === this.kernelInspectorRequest) &&
+          !(code === this._initScripts) &&
+          !(code === this._codeToIgnore)
         ) {
           console.log('Non-internal code running');
           this.pythonRequestDataframes();
@@ -722,47 +730,47 @@ export class Backend {
     response: KernelMessage.IIOPubMessage
   ): void => {
     //console.log('------> Handle inspector request');
-    const message_type = response.header.msg_type;
-    if (message_type === 'execute_result') {
+    const messageType = response.header.msg_type;
+    if (messageType === 'execute_result') {
       const payload: any = response.content;
       let content: string = payload.data['text/plain'] as string;
 
       // The resulting python JSON neets to be cleaned
-      if (content.slice(0, 1) == "'" || content.slice(0, 1) == '"') {
+      if (content.slice(0, 1) === "'" || content.slice(0, 1) === '"') {
         content = content.slice(1, -1);
         content = content.replace(/\\"/g, '"').replace(/\\'/g, "'");
       }
 
-      const kerneldata = JSON.parse(content);
-      //console.log('Kernel Inspector: Result', kerneldata)
-      const dataframes = kerneldata['ed_get_dfs'];
+      const kernelData = JSON.parse(content);
+      //console.log('Kernel Inspector: Result', kernelData)
+      const dataframes = kernelData['ed_get_dfs'];
       //console.log('Number of dataframes:', dataframes.length);
 
-      const variables = kerneldata['ed_get_nondf_variables'];
+      const variables = kernelData['ed_get_nondf_variables'];
 
       if (variables.length > 0) {
         this.variablesLoaded = variables;
       }
 
-      if (dataframes.length == 0) {
+      if (dataframes.length === 0) {
         // If there is no data loaded, reset frontend component
         this._resetStateFormulabarFlag = true;
         this._resetStateDatavisualizerFlag = true;
       } else {
         console.log('Refreshing dataframes');
-        const dataframe_list: Array<any> = [];
+        const dataframeList: Array<any> = [];
         // Note: Just trying to make an array so that I can iterate here
         (dataframes as Array<any>).forEach((item, index) => {
           //console.log(item, index);
-          const dataframe_item = {
+          const dataframeItem = {
             value: item,
             label: item
           };
-          dataframe_list.push(dataframe_item);
+          dataframeList.push(dataframeItem);
         });
 
-        this.dataframesLoaded = dataframe_list;
-        this.packagesImported = kerneldata['ed_get_imported_modules'];
+        this.dataframesLoaded = dataframeList;
+        this.packagesImported = kernelData['ed_get_imported_modules'];
       }
       // Emit signal to re-render the component
       this.signal.emit();
