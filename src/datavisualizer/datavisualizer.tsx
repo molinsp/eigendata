@@ -1,15 +1,15 @@
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
-
 import React, { useState, useEffect } from 'react';
-
-import { ISignal } from '@lumino/signaling';
-
 import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
-
-import { Backend } from '../core/backend';
-
 import amplitude from 'amplitude-js';
-import { GroupType } from 'react-select';
+import { ISignal } from '@lumino/signaling';
+import { Backend } from '../core/backend';
+import {
+  getUSDString,
+  cutString,
+  separateThousands
+} from '../utils/stringUtils';
+
 /**
  * React component for a counter.
  *
@@ -27,21 +27,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
   console.log('Current URL', url);
-
-  const separateThousands = number => {
-    let stringNumber = number + '';
-    const rgx = /(\d+)(\d{3})/;
-    while (rgx.test(stringNumber)) {
-      stringNumber = stringNumber.replace(rgx, '$1' + '.' + '$2');
-    }
-    return stringNumber;
-  };
-
-  const getModifiedValue = (value: any): string => {
-    return typeof value === 'number'
-      ? value.toLocaleString('USD')
-      : String(value);
-  };
 
   if (props.logic._resetStateDatavisualizerFlag === true) {
     console.log('RESETING DATA VISUALIZER STATE');
@@ -62,7 +47,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       const columns = keys.map(key => ({
         accessor: key,
         Header: key,
-        Cell: (props): string => getModifiedValue(props.value)
+        Cell: (props): string => getUSDString(props.value)
       }));
       setColumns([...columns]);
       setData([...variables]);
@@ -84,7 +69,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             if (index === 0) {
               column.width = 55;
             }
-            column.Cell = (props): string => getModifiedValue(props.value);
+            column.Cell = (props): string => getUSDString(props.value);
             return column;
           });
           setShowTable(true);
@@ -121,12 +106,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     useBlockLayout,
     useResizeColumns
   );
-
-  const cutString = (string, requiredLength): string => {
-    return string.length > requiredLength
-      ? `${string.slice(0, requiredLength)}...`
-      : string;
-  };
 
   const closeDropdownMenu = (element: Element): void => {
     element.className = element.className.replace(' show', '');
@@ -170,10 +149,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
   const isVariableTab = (tab: number): boolean => {
     return tab === -1;
-  };
-
-  const isLastCell = (cell: number, row: GroupType<any>): boolean => {
-    return cell === row.headers.length - 1;
   };
 
   return (
@@ -306,14 +281,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         >
                           {column.render('Header')}
                         </div>
-                        {!isLastCell(index, headerGroup) && (
-                          <div
-                            {...column.getResizerProps()}
-                            className="delimiter-wrapper"
-                          >
-                            <div className="delimiter" />
-                          </div>
-                        )}
+                        <div
+                          {...column.getResizerProps()}
+                          className="delimiter-wrapper"
+                        >
+                          <div className="delimiter" />
+                        </div>
                         {isLastRow(rowIndex) && (
                           <div>
                             {!isVariableTab(activeTab) && (
@@ -337,7 +310,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         return (
                           <div
                             {...cell.getCellProps()}
-                            title={getModifiedValue(cell.value)}
+                            title={getUSDString(cell.value)}
                             className="td"
                             role="td"
                           >
