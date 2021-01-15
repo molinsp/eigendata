@@ -343,7 +343,7 @@ function UseSignalComponent(props: {
 }) {
   return (
     <UseSignal signal={props.signal}>
-      {() => <DataVisualizerComponent logic={props.logic} />}
+      {(): JSX.Element => <DataVisualizerComponent logic={props.logic} />}
     </UseSignal>
   );
 }
@@ -356,7 +356,7 @@ export class DataVisualizerWidget extends ReactWidget {
    * Constructs a new CounterWidget.
    */
 
-  private _backend = null;
+  private readonly _backend = null;
 
   constructor(backend: Backend) {
     super();

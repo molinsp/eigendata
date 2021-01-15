@@ -12,7 +12,7 @@ import {
 } from 'react-awesome-query-builder';
 import 'react-awesome-query-builder/lib/css/styles.css';
 import { Backend } from '../core/backend';
-import customConfig from './querybuilder_config';
+import customConfig from '../formulabarComponents/querybuilder_config';
 import Select from 'react-select';
 import amplitude from 'amplitude-js';
 
@@ -124,7 +124,7 @@ export default class QueryBuilder extends Component<
     -> Writes: Notebook
     -----------------------------------------------------------------------------------------------------*/
 
-  generateCode = () => {
+  generateCode = (): void => {
     let sql_query = JSON.stringify(
       QbUtils.sqlFormat(this.state.tree, this.state.config),
       undefined,
