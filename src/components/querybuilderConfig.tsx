@@ -222,7 +222,7 @@ const operators: Operators = {
 const settings: Settings = {
   ...InitialConfig.settings,
   renderOperator: props => {
-    return <QuerybuilderCustomSelect {...props} />;
+    return <QuerybuilderCustomSelect {...props} operatorField />;
   },
   renderField: props => {
     return <QuerybuilderCustomSelect {...props} />;
