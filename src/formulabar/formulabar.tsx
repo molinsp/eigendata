@@ -1,24 +1,23 @@
-import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 import React, { useState } from 'react';
 import Form from '@rjsf/core';
 import Select from 'react-select';
 import { JSONSchema7 } from 'json-schema';
-import { ISignal } from '@lumino/signaling';
 import Joyride from 'react-joyride';
-import { generatePythonCode } from '../code_generation';
+import { generatePythonCode } from './code_generation';
 import ChatWidget from '@papercups-io/chat-widget';
 import 'bootstrap/dist/css/bootstrap.css';
 // Feedback buttons library
 import { BinaryFeedback } from 'react-simple-user-feedback';
+import { FeedbackContent } from '../components/feedbackContent';
 // Usage analytics
 import amplitude from 'amplitude-js';
 // This is used to force refresh the form schema for dynamic forms with react-jsonschema-form
 import _ from 'lodash';
 // Awesome querybuilder
-import QueryBuilder from '../formulabarComponents/querybuilder';
+import QueryBuilder from '../components/querybuilder';
 import { magnifier, tableIcon, thumbDown, thumbUp } from '../assets/svgs';
 import { formulabarMainSelect } from '../styles/reactSelectStyles';
-import CustomSelect from '../formulabarComponents/customSelect';
+import CustomSelect from '../components/customSelect';
 import productTourSteps from '../productTour';
 import { Backend } from '../core/backend';
 
@@ -30,7 +29,7 @@ import { Backend } from '../core/backend';
    2.  BACKEND LOGIC
        - Variable tracker: There is a set of functions that keeps track of what dataframes are in the kernel
          The variable tracker takes the form of a set of Python scripts that are rendered to python
-       - Functions that execute code agains the Python Kernel
+       - Functions that execute code against the Python Kernel
 */
 
 // -------------------------------------------------------------------------------------------------------------
@@ -48,7 +47,7 @@ import { Backend } from '../core/backend';
      - transformationsList: Available transformationsList
  */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
-const FormComponent = (props: { logic: Backend }): JSX.Element => {
+export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Access backend class through logic object
   const logic = props.logic;
 
@@ -451,25 +450,6 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     ? { form: { __errors: [state.error.message] } }
     : undefined;
 
-  // Content of feedback buttons
-  const getFeedBackContent = (
-    thumb: JSX.Element,
-    text: string,
-    textColor: string
-  ): JSX.Element => {
-    return (
-      <div className="feedback__content">
-        {thumb}
-        <p
-          className="full-width  feedback__buttons-text"
-          style={{ color: textColor }}
-        >
-          {text}
-        </p>
-      </div>
-    );
-  };
-
   // Action when click "Worked" button
   const onNegativeClick = (): void => {
     console.log('Logged: ', feedbackState.submittedTransformation.value);
@@ -616,12 +596,12 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
                 <BinaryFeedback
                   onPositiveClick={onPositiveClick}
                   onNegativeClick={onNegativeClick}
-                  positiveContent={getFeedBackContent(
+                  positiveContent={FeedbackContent(
                     thumbUp,
                     'Worked',
                     '#93C47d'
                   )}
-                  negativeContent={getFeedBackContent(
+                  negativeContent={FeedbackContent(
                     thumbDown,
                     "Didn't work",
                     '#E06666'
@@ -635,6 +615,7 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
                   type="text"
                   className="short form-control margin-right"
                   onChange={onTextChange}
+                  value={feedbackState.negativeDescription}
                 />
                 <input
                   type="submit"
@@ -658,43 +639,3 @@ const FormComponent = (props: { logic: Backend }): JSX.Element => {
     </div>
   );
 };
-
-// This allows to re-render the component when there is a signal emitted (Read about signals here https://jupyterlab.readthedocs.io/en/stable/developer/patterns.html)
-// This is the recommended approach from the Jupyter team: https://jupyterlab.readthedocs.io/en/stable/developer/virtualdom.html
-// Inspired by this example: https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/developer/virtualdom.usesignal.tsx
-// ...and this example: https://github.com/jupyterlab/jupyterlab/blob/f2e0cde0e7c960dc82fd9b010fcd3dbd9e9b43d0/packages/running/src/index.tsx#L157-L159
-function UseSignalComponent(props: {
-  signal: ISignal<Backend, void>;
-  logic: Backend;
-}): JSX.Element {
-  return (
-    <UseSignal signal={props.signal}>
-      {(): JSX.Element => <FormComponent logic={props.logic} />}
-    </UseSignal>
-  );
-}
-
-// Class that acts as a wrapper for rendering React in jupyter (based on the react jupyterlab extension example )
-export class FormWidget extends ReactWidget {
-  private _backend = null;
-
-  // -------------------------------------------------------------------------------------------------------------
-  // CONSTRUCTOR
-  // -------------------------------------------------------------------------------------------------------------
-  constructor(backend: Backend) {
-    super();
-    console.log('------> Constructor');
-    this.addClass('jp-ReactWidget');
-
-    this._backend = backend;
-  }
-
-  // -------------------------------------------------------------------------------------------------------------
-  // RENDER
-  // -------------------------------------------------------------------------------------------------------------
-  render(): JSX.Element {
-    return (
-      <UseSignalComponent signal={this._backend.signal} logic={this._backend} />
-    );
-  }
-}

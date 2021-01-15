@@ -7,9 +7,10 @@ import {
   Widgets
 } from 'react-awesome-query-builder';
 
-import React, { useEffect, useState } from 'react';
-import Select from 'react-select';
-import { querySelectStyles } from '../styles/reactSelectStyles';
+import { QuerybuilderCustomSelect } from '../components/querybuilderCustomSelect';
+import { QuerybuilderCustomMultiselect } from '../components/querybuilderCustomMultiselect';
+
+import React from 'react';
 
 const InitialConfig = BasicConfig; // or BasicConfig or MaterialConfig
 
@@ -182,7 +183,9 @@ const widgets: Widgets = {
   multiselect: {
     ...InitialConfig.widgets.multiselect,
     type: 'multiselect',
-    factory: (props): JSX.Element => <CustomMultiSelect {...props} />,
+    factory: (props): JSX.Element => (
+      <QuerybuilderCustomMultiselect {...props} />
+    ),
     sqlFormatValue: (val): string => {
       return val.map(value => `'${value}'`);
     }
@@ -218,10 +221,10 @@ const operators: Operators = {
 const settings: Settings = {
   ...InitialConfig.settings,
   renderOperator: props => {
-    return <CustomSelect {...props} />;
+    return <QuerybuilderCustomSelect {...props} />;
   },
   renderField: props => {
-    return <CustomSelect {...props} />;
+    return <QuerybuilderCustomSelect {...props} />;
   }
 };
 
@@ -234,54 +237,3 @@ const customConfig: any = {
 };
 
 export default customConfig;
-
-const CustomMultiSelect = (props): JSX.Element => {
-  const [options, setOptions] = useState([]);
-  useEffect(() => {
-    // React select requires 'value' field for options
-    const modifiedOptions = props.listValues.map(listValue => {
-      return { label: listValue.title, value: listValue.value };
-    });
-    setOptions(modifiedOptions);
-  }, []);
-  return (
-    <Select
-      onChange={(selection: ISelection[]): void => {
-        props.setValue(selection.map(item => item.value));
-      }}
-      isMulti
-      options={options}
-      menuPortalTarget={document.body}
-      styles={querySelectStyles}
-    />
-  );
-};
-
-const CustomSelect = (props): JSX.Element => {
-  const [options, setOptions] = useState([]);
-
-  useEffect(() => {
-    // React select requires 'value' field for options
-    const modifiedOptions = props.items.map(item => {
-      return { value: item.key, label: item.label };
-    });
-
-    setOptions(modifiedOptions);
-  }, []);
-
-  return (
-    <Select
-      onChange={(selection: ISelection): void => {
-        props.setField(selection.value);
-      }}
-      options={options}
-      menuPortalTarget={document.body}
-      styles={querySelectStyles}
-    />
-  );
-};
-
-interface ISelection {
-  value: string;
-  label: string;
-}
