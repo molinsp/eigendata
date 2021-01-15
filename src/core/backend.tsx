@@ -7,7 +7,7 @@ import { KernelConnector } from './kernelconnector';
 import { Signal } from '@lumino/signaling';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Initialization scripts. See file for more details.
-import { python_initialization_script } from '../initscript';
+import { python_initialization_script } from './initscript';
 import { Dialog, ISessionContext, showDialog } from '@jupyterlab/apputils';
 import ReactGA from 'react-ga';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
@@ -16,7 +16,7 @@ import { JSONSchema7 } from 'json-schema';
 // Utilities from another project. See file for more details.
 import CellUtilities from './CellUtilities';
 // JSON configuration holding all information for the UI transformationsList
-import localTransformationsConfig from '../transformations.json';
+import localTransformationsConfig from '../formulabar/transformations.json';
 import amplitude from 'amplitude-js';
 
 // Before deploying to production, we change this flag
