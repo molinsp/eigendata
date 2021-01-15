@@ -1,4 +1,4 @@
-export const python_initialization_script = `
+export const pythonInitializationScript = `
 # ---------------- Multi-backend caller ----------------
 def call_backend_functions(functions):
     results = {}

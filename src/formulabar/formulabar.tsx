@@ -3,7 +3,7 @@ import Form from '@rjsf/core';
 import Select from 'react-select';
 import { JSONSchema7 } from 'json-schema';
 import Joyride from 'react-joyride';
-import { generatePythonCode } from './code_generation';
+import { generatePythonCode } from './codeGeneration';
 import ChatWidget from '@papercups-io/chat-widget';
 import 'bootstrap/dist/css/bootstrap.css';
 // Feedback buttons library
@@ -63,7 +63,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     label: 'Read CSV'
   };
 
-  const loadingTransformations = () => {
+  const loadingTransformations = (): any[] => {
     const result = [];
 
     _.forIn(logic._transformationsConfig, (value, key) => {
@@ -108,8 +108,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   REACT SELECT LOG SEARCH
   -----------------------------------*/
   let prevInput = '';
-  const handleInputChange = function(inputValue) {
-    if (inputValue.length == 0 && prevInput.length != 0) {
+  const handleInputChange = (inputValue): void => {
+    if (inputValue.length === 0 && prevInput.length !== 0) {
       console.log('Formulabar search: search and select - ', prevInput);
 
       if (logic._production && logic.shareProductData) {
@@ -155,7 +155,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     logic._resetStateFormulabarFlag = false;
 
     // This starts the product tour. It's here because it needs to load after the rest of the lements
-    if (logic.completedProductTour == false) {
+    if (logic.completedProductTour === false) {
       setProductTourState({ run: true });
       // Change the settings for it not to run next time (next refresh)
       logic.eigendataSettings.set('completedProductTour', true);
@@ -229,18 +229,18 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   // Save the input of the Dataframe selection in the UI to the state
-  const handleDataframeSelectionChange = (input: any): void => {
+  const handleDataframeSelectionChange = async (input): Promise<void> => {
     //console.log(this);
     if (state.transformationSelection) {
       console.log('Formulabar: get transformation to state');
-      getTransformationFormToState(input, state.transformationSelection);
+      await getTransformationFormToState(input, state.transformationSelection);
     } else {
       setState(state => ({ ...state, dataframeSelection: input, error: null }));
     }
   };
 
   // Save the input of the transformation selection in the UI to the state
-  const handleTransformationSelectionChange = (input: any): void => {
+  const handleTransformationSelectionChange = async (input): Promise<void> => {
     // Event tracking
     if (logic._production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: select transformation', {
@@ -249,7 +249,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     }
     if (state.dataframeSelection) {
       console.log('all defined');
-      getTransformationFormToState(state.dataframeSelection, input);
+      await getTransformationFormToState(state.dataframeSelection, input);
     } else if (
       logic._transformationsConfig[input.value]['form'][
         'transformationType'
@@ -301,7 +301,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         dataframeSelection.value,
         transformationSelection.value
       );
-      const newUISchema = logic.getTransfromationUISchema(
+      const newUISchema = logic.getTransformationUISchema(
         transformationSelection.value
       );
       setState({
@@ -354,7 +354,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     } else {
       dataframeSelection = null;
     }
-    const { formula, result_variable, returnType } = generatePythonCode(
+    const { formula, resultVariable, returnType } = generatePythonCode(
       formResponse,
       dataframeSelection
     );
@@ -408,8 +408,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         setState(state => ({
           ...state,
           dataframeSelection: {
-            label: result_variable,
-            value: result_variable
+            label: resultVariable,
+            value: resultVariable
           },
           transformationSelection: null,
           showForm: false,

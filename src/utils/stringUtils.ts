@@ -1,5 +1,5 @@
-export const separateThousands = number => {
-  let stringNumber = number + '';
+export const separateThousands = (value): string => {
+  let stringNumber = value + '';
   const rgx = /(\d+)(\d{3})/;
   while (rgx.test(stringNumber)) {
     stringNumber = stringNumber.replace(rgx, '$1' + '.' + '$2');
@@ -13,8 +13,8 @@ export const getUSDString = (value: any): string => {
     : String(value);
 };
 
-export const cutString = (string, requiredLength): string => {
-  return string.length > requiredLength
-    ? `${string.slice(0, requiredLength)}...`
-    : string;
+export const cutString = (text: string, requiredLength: number): string => {
+  return text.length > requiredLength
+    ? `${text.slice(0, requiredLength)}...`
+    : text;
 };

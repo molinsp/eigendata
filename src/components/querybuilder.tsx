@@ -1,4 +1,3 @@
-/*eslint @typescript-eslint/no-unused-vars: ["off", {"varsIgnorePattern": "^_"}]*/
 import React, { Component } from 'react';
 import {
   Query,
@@ -12,7 +11,7 @@ import {
 } from 'react-awesome-query-builder';
 import 'react-awesome-query-builder/lib/css/styles.css';
 import { Backend } from '../core/backend';
-import customConfig from '../formulabarComponents/querybuilder_config';
+import customConfig from './querybuilderConfig';
 import Select from 'react-select';
 import amplitude from 'amplitude-js';
 
@@ -41,7 +40,7 @@ export default class QueryBuilder extends Component<
     { value: 'eval', label: 'Create true/false indicators' }
   ];
 
-  setQueryType = (input: any): void => {
+  setQueryType = (input): void => {
     //console.log('Dropdown changed', input);
     this.setState(state => ({ ...state, queryType: input.value }));
   };
@@ -124,25 +123,25 @@ export default class QueryBuilder extends Component<
     -> Writes: Notebook
     -----------------------------------------------------------------------------------------------------*/
 
-  generateCode = (): void => {
-    let sql_query = JSON.stringify(
+  generateCode = async (): Promise<void> => {
+    let sqlQuery = JSON.stringify(
       QbUtils.sqlFormat(this.state.tree, this.state.config),
       undefined,
       2
     );
-    console.log('SQL query', sql_query);
-    sql_query = sql_query.replace(/ IS EMPTY/g, '.isnull()');
-    sql_query = sql_query.replace(/ IS NOT EMPTY/g, '.notnull()');
-    sql_query = sql_query.replace(/AND/g, 'and');
-    sql_query = sql_query.replace(/OR/g, 'or');
-    sql_query = sql_query.replace(/true/g, 'True');
-    sql_query = sql_query.replace(/false/g, 'False');
+    console.log('SQL query', sqlQuery);
+    sqlQuery = sqlQuery.replace(/ IS EMPTY/g, '.isnull()');
+    sqlQuery = sqlQuery.replace(/ IS NOT EMPTY/g, '.notnull()');
+    sqlQuery = sqlQuery.replace(/AND/g, 'and');
+    sqlQuery = sqlQuery.replace(/OR/g, 'or');
+    sqlQuery = sqlQuery.replace(/true/g, 'True');
+    sqlQuery = sqlQuery.replace(/false/g, 'False');
     // Handle the case of any in ['a','b'] instead of IN ('a', 'b')
-    sql_query = sql_query.replace(/NOT IN\s\((.*?)\)/g, 'not in [$1]');
-    sql_query = sql_query.replace(/IN\s\((.*?)\)/g, 'in [$1]');
-    sql_query = sql_query.replace(/NOT/g, '~');
-    sql_query = sql_query.replace(/ = /g, '==');
-    sql_query = sql_query.replace(/ <> /g, '!=');
+    sqlQuery = sqlQuery.replace(/NOT IN\s\((.*?)\)/g, 'not in [$1]');
+    sqlQuery = sqlQuery.replace(/IN\s\((.*?)\)/g, 'in [$1]');
+    sqlQuery = sqlQuery.replace(/NOT/g, '~');
+    sqlQuery = sqlQuery.replace(/ = /g, '==');
+    sqlQuery = sqlQuery.replace(/ <> /g, '!=');
 
     const colNames = Object.entries(this.state.config.fields).map(
       ([k, v]) => v.label
@@ -153,25 +152,25 @@ export default class QueryBuilder extends Component<
     //console.log('Querybuilder: Config fields sorted', colNamesSorted);
 
     for (const i of colNamesSorted) {
-      const col_name = i;
-      console.log('Col name', col_name);
+      const colName = i;
+      console.log('Col name', colName);
       // Check if there is any blank space in the column names
-      if (/\s/.test(col_name)) {
+      if (/\s/.test(colName)) {
         // It has any kind of whitespace
         // Replace with backticks to ensure pandas does not generate an error
         console.log('replacing');
         // Match any string finishing with space and a characte
         // except a space and the word in (special keyword)
-        const regex = col_name + '(?!( (?!in)\\S))';
+        const regex = colName + '(?!( (?!in)\\S))';
         console.log('Regex', regex);
         const re = new RegExp(regex, 'g');
-        const replace_to = '`' + col_name + '`';
-        sql_query = sql_query.replace(re, replace_to);
+        const replaceTo = '`' + colName + '`';
+        sqlQuery = sqlQuery.replace(re, replaceTo);
       }
     }
 
     let returnType = '';
-    if (this.state.queryType.localeCompare('query') == 0) {
+    if (this.state.queryType.localeCompare('query') === 0) {
       returnType = 'dataframe';
     } else {
       // eval case
@@ -180,13 +179,13 @@ export default class QueryBuilder extends Component<
 
     // If no variable defined, use this dataframe selection
     let variable = '';
-    if (returnType.localeCompare('dataframe') == 0) {
+    if (returnType.localeCompare('dataframe') === 0) {
       if (this.state.newTableName === '') {
         variable = this.props.dataframeSelection;
       } else {
         variable = this.state.newTableName.replace(/ /g, '_');
       }
-    } else if (returnType.localeCompare('series') == 0) {
+    } else if (returnType.localeCompare('series') === 0) {
       if (this.state.newTableName === '') {
         variable = this.props.dataframeSelection + '["indicator"]';
       } else {
@@ -203,10 +202,10 @@ export default class QueryBuilder extends Component<
     formula = formula + '.' + this.state.queryType;
 
     // Add the copy command to make sure pandas knows we are creating a copy
-    if (returnType.localeCompare('dataframe') == 0) {
-      formula = formula + '(' + sql_query + ', engine="python"' + ').copy()';
+    if (returnType.localeCompare('dataframe') === 0) {
+      formula = formula + '(' + sqlQuery + ', engine="python"' + ').copy()';
     } else {
-      formula = formula + '(' + sql_query + ', engine="python"' + ')';
+      formula = formula + '(' + sqlQuery + ', engine="python"' + ')';
     }
 
     console.log(
@@ -222,7 +221,7 @@ export default class QueryBuilder extends Component<
       });
     }
 
-    this.state.logic.writeToNotebookAndExecute(formula);
+    await this.state.logic.writeToNotebookAndExecute(formula);
   };
 
   /*----------------------------------------------------------------------------------------------------
@@ -230,11 +229,9 @@ export default class QueryBuilder extends Component<
     -> Writes: State
     -----------------------------------------------------------------------------------------------------*/
 
-  onChange = (immutableTree: ImmutableTree, config: Config) => {
+  onChange = (immutableTree: ImmutableTree, config: Config): void => {
     // Tip: for better performance you can apply `throttle` - see `examples/demo`
-    //this.setState({tree: immutableTree, config: config});
     this.setState(state => ({ ...state, tree: immutableTree, config: config }));
-
     // const jsonTree = QbUtils.getTree(immutableTree);
     // console.log('JSON TREE', jsonTree);
     // `jsonTree` can be saved to backend, and later loaded to `queryValue`
