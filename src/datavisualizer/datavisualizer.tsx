@@ -42,8 +42,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
     if (dataframeValues.length > 0) {
       const currentDataframeValue = props.logic.dataframeSelection;
-      // console.log('1) ', dataframeValues);
-      // console.log('2) ', currentDataframeValue);
       //if there is variable name, indexOf returns -1 - index of variable tab
       const index = dataframeValues.indexOf(currentDataframeValue)
       setActiveTab(index);
