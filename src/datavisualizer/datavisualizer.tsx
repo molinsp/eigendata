@@ -28,14 +28,14 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const binderUrl = url.includes('molinsp-eigendata-trial');
   console.log('Current URL', url);
 
-  if (props.logic._resetStateDatavisualizerFlag === true) {
+  if (props.logic.resetStateDatavisualizerFlag === true) {
     console.log('RESETING DATA VISUALIZER STATE');
     setColumns([]);
     setData([]);
     setShowTable(false);
     setActiveTab(0);
     setVariables([]);
-    props.logic._resetStateDatavisualizerFlag = false;
+    props.logic.resetStateDatavisualizerFlag = false;
   }
 
   //Rerender variables table
@@ -122,7 +122,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
-  const onBlur = (e: any, index: number): void => {
+  const onBlur = (e, index: number): void => {
     const dropdown = document.querySelector(
       `#dropdown-${index} .dropdown-menu`
     );
@@ -196,7 +196,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                       onClick={(): void => {
                         setActiveTab(index);
                         if (
-                          props.logic._production &&
+                          props.logic.production &&
                           props.logic.shareProductData
                         ) {
                           amplitude
@@ -337,16 +337,16 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 // This is the recommended approach from the Jupyter team: https://jupyterlab.readthedocs.io/en/stable/developer/virtualdom.html
 // Inspired by this example: https://github.com/jupyterlab/jupyterlab/blob/master/docs/source/developer/virtualdom.usesignal.tsx
 // ...and this example: https://github.com/jupyterlab/jupyterlab/blob/f2e0cde0e7c960dc82fd9b010fcd3dbd9e9b43d0/packages/running/src/index.tsx#L157-L159
-function UseSignalComponent(props: {
+const UseSignalComponent = (props: {
   signal: ISignal<Backend, void>;
   logic: Backend;
-}) {
+}): JSX.Element => {
   return (
     <UseSignal signal={props.signal}>
       {(): JSX.Element => <DataVisualizerComponent logic={props.logic} />}
     </UseSignal>
   );
-}
+};
 
 /**
  * A Counter Lumino Widget that wraps a CounterComponent.
@@ -356,17 +356,17 @@ export class DataVisualizerWidget extends ReactWidget {
    * Constructs a new CounterWidget.
    */
 
-  private readonly _backend = null;
+  private readonly backend = null;
 
   constructor(backend: Backend) {
     super();
     this.addClass('jp-ReactWidget');
-    this._backend = backend;
+    this.backend = backend;
   }
 
   render(): JSX.Element {
     return (
-      <UseSignalComponent signal={this._backend.signal} logic={this._backend} />
+      <UseSignalComponent signal={this.backend.signal} logic={this.backend} />
     );
   }
 }

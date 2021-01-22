@@ -1,14 +1,15 @@
 /*eslint @typescript-eslint/no-unused-vars: ["off", {"varsIgnorePattern": "^_"}]*/
 import {
   BasicConfig,
+  Config,
   Operators,
   Settings,
   Types,
   Widgets
 } from 'react-awesome-query-builder';
 
-import { QuerybuilderCustomSelect } from '../components/querybuilderCustomSelect';
-import { QuerybuilderCustomMultiselect } from '../components/querybuilderCustomMultiselect';
+import { QuerybuilderCustomSelect } from './querybuilderCustomSelect';
+import { QuerybuilderCustomMultiselect } from './querybuilderCustomMultiselect';
 
 import React from 'react';
 
@@ -228,7 +229,7 @@ const settings: Settings = {
   }
 };
 
-const customConfig: any = {
+const customConfig: Config = {
   ...InitialConfig,
   types,
   operators,
