@@ -214,7 +214,7 @@ export default class QueryBuilder extends Component<
     );
     console.log('Querybuilder: Formula', formula);
 
-    if (this.state.logic._production && this.state.logic.shareProductData) {
+    if (this.state.logic.production && this.state.logic.shareProductData) {
       amplitude.getInstance().logEvent('Querybuilder: submit transformation', {
         function: 'query',
         generatedCode: formula

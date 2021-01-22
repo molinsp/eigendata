@@ -19,7 +19,7 @@ import { magnifier, tableIcon, thumbDown, thumbUp } from '../assets/svgs';
 import { formulabarMainSelect } from '../styles/reactSelectStyles';
 import CustomSelect from '../components/customSelect';
 import productTourSteps from '../productTour';
-import { Backend } from '../core/backend';
+import { Backend, Dataframe } from '../core/backend';
 
 /*
  Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
@@ -52,10 +52,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const logic = props.logic;
 
   // Defaults for form and UI schema
-  const transformationForm: JSONSchema7 = logic._transformationsConfig[
+  const transformationForm: JSONSchema7 = logic.transformationsConfig[
     'read_csv'
   ]['form'] as JSONSchema7;
-  const defaultUISchema: JSONSchema7 = logic._transformationsConfig['read_csv'][
+  const defaultUISchema: JSONSchema7 = logic.transformationsConfig['read_csv'][
     'uischema'
   ] as JSONSchema7;
   const defaultTransformationSelection = {
@@ -63,10 +63,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     label: 'Read CSV'
   };
 
-  const loadingTransformations = (): any[] => {
+  const loadingTransformations = (): Dataframe[] => {
     const result = [];
 
-    _.forIn(logic._transformationsConfig, (value, key) => {
+    _.forIn(logic.transformationsConfig, (value, key) => {
       if (value['form']['transformationType'] === 'dataLoading') {
         result.push({ value: key, label: value['form']['title'] });
       }
@@ -112,7 +112,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     if (inputValue.length === 0 && prevInput.length !== 0) {
       console.log('Formulabar search: search and select - ', prevInput);
 
-      if (logic._production && logic.shareProductData) {
+      if (logic.production && logic.shareProductData) {
         amplitude
           .getInstance()
           .logEvent('Formulabar search: search and select', {
@@ -124,7 +124,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     } else if (inputValue.endsWith(' ')) {
       console.log('Formulabar search: search keyword - ', prevInput);
 
-      if (logic._production && logic.shareProductData) {
+      if (logic.production && logic.shareProductData) {
         amplitude
           .getInstance()
           .logEvent('Formulabar search: search and select', {
@@ -139,7 +139,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   /*-----------------------------------
   RESET STATE LOGIC: Backend triggers FE reset
   -----------------------------------*/
-  if (logic._resetStateFormulabarFlag === true) {
+  if (logic.resetStateFormulabarFlag === true) {
     console.log('RESETING FORMULABAR STATE');
     setState({
       transformationForm: transformationForm,
@@ -152,7 +152,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       error: null
     });
 
-    logic._resetStateFormulabarFlag = false;
+    logic.resetStateFormulabarFlag = false;
 
     // This starts the product tour. It's here because it needs to load after the rest of the lements
     if (logic.completedProductTour === false) {
@@ -175,8 +175,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       keywords = ['filter', 'more', 'less', 'equal'].join(' ');
     } else if (option.value === 'notfound') {
       return true;
-    } else if (logic._transformationsConfig[option.value]['keywords']) {
-      keywords = logic._transformationsConfig[option.value]['keywords'].join(
+    } else if (logic.transformationsConfig[option.value]['keywords']) {
+      keywords = logic.transformationsConfig[option.value]['keywords'].join(
         ' '
       );
     }
@@ -198,7 +198,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
-  const handleFormChange = async (data: any): Promise<void> => {
+  const handleFormChange = async (data): Promise<void> => {
     /*-------------------------------
      MERGE
      -------------------------------*/
@@ -242,7 +242,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Save the input of the transformation selection in the UI to the state
   const handleTransformationSelectionChange = async (input): Promise<void> => {
     // Event tracking
-    if (logic._production && logic.shareProductData) {
+    if (logic.production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: select transformation', {
         userSelection: input.value
       });
@@ -251,16 +251,15 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       console.log('all defined');
       await getTransformationFormToState(state.dataframeSelection, input);
     } else if (
-      logic._transformationsConfig[input.value]['form'][
-        'transformationType'
-      ] === 'dataLoading' ||
+      logic.transformationsConfig[input.value]['form']['transformationType'] ===
+        'dataLoading' ||
       input.value === 'notfound'
     ) {
       console.log('Data loading transformation');
       setState(state => ({
         ...state,
-        transformationForm: logic._transformationsConfig[input.value]['form'],
-        transformationUI: logic._transformationsConfig[input.value]['uischema'],
+        transformationForm: logic.transformationsConfig[input.value]['form'],
+        transformationUI: logic.transformationsConfig[input.value]['uischema'],
         transformationSelection: input,
         showForm: true,
         formData: {},
@@ -278,7 +277,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Populates the transformation form into the state
   const getTransformationFormToState = async (
-    dataframeSelection: any,
+    dataframeSelection: Dataframe,
     transformationSelection: any
   ): Promise<void> => {
     if (transformationSelection.value.localeCompare('query') === 0) {
@@ -335,7 +334,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
       //console.log('Loge event', formResponse.formData.description);
       // Log event
-      if (logic._production && logic.shareProductData) {
+      if (logic.production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: request transformation', {
           userRequest: formResponse.formData.description
         });
@@ -362,7 +361,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     /*-----------------------------------------------
     Tracking in amplitude
     -----------------------------------------------*/
-    if (logic._production && logic.shareProductData) {
+    if (logic.production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: submit transformation', {
         function: formResponse.schema.function,
         formInput: formResponse.formData,
@@ -373,7 +372,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     Import libraries if needed
     -----------------------------------------------*/
     const library =
-      logic._transformationsConfig[formResponse.schema.function]['library'];
+      logic.transformationsConfig[formResponse.schema.function]['library'];
 
     // Check if the library is already imported or not
     if (logic.packagesImported.includes(library['name'])) {
@@ -425,7 +424,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       }
     } catch (error) {
       // Log transformation errors
-      if (logic._production && logic.shareProductData) {
+      if (logic.production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: transformation error', {
           function: formResponse.schema.function,
           formInput: formResponse.formData,
@@ -454,7 +453,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const onNegativeClick = (): void => {
     console.log('Logged: ', feedbackState.submittedTransformation.value);
     // Log result
-    if (logic._production && logic.shareProductData) {
+    if (logic.production && logic.shareProductData) {
       amplitude
         .getInstance()
         .logEvent('Formulabar: transformation did not work', {
@@ -470,7 +469,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const onPositiveClick = (): void => {
     console.log('Logged: ', feedbackState.submittedTransformation.value);
     // Log result
-    if (logic._production && logic.shareProductData) {
+    if (logic.production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: transformation worked', {
         transformation: feedbackState.submittedTransformation.value
       });
@@ -485,7 +484,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     const text = feedbackState.negativeDescription;
     console.log('Logged: ', feedbackState.submittedTransformation.value, text);
     // Log result
-    if (logic._production && logic.shareProductData) {
+    if (logic.production && logic.shareProductData) {
       amplitude
         .getInstance()
         .logEvent('Formulabar: transformation did not work', {
