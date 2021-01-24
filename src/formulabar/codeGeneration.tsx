@@ -177,6 +177,7 @@ export const generatePythonCode = (
     const parameterPrefix = '\n    ';
     const fieldInput = formData[key];
     let fieldSchema = null;
+    console.log('CG: Parameter', key);
 
     /*----------------------------------------------------------------------------------------------------------
     3.1: Find schema for the field
@@ -185,20 +186,26 @@ export const generatePythonCode = (
       fieldSchema = formResponse.schema.properties[key];
     }
     // Check if we can't find it because it is part of a schema dependency
-    else if (typeof formResponse.schema.properties['mode'] !== 'undefined') {
-      const selectedMode = formData['mode'];
-      const selectedModeIndex = formResponse.schema.properties['mode'][
+    else if (typeof formResponse.schema.dependencies !== 'undefined') {
+      // Name of the field that holds the dependencies. WE ONLY SUPPORT ONE FIELD
+      const modeFieldName = Object.keys(formResponse.schema.dependencies)[0];
+
+      // Selected item in dependency enum
+      const selectedMode = formData[modeFieldName];
+      // Index of selected enum
+      const selectedModeIndex = formResponse.schema.properties[modeFieldName][
         'enum'
       ].findIndex(element => element.localeCompare(selectedMode) === 0);
       console.log('SELECTED MODE INDEX', selectedModeIndex);
       console.log(
         '--->',
-        formResponse.schema.dependencies.mode['oneOf'][selectedModeIndex]
+        formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
       );
       fieldSchema =
-        formResponse.schema.dependencies.mode['oneOf'][selectedModeIndex]
+        formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
           .properties[key];
     }
+    console.log('CG: Field schema', fieldSchema);
 
     /*----------------------------------------------------------------------------------------------------------
     3.2: Process the result parameters
