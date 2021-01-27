@@ -314,6 +314,4 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     
     # 3. Return as JSON
     return json.dumps(result, ensure_ascii=False, allow_nan=False)
-# ---------------- FASTDATA IMPORT ----------------
-from fastdata.core import *
 `;
