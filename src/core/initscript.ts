@@ -230,7 +230,7 @@ def ed_format_data_for_visualization(df_data):
             #If not handled, treat as a string
             df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
 
-def ed_prep_data_for_visualization(dfmi,index=False):
+def ed_prep_data_for_visualization(dfmi,index=False, sortby=None, ascending=False):
     """
     Prepare multiindex dataframe (data) and options
     to display it with corresponding row grouping and
@@ -241,6 +241,8 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     """
 
     df_data = dfmi.copy()
+    if sortby != None:
+        df_data = df_data.sort_values(by=sortby, ascending=False)
     
     # Abreviations: mi is multi index
 
