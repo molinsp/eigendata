@@ -18,11 +18,11 @@ import {
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
-  const [variables, setVariables] = useState([]);
   const [showTable, setShowTable] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [columnTypes, setColumnTypes] = useState([]);
   const [shape, setShape] = useState({});
+  const [columnSizes, setColumnSizes] = useState({});
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
@@ -33,7 +33,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     setData([]);
     setShowTable(false);
     setActiveTab(0);
-    setVariables([]);
+    // setVariables([]);
     props.logic.resetStateDatavisualizerFlag = false;
   }
 
@@ -51,14 +51,14 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
-    console.log('vars: ', variables, activeTab);
-    setVariables([...variables]);
+    // setVariables([...variables]);
     if (isVariableTab(activeTab)) {
       const keys = Object.keys(variables[0]);
-      const columns = keys.map(key => ({
+      const columns = keys.map((key, index) => ({
         accessor: key,
         Header: key,
-        Cell: (props): string => getUSDString(props.value)
+        Cell: (props): string => getUSDString(props.value),
+        width: columnSizes['variables'] ? columnSizes['variables'][index] : 80
       }));
       setColumns([...columns]);
       setData([...variables]);
@@ -70,15 +70,18 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     const getDataForVisualization = async (): Promise<void> => {
       try {
         const dataframes = props.logic.dataframesLoaded;
-        console.log('Dataframes', dataframes);
         if (dataframes[activeTab]) {
           const result = await props.logic.pythonGetDataForVisualization(
             dataframes[activeTab].value
           );
           // Add missing methods and properties
           const columns = result['columns'].map((column, index) => {
-            if (index === 0) {
-              column.width = 55;
+            if (!columnSizes[dataframes[activeTab].value]) {
+              if (index === 0) {
+                column.width = 55;
+              }
+            } else {
+              column.width = columnSizes[dataframes[activeTab].value][index]
             }
             column.Cell = (props): string => getUSDString(props.value);
             return column;
@@ -168,15 +171,32 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const onTabClick = (index: number): void => {
     setActiveTab(index);
     props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
-    if (
-      props.logic.production &&
-      props.logic.shareProductData
-    ) {
+    if (props.logic.production && props.logic.shareProductData) {
       amplitude
         .getInstance()
         .logEvent('Datavisualizer: change tab', {
           index: index
         });
+    }
+  }
+
+  const onMouseUpHandler = (): void => {
+    const columnHeaders = document.querySelectorAll('div.th');
+    const data = isVariableTab(activeTab)
+      ? 'variables'
+      : props.logic.dataframesLoaded[activeTab].value
+    const getWidths = (): number[] => {
+      const res = [];
+      for (const node of columnHeaders) {
+        res.push(node.clientWidth);
+      }
+      return res;
+    }
+    if (data) {
+      setColumnSizes({
+        ...columnSizes,
+        [data]: getWidths()
+      });
     }
   }
 
@@ -196,7 +216,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         <div className="full-height-container">
           <nav className="scroll-nav">
             <div className="dropdown-container">
-              {variables.length > 0 && (
+              {props.logic.variablesLoaded.length > 0 && (
                 <button
                   type="button"
                   className={`tab-button ${isVariableTab(activeTab) &&
@@ -218,7 +238,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                   >
                     <button
                       type="button"
-                      className={`tab-button ${
+                      className={`tab-button ellipsized ${
                         activeTab === index
                           ? 'tab-button_active'
                           : 'tab-button_inactive'
@@ -261,7 +281,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             </div>
             {activeTab === -1 ? (
               <p className="disclaimer">
-                Data shape: {separateThousands(variables.length)} rows.
+                Data shape: {separateThousands(props.logic.variablesLoaded.length)} rows.
               </p>
             ) : (
               <p className="disclaimer">
@@ -276,6 +296,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               {...getTableProps()}
               className="div-table div-table-striped"
               role="table"
+              onMouseUp={onMouseUpHandler}
             >
               <div className="thead-dark sticky" role="thead">
                 {headerGroups.map((headerGroup, rowIndex) => (
@@ -294,9 +315,9 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                         role="th"
                       >
                         <div
-                          className={`th ${index === 0 &&
-                            column.Header === 'index' &&
-                            'index-column-header'}`}
+                          className={`ellipsized ${index === 0 &&
+                            column.Header === 'index' ?
+                            'index-column-header' : ''}`}
                         >
                           {column.render('Header')}
                         </div>
@@ -330,7 +351,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                           <div
                             {...cell.getCellProps()}
                             title={getUSDString(cell.value)}
-                            className="td"
+                            className="td ellipsized"
                             role="td"
                           >
                             {cell.render('Cell')}
