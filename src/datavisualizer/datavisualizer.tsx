@@ -42,8 +42,8 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
     if (dataframeValues.length > 0) {
       const currentDataframeValue = props.logic.dataframeSelection;
-      console.log('1) ', dataframeValues);
-      console.log('2) ', currentDataframeValue);
+      // console.log('1) ', dataframeValues);
+      // console.log('2) ', currentDataframeValue);
       //if there is variable name, indexOf returns -1 - index of variable tab
       const index = dataframeValues.indexOf(currentDataframeValue)
       setActiveTab(index);
@@ -171,7 +171,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     setActiveTab(index);
     props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
     if (
-      props.logic._production &&
+      props.logic.production &&
       props.logic.shareProductData
     ) {
       amplitude
@@ -225,19 +225,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                           ? 'tab-button_active'
                           : 'tab-button_inactive'
                       }`}
-                      onClick={(): void => {
-                        setActiveTab(index);
-                        if (
-                          props.logic.production &&
-                          props.logic.shareProductData
-                        ) {
-                          amplitude
-                            .getInstance()
-                            .logEvent('Datavisualizer: change tab', {
-                              index: index
-                            });
-                        }
-                      }}
+                      onClick={(): void => {onTabClick(index)}}
                       title={dataframe.label}
                     >
                       {cutString(dataframe.label, 20)}

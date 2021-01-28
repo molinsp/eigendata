@@ -357,7 +357,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       formResponse,
       dataframeSelection
     );
-    props.logic.dataframeSelection = result_variable;
+    props.logic.dataframeSelection = resultVariable;
     /*-----------------------------------------------
     Tracking in amplitude
     -----------------------------------------------*/
