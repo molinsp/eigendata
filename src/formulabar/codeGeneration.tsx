@@ -169,6 +169,17 @@ export const generatePythonCode = (
   }
 
   /*-------------------------------------------------------------------
+   Use the object selectino dropdown as a parameter input
+   E.g. px.line(df, ...) 
+  --------------------------------------------------------------------*/
+  // If there is a selectionAsParameter config and it's set to true,
+  // add a first parameter that is equal to the dataframe selection
+  if (typeof formResponse.schema.selectionAsParameter !== 'undefined'
+      && formResponse.schema.selectionAsParameter === true) {
+      formula = formula + dataframeSelection + ',';
+  }
+
+  /*-------------------------------------------------------------------
     3. Process every parameter input
   --------------------------------------------------------------------*/
   // Process every input
