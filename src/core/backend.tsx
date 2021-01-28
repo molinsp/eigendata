@@ -79,6 +79,16 @@ export class Backend {
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
+  private _dataframeSelection: any;
+
+  get dataframeSelection() {
+    return this._dataframeSelection;
+  }
+
+  set dataframeSelection(value: any) {
+    this._dataframeSelection = value;
+  }
+
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------

@@ -26,7 +26,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
-  console.log('Current URL', url);
 
   if (props.logic.resetStateDatavisualizerFlag === true) {
     console.log('RESETING DATA VISUALIZER STATE');
@@ -38,11 +37,25 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     props.logic.resetStateDatavisualizerFlag = false;
   }
 
+  // Set active tab to the latest dataframe/variable
+  useEffect(() => {
+    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
+    if (dataframeValues.length > 0) {
+      const currentDataframeValue = props.logic.dataframeSelection;
+      console.log('1) ', dataframeValues);
+      console.log('2) ', currentDataframeValue);
+      //if there is variable name, indexOf returns -1 - index of variable tab
+      const index = dataframeValues.indexOf(currentDataframeValue)
+      setActiveTab(index);
+    }
+  }, [props.logic.dataframeSelection]);
+
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
+    console.log('vars: ', variables, activeTab);
     setVariables([...variables]);
-    if (activeTab === -1) {
+    if (isVariableTab(activeTab)) {
       const keys = Object.keys(variables[0]);
       const columns = keys.map(key => ({
         accessor: key,
@@ -58,11 +71,11 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   useEffect(() => {
     const getDataForVisualization = async (): Promise<void> => {
       try {
-        const dfs = props.logic.dataframesLoaded;
-        console.log('Dataframes', dfs);
-        if (dfs[activeTab]) {
+        const dataframes = props.logic.dataframesLoaded;
+        console.log('Dataframes', dataframes);
+        if (dataframes[activeTab]) {
           const result = await props.logic.pythonGetDataForVisualization(
-            dfs[activeTab].value
+            dataframes[activeTab].value
           );
           // Add missing methods and properties
           const columns = result['columns'].map((column, index) => {
@@ -72,19 +85,22 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             column.Cell = (props): string => getUSDString(props.value);
             return column;
           });
-          setShowTable(true);
-          setColumns([...columns]);
-          setData([...result['data']]);
-          setColumnTypes([...result['columnTypes']]);
-          setShape({ ...result['shape'] });
-          console.log('Backend result', result);
+            setShowTable(true);
+            setColumns([...columns]);
+            setData([...result['data']]);
+            setColumnTypes([...result['columnTypes']]);
+            setShape({ ...result['shape'] });
         }
       } catch (e) {
         setShowTable(false);
       }
     };
-    getDataForVisualization();
-  }, [props.logic.dataframesLoaded, activeTab]);
+
+    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
+    if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
+      getDataForVisualization();
+    }
+  }, [activeTab, props.logic.dataframesLoaded]);
 
   // Default size of columns
   const defaultColumn = React.useMemo(
@@ -151,6 +167,21 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     return tab === -1;
   };
 
+  const onTabClick = (index: number): void => {
+    setActiveTab(index);
+    props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
+    if (
+      props.logic._production &&
+      props.logic.shareProductData
+    ) {
+      amplitude
+        .getInstance()
+        .logEvent('Datavisualizer: change tab', {
+          index: index
+        });
+    }
+  }
+
   return (
     <div className="full-height-container">
       {binderUrl && (
@@ -174,6 +205,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                     'tab-button_active'} variables-button`}
                   onClick={(): void => {
                     setActiveTab(-1);
+
                   }}
                 >
                   Variables
