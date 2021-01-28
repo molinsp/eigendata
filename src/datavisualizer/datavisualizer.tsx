@@ -33,7 +33,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     setData([]);
     setShowTable(false);
     setActiveTab(0);
-    // setVariables([]);
     props.logic.resetStateDatavisualizerFlag = false;
   }
 
@@ -170,7 +169,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const onTabClick = (index: number): void => {
     setActiveTab(index);
     props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
-if (props.logic.production && props.logic.shareProductData) {
+    if (props.logic.production && props.logic.shareProductData) {
       amplitude
         .getInstance()
         .logEvent('Datavisualizer: change tab', {
