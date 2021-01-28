@@ -401,17 +401,13 @@ export class Backend {
     console.log('Last cell index', lastCellIndex);
 
     // Run and insert using cell utilities
-    try {
-      await CellUtilities.insertRunShow(
-        this.currentNotebook,
-        lastCellIndex,
-        code,
-        true
-      );
-      return 'success';
-    } catch (error) {
-      console.log(error);
-    }
+    await CellUtilities.insertRunShow(
+      this.currentNotebook,
+      lastCellIndex,
+      code,
+      true
+    );
+    return 'success';
   }
 
   /*----------------------------------------------------------------------------------------------------

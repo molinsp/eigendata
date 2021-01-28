@@ -142,19 +142,18 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   if (logic.resetStateFormulabarFlag === true) {
     console.log('RESETING FORMULABAR STATE');
     setState({
+      ...state,
       transformationForm: transformationForm,
       transformationUI: defaultUISchema,
       showForm: true,
       dataframeSelection: null,
       transformationSelection: defaultTransformationSelection,
       formData: {},
-      queryConfig: null,
-      error: null
+      queryConfig: null
     });
-
     logic.resetStateFormulabarFlag = false;
 
-    // This starts the product tour. It's here because it needs to load after the rest of the lements
+    // This starts the product tour. It's here because it needs to load after the rest of the elements
     if (logic.completedProductTour === false) {
       setProductTourState({ run: true });
       // Change the settings for it not to run next time (next refresh)
