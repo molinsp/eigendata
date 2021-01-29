@@ -320,23 +320,24 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                           </div>
                         )}
                         <div className="dropdown-header-menu" key={'dropdown-menu' + index}>
+                          <p className="sort-header">SORT</p>
                           <a className="dropdown-item"
                              href="#"
                              onClick={ (): void=> {sortColumn(column.Header, true, '.dropdown-header-menu');}}
                           >
-                            Sort ascending ↑
+                            Ascending ↑
                           </a>
                           <a className="dropdown-item"
                              href="#"
                              onClick={ (): void =>  sortColumn(column.Header, false, '.dropdown-header-menu')}
                           >
-                            Sort descending ↓
+                            Descending ↓
                           </a>
                           <a className="dropdown-item"
                              href="#"
                              onClick={ (): void =>  sortColumn(undefined, undefined, '.dropdown-header-menu')}
                           >
-                            Reset sorting
+                            Reset
                           </a>
                         </div>
                       </div>
