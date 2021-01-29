@@ -409,10 +409,18 @@ export const generatePythonCode = (
     formula = formula + formResponse.schema.append;
   }
 
+  // In the case the ruturn type is a series, remove the column name from the variable
+  // i.e. df instead of df['col name']
+  let resultDataFrame = resultVariable;
+  if (returnType.localeCompare('series') == 0) {
+    resultDataFrame = dataframeSelection;
+  }
+
+  console.log('RESULT DF', resultDataFrame);
   console.log('FORMULA: ', formula);
   return {
     formula: formula,
-    resultVariable: resultVariable,
+    resultVariable: resultDataFrame,
     returnType: returnType
   };
 };

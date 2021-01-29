@@ -51,7 +51,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
-    // setVariables([...variables]);
     if (isVariableTab(activeTab)) {
       const keys = Object.keys(variables[0]);
       const columns = keys.map((key, index) => ({
@@ -171,7 +170,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const onTabClick = (index: number): void => {
     setActiveTab(index);
     props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
-    if (props.logic.production && props.logic.shareProductData) {
+if (props.logic.production && props.logic.shareProductData) {
       amplitude
         .getInstance()
         .logEvent('Datavisualizer: change tab', {

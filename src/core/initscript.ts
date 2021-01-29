@@ -242,7 +242,7 @@ def ed_prep_data_for_visualization(dfmi,index=False, sortby=None, ascending=Fals
 
     df_data = dfmi.copy()
     if sortby != None:
-        df_data = df_data.sort_values(by=sortby, ascending=False)
+        df_data = df_data.sort_values(by=sortby, ascending=ascending)
     
     # Abreviations: mi is multi index
 
