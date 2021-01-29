@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.29",
+  "version" : "0.0.30",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -42,7 +42,8 @@
       },
       "library" : {
         "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "importStatement" : "import pandas as pd",
+        "namespace" : "pd"
       },
       "keywords" : [
         "csv",
@@ -133,8 +134,8 @@
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -585,8 +586,8 @@
             }
           }
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -1176,8 +1177,8 @@
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "keywords" : [
@@ -1451,8 +1452,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -2056,8 +2057,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -2491,8 +2492,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -2596,8 +2597,8 @@
         "value" : {
           "ui:placeholder" : "E.g. \"text\" / 45"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "keywords" : [
@@ -2784,8 +2785,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3144,8 +3145,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3235,8 +3236,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3326,8 +3327,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3417,8 +3418,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3511,8 +3512,8 @@
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
         },
-        "mode": {
-          "ui:widget": "radio"
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3936,51 +3937,6 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
-      },
-      "line" : {
-        "form" : {
-          "properties" : {
-            "x" : {
-              "type" : "string",
-              "$ref" : "#/definitions/column",
-              "description" : "Column to use for the x axis."
-            },
-            "y" : {
-              "type" : "string",
-              "$ref" : "#/definitions/column",
-              "description" : "Column to use for the y axis."
-            },
-            "color" : {
-              "type" : "string",
-              "$ref" : "#/definitions/column",
-              "description" : "Plot one line for each distinct value in the selected column (Group by)."
-            }
-          },
-          "required" : [
-            "x",
-            "y"
-          ],
-          "type" : "object",
-          "title" : "Line chart",
-          "callerObject" : "px",
-          "function" : "line",
-          "description" : "Generate a line chart",
-          "returnType" : "none",
-          "selectionAsParameter" : true,
-          "definitions" : {
-            "column" : {
-              "type" : "string",
-              "enum" : []
-            }
-          }
-        },
-        "keywords" : [
-          "write"
-        ],
-        "library" : {
-          "name" : "plotly.express",
-          "importStatement" : "import plotly.express as px"
-        }
       }
     },
     "bar" : {
@@ -4026,52 +3982,43 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
-      },
-      "line" : {
-        "form" : {
-          "properties" : {
-            "x" : {
-              "type" : "string",
-              "$ref" : "#/definitions/column",
-              "description" : "Column to use for the x axis."
-            },
-            "y" : {
-              "type" : "string",
-              "$ref" : "#/definitions/column",
-              "description" : "Column to use for the y axis."
-            },
-            "color" : {
-              "type" : "string",
-              "$ref" : "#/definitions/column",
-              "description" : "Plot one line for each distinct value in the selected column (Group by)."
-            }
+      }
+    },
+    "euclidean_distance" : {
+      "type" : "snippet",
+      "form" : {
+        "properties" : {
+          "df1" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes",
+            "description" : "First dataframe"
           },
-          "required" : [
-            "x",
-            "y"
-          ],
-          "type" : "object",
-          "title" : "Line chart",
-          "callerObject" : "px",
-          "function" : "line",
-          "description" : "Generate a line chart",
-          "returnType" : "none",
-          "selectionAsParameter" : true,
-          "definitions" : {
-            "column" : {
-              "type" : "string",
-              "enum" : []
-            }
+          "df2" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes",
+            "description" : "Second dataframe"
           }
         },
-        "keywords" : [
-          "write"
+        "required" : [
+          "df1",
+          "df2"
         ],
-        "library" : {
-          "name" : "plotly.express",
-          "importStatement" : "import plotly.express as px"
+        "type" : "object",
+        "title" : "[Snippet] Euclidean distance",
+        "callerObject" : "",
+        "function" : "euclidean_dist",
+        "description" : "Calculate the row-wise euclidean distance between two dataframes with the same columns. Returns a dataframe with the index of the first dataframe and the corresponding euclidean distances.",
+        "returnType" : "DataFrame",
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
         }
-      }
+      },
+      "snippet" : "def euclidean_dist(df1, df2):\n    eucl_d = np.linalg.norm(df1.values - df2.values, axis=1)\n    return pd.DataFrame({'eucl_d':eucl_d}, index=df1.index)"
     },
     "notfound" : {
       "form" : {

@@ -45,6 +45,15 @@ def ed_keep_nondf_variables(v):
             return False
     except:
         pass
+
+def ed_keep_modules(v):
+    try:
+        obj = eval(v)
+        # Ignore internal variables
+        if getattr(obj, "__version__", None) != None:
+            return True
+    except:
+        pass
     
 def ed_get_nondf_variables():
     values = _jupyterlab_variableinspector_nms.who_ls()
@@ -62,6 +71,11 @@ def ed_get_dfs():
 
 def ed_get_imported_modules():
     return list(sys.modules.keys())
+
+def ed_get_module_namespaces():
+    values = _jupyterlab_variableinspector_nms.who_ls()
+    vararray = [_v for _v in values if ed_keep_modules(_v)]
+    return vararray
 
 # ---------------- GET DF COLUMNS AS JSON ----------------
 def ed_get_json_column_values(df):

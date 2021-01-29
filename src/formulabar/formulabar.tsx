@@ -375,10 +375,22 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     const library =
       logic.transformationsConfig[formResponse.schema.function]['library'];
 
+    // Check if there is a need for a namespace
+    let hasNamespace: boolean = false;
+    if (typeof(library['namespace']) != 'undefined'){
+      hasNamespace = true;
+    }
     // Check if the library is already imported or not
-    if (logic.packagesImported.includes(library['name'])) {
+
+    // Case 1: No namespace
+    if (hasNamespace == false && logic.packagesImported.includes(library['name'])) {
       console.log('CG: Package already imported');
-    } else {
+    }
+    // Case 2: There is a namespace, in which case you need both the import and the namespace for it to work
+    else if (hasNamespace == true && logic.packagesImported.includes(library['name']) && logic.packageNamespaces.includes(library['namespace']) ){
+      console.log('CG: Package & namespace already imported');
+    }
+    else {
       console.log(
         'CG: Not importes, using statement',
         library['importStatement']

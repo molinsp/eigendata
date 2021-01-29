@@ -47,6 +47,7 @@ export class Backend {
   // Used to display forms
   public dataframesLoaded = [];
   public packagesImported = [];
+  public packageNamespaces = [];
 
   // Data transformation functions
   public transformationsList = [];
@@ -233,7 +234,8 @@ export class Backend {
   call_backend_functions([
    {'name': 'ed_get_dfs', 'parameters': {}},
    {'name': 'ed_get_imported_modules', 'parameters': {}},  
-   {'name': 'ed_get_nondf_variables', 'parameters': {}}
+   {'name': 'ed_get_nondf_variables', 'parameters': {}},
+   {'name': 'ed_get_module_namespaces', 'parameters': {}}
   ])
   `;
 
@@ -600,8 +602,6 @@ export class Backend {
       importsCell.value.text = importsCellNewContent;
     }
 
-    console.log('imports cell new content', importsCellNewContent);
-
     // Write in the first cell
     //this.currentNotebook.content.model.cells.get(0).value.text = importsCellNewContent;
     //await CellUtilities.injectCodeAtIndex(this.currentNotebook.content, 0, importsCellNewContent);
@@ -720,7 +720,6 @@ export class Backend {
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
   private pythonRequestDataframes(): void {
-    console.log('------> Get dataframe list');
     const content: KernelMessage.IExecuteRequestMsg['content'] = {
       code: this.kernelInspectorRequest,
       stop_on_error: false,
@@ -738,7 +737,9 @@ export class Backend {
   ): void => {
     //console.log('------> Handle inspector request');
     const messageType = response.header.msg_type;
+    console.log('Message type from the backend', messageType);
     if (messageType === 'execute_result') {
+      console.log('------> Get dataframe list');
       const payload: any = response.content;
       let content: string = payload.data['text/plain'] as string;
 
@@ -763,6 +764,8 @@ export class Backend {
         // If there is no data loaded, reset frontend component
         this.resetStateFormulabarFlag = true;
         this.resetStateDatavisualizerFlag = true;
+        this.packagesImported = kernelData['ed_get_imported_modules'];
+        this.packageNamespaces = kernelData['ed_get_module_namespaces'];
       } else {
         console.log('Refreshing dataframes');
         const dataframeList: Array<Dataframe> = [];
@@ -777,6 +780,7 @@ export class Backend {
 
         this.dataframesLoaded = dataframeList;
         this.packagesImported = kernelData['ed_get_imported_modules'];
+        this.packageNamespaces = kernelData['ed_get_module_namespaces'];
       }
       // Emit signal to re-render the component
       this.signal.emit();
