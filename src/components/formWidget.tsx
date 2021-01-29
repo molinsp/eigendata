@@ -1,4 +1,7 @@
-// Class that acts as a wrapper for rendering React in jupyter (based on the react jupyterlab extension example )
+// [COMPONENT] Wrapper for rendering React in jupyter
+//   -> Class that acts as a wrapper for rendering React in jupyter (based on the react jupyterlab extension example)
+//   -> Used in: Formulabar
+
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 import { Backend } from '../core/backend';
 import React from 'react';

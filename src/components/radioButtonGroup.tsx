@@ -1,3 +1,7 @@
+// [COMPONENT] Container with radio buttons
+//   -> Custom widget for radio button group in transformations.json
+//   -> Used in: Formulabar
+
 import React from 'react';
 
 export const RadioButtonGroup = (props): JSX.Element => {
