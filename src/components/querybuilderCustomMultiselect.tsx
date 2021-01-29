@@ -1,3 +1,7 @@
+// [COMPONENT] Custom select
+//   -> Custom widget for query builder multi selects
+//   -> Used in: Querybuilder
+
 import React, { useEffect, useState } from 'react';
 import Select from 'react-select';
 import { querySelectStyles } from '../styles/reactSelectStyles';
