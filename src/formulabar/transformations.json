@@ -132,6 +132,9 @@
       "uischema" : {
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -581,6 +584,9 @@
               "classNames" : "right-field"
             }
           }
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -1169,6 +1175,9 @@
         },
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "keywords" : [
@@ -1441,6 +1450,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -2043,6 +2055,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -2475,6 +2490,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -2577,6 +2595,9 @@
         },
         "value" : {
           "ui:placeholder" : "E.g. \"text\" / 45"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "keywords" : [
@@ -2762,6 +2783,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -3119,6 +3143,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -3207,6 +3234,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -3295,6 +3325,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -3383,6 +3416,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
@@ -3474,6 +3510,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode": {
+          "ui:widget": "radio"
         }
       },
       "library" : {
