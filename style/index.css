@@ -44,6 +44,13 @@
   display: flex !important;
 }
 
+/* Add ellipsis */
+.ellipsized {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 /* |----------------------- FORMULABAR: GENERAL STYLING -----------------------------------------------------------> */
@@ -258,9 +265,6 @@
 
 /* Navigation tab (button) */
 .tab-button {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   min-width: 77px;
   height: 30px;
   background: #FFFFFF;
@@ -432,11 +436,7 @@
   top: 0;
 }
 
-/* Add ellipsis to cells */
 .th, .td {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
   cursor: text;
 }
 
