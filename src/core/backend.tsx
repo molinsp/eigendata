@@ -497,13 +497,22 @@ export class Backend {
   }
 
   /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Get the backendata in the visualizer
+  [FUNCTION] Get the backend data in the visualizer
   -> Returns: JSON object to pass to querybuiler
   -> Writes: codeToIgnore
-  -----------------------------------------------------------------------------------------------------*/
-  public async pythonGetDataForVisualization(dataframe: string) {
-    const codeToRun =
-      'ed_visualizer_data = ed_prep_data_for_visualization(' + dataframe + ')';
+  ----------------------------------------------------------------------------------------------------*/
+  public async pythonGetDataForVisualization(
+    dataframe: string,
+    sortBy?: string,
+    ascending?: boolean
+  ) {
+    const isAscending = (): string => (ascending ? 'True' : 'False');
+    let codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe})`;
+    if (sortBy) {
+      codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe}, sortby="${sortBy}", ${
+        ascending !== undefined ? 'ascending=' + isAscending() : ''
+      })`;
+    }
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this.codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
