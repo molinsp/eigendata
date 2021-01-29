@@ -15,6 +15,7 @@ import {
  *
  * @returns The React component
  */
+
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
@@ -23,6 +24,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columnTypes, setColumnTypes] = useState([]);
   const [shape, setShape] = useState({});
   const [columnSizes, setColumnSizes] = useState({});
+  const [sortConfig, setSortConfig] = useState({sortBy: undefined, ascending: undefined})
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
@@ -33,7 +35,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     setData([]);
     setShowTable(false);
     setActiveTab(0);
-    // setVariables([]);
     props.logic.resetStateDatavisualizerFlag = false;
   }
 
@@ -71,7 +72,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         const dataframes = props.logic.dataframesLoaded;
         if (dataframes[activeTab]) {
           const result = await props.logic.pythonGetDataForVisualization(
-            dataframes[activeTab].value
+            dataframes[activeTab].value, sortConfig.sortBy, sortConfig.ascending
           );
           // Add missing methods and properties
           const columns = result['columns'].map((column, index) => {
@@ -100,7 +101,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
       getDataForVisualization();
     }
-  }, [activeTab, props.logic.dataframesLoaded]);
+  }, [activeTab, props.logic.dataframesLoaded, sortConfig]);
 
   // Default size of columns
   const defaultColumn = React.useMemo(
@@ -123,40 +124,35 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     useResizeColumns
   );
 
-  const closeDropdownMenu = (element: Element): void => {
-    element.className = element.className.replace(' show', '');
-  };
-
-  const openDropdownMenu = (index: number): void => {
-    const dropdown = document.querySelector(
-      `#dropdown-${index} .dropdown-menu`
-    );
-    if (dropdown.className.indexOf('show') === -1) {
-      dropdown.className += ' show';
-    } else {
-      closeDropdownMenu(dropdown);
-    }
-  };
-
-  const onBlur = (e, index: number): void => {
-    const dropdown = document.querySelector(
-      `#dropdown-${index} .dropdown-menu`
-    );
-    const target = e.relatedTarget;
-    if (target.className !== 'dropdown-item') {
-      closeDropdownMenu(dropdown);
-    }
-  };
-
-  const deleteTab = async (table: string): Promise<void> => {
-    await props.logic.pythonRemoveTable(table);
-    const dropdowns = document.querySelectorAll('.dropdown-menu');
+  const closeDropdownMenus = (menuName: string): void => {
+    const dropdowns = document.querySelectorAll(menuName);
     const element = Array.from(dropdowns).find(element =>
       element.className.includes('show')
     );
     if (element) {
-      closeDropdownMenu(element);
+      element.className = element.className.replace(' show', '');
     }
+  };
+
+  const openDropdownMenu = (menuToOpen: string, menusToClose: string): void => {
+    const dropdown = document.querySelector(menuToOpen);
+    if (dropdown.className.indexOf('show') === -1) {
+      dropdown.className += ' show';
+    } else {
+      closeDropdownMenus(menusToClose);
+    }
+  }
+
+  const onBlur = (e, menusToClose): void => {
+    const target = e.relatedTarget;
+    if (!target || target?.className !== 'dropdown-item') {
+      closeDropdownMenus(menusToClose);
+    }
+  };
+
+  const deleteTab = async (table: string, menusToClose: string): Promise<void> => {
+    await props.logic.pythonRemoveTable(table);
+    closeDropdownMenus(menusToClose);
   };
 
   const isLastRow = (row: number): boolean => {
@@ -170,13 +166,14 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const onTabClick = (index: number): void => {
     setActiveTab(index);
     props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
-if (props.logic.production && props.logic.shareProductData) {
+    if (props.logic.production && props.logic.shareProductData) {
       amplitude
         .getInstance()
         .logEvent('Datavisualizer: change tab', {
           index: index
         });
     }
+    setSortConfig({sortBy: undefined, ascending: undefined});
   }
 
   const onMouseUpHandler = (): void => {
@@ -199,77 +196,73 @@ if (props.logic.production && props.logic.shareProductData) {
     }
   }
 
+  const sortColumn = (sortBy: string, ascending: boolean, menusToClose: string): void => {
+    setSortConfig({ sortBy, ascending });
+    closeDropdownMenus(menusToClose);
+  }
+
+  const getSortArrow = (sorted: boolean | undefined): string => {
+    switch (sorted) {
+      case true: return '↑';
+      case false: return '↓';
+      default: return '';
+    }
+  }
+
   return (
-    <div className="full-height-container">
-      {binderUrl && (
-        <div className="binderButtonSeparator">
-          <a
-            href="https://calendly.com/molinsp/eigendata-demo"
-            className="binderButton"
-          >
-            BOOK A DEMO
-          </a>
-        </div>
-      )}
-      {showTable ? (
+    <div className="full-height-container"> {binderUrl &&
+      <div className="binderButtonSeparator">
+        <a href="https://calendly.com/molinsp/eigendata-demo"
+           className="binderButton"
+        >
+          BOOK A DEMO
+        </a>
+      </div>} {showTable ?
         <div className="full-height-container">
           <nav className="scroll-nav">
             <div className="dropdown-container">
-              {props.logic.variablesLoaded.length > 0 && (
-                <button
-                  type="button"
-                  className={`tab-button ${isVariableTab(activeTab) &&
-                    'tab-button_active'} variables-button`}
-                  onClick={(): void => {
-                    setActiveTab(-1);
-
-                  }}
-                >
-                  Variables
-                </button>
-              )}
+              {props.logic.variablesLoaded.length > 0 &&
+              <button type="button"
+                      className={`tab-button ${isVariableTab(activeTab) && 'tab-button_active'} variables-button`}
+                       onClick={(): void => setActiveTab(-1)}
+              >
+                Variables
+              </button>}
               {props.logic.dataframesLoaded.map((dataframe, index) => {
                 return (
-                  <div
-                    className="dropdown"
-                    id={'dropdown-' + index}
-                    key={'dropdown-' + index}
+                  <div className="dropdown"
+                       id={'dropdown-' + index}
+                       key={'dropdown-' + index}
                   >
-                    <button
-                      type="button"
-                      className={`tab-button ellipsized ${
-                        activeTab === index
-                          ? 'tab-button_active'
-                          : 'tab-button_inactive'
-                      }`}
-                      onClick={(): void => {onTabClick(index)}}
-                      title={dataframe.label}
+                    <button type="button"
+                            className={`tab-button ellipsized ${
+                              activeTab === index
+                                ? 'tab-button_active'
+                                : 'tab-button_inactive'
+                            }`}
+                            onClick={(): void => {onTabClick(index)}}
+                            title={dataframe.label}
                     >
                       {cutString(dataframe.label, 20)}
                     </button>
-                    <button
-                      type="button"
-                      className={`dropdown-button dropdown-toggle ${
-                        activeTab === index
-                          ? 'tab-button_active'
-                          : 'tab-button_inactive'
-                      }`}
-                      onClick={(): void => openDropdownMenu(index)}
-                      onBlur={(e): void => onBlur(e, index)}
-                      key={'dropdown-button' + index}
+                    <button type="button"
+                            className={`dropdown-button dropdown-toggle ${
+                              activeTab === index
+                                ? 'tab-button_active'
+                                : 'tab-button_inactive'
+                            }`}
+                            onClick={(): void => openDropdownMenu(`#dropdown-${index} .dropdown-menu`, '.dropdown-menu')}
+                            onBlur={(e): void => onBlur(e, '.dropdown-menu')}
+                            key={'dropdown-button' + index}
                     >
                       <span className="dropdown-arrow" />
                     </button>
-                    <div
-                      className="dropdown-menu"
-                      key={'dropdown-menu' + index}
-                    >
-                      <a
-                        className="dropdown-item"
-                        href="#"
-                        onClick={(): Promise<void> =>
-                          deleteTab(dataframe.label)
-                        }
+                    <div className="dropdown-menu" key={'dropdown-menu' + index}>
+                      <a className="dropdown-item"
+                         href="#"
+                         onClick={(): Promise<void> =>
+                           deleteTab(dataframe.label, '.dropdown-menu')
+                         }
                       >
                         Delete table
                       </a>
@@ -278,63 +271,75 @@ if (props.logic.production && props.logic.shareProductData) {
                 );
               })}
             </div>
-            {activeTab === -1 ? (
-              <p className="disclaimer">
-                Data shape: {separateThousands(props.logic.variablesLoaded.length)} rows.
-              </p>
-            ) : (
-              <p className="disclaimer">
+            {isVariableTab(activeTab)
+              ? <p className="disclaimer">Data shape: {separateThousands(props.logic.variablesLoaded.length)} rows.</p>
+              : <p className="disclaimer">
                 Data shape: {separateThousands(shape['rows'])} rows and{' '}
                 {shape['columns']} columns. Preview: first {data.length} rows
                 and {shape['displayedColumns']} columns.
-              </p>
-            )}
+              </p>}
           </nav>
           <div className="tab-item">
-            <div
-              {...getTableProps()}
-              className="div-table div-table-striped"
-              role="table"
-              onMouseUp={onMouseUpHandler}
+            <div{...getTableProps()}
+                className="div-table div-table-striped"
+                role="table"
+                onMouseUp={onMouseUpHandler}
             >
               <div className="thead-dark sticky" role="thead">
                 {headerGroups.map((headerGroup, rowIndex) => (
-                  <div
-                    {...headerGroup.getHeaderGroupProps()}
-                    className="tr"
-                    role="tr"
-                  >
-                    {isLastRow(rowIndex) && !isVariableTab(activeTab) && (
-                      <div className="header-white-row" />
-                    )}
+                  <div {...headerGroup.getHeaderGroupProps()} className="tr" role="tr">
+                    {isLastRow(rowIndex) && !isVariableTab(activeTab) &&
+                    <div className="header-white-row" />}
                     {headerGroup.headers.map((column, index) => (
-                      <div
-                        {...column.getHeaderProps()}
-                        className="th"
-                        role="th"
+                      <div {...column.getHeaderProps()}
+                           className="th"
+                           role="th"
+                           id={`dropdown-header-${column.Header}-${index}`}
                       >
-                        <div
-                          className={`ellipsized ${index === 0 &&
-                            column.Header === 'index' ?
-                            'index-column-header' : ''}`}
+                        <div className={`ellipsized header ${index === 0 && column.Header === 'index' ? 'index-column-header' : ''}`}
+                             title={column.Header}
                         >
                           {column.render('Header')}
+                          <p className={`sort-arrow ${column.Header === sortConfig.sortBy ? 'show' : ''}`}>{getSortArrow(sortConfig.ascending)}</p>
+                          {column.Header !== 'index' && !isVariableTab(activeTab) &&
+                          <button className="dropdown-header-button"
+                                  onClick={(): void => openDropdownMenu(`#dropdown-header-${column.Header}-${index} .dropdown-header-menu`, '.dropdown-header-menu')}
+                                  onBlur={(e): void => onBlur(e,  '.dropdown-header-menu')}
+                          >
+                            <div className="dropdown-arrow"/>
+                          </button>}
                         </div>
-                        <div
-                          {...column.getResizerProps()}
-                          className="delimiter-wrapper"
-                        >
+                        <div {...column.getResizerProps()} className="delimiter-wrapper">
                           <div className="delimiter" />
                         </div>
                         {isLastRow(rowIndex) && (
-                          <div>
-                            {!isVariableTab(activeTab) && (
-                              <div className="data-type-info">
-                                {columnTypes[index] && columnTypes[index].type}
-                              </div>
-                            )}
+                          <div> {!isVariableTab(activeTab) &&
+                            <div className="data-type-info">
+                              {columnTypes[index] && columnTypes[index].type}
+                            </div>}
                           </div>
                         )}
+                        <div className="dropdown-header-menu" key={'dropdown-menu' + index}>
+                          <p className="sort-header">SORT</p>
+                          <a className="dropdown-item"
+                             href="#"
+                             onClick={ (): void=> {sortColumn(column.Header, true, '.dropdown-header-menu');}}
+                          >
+                            Ascending ↑
+                          </a>
+                          <a className="dropdown-item"
+                             href="#"
+                             onClick={ (): void =>  sortColumn(column.Header, false, '.dropdown-header-menu')}
+                          >
+                            Descending ↓
+                          </a>
+                          <a className="dropdown-item"
+                             href="#"
+                             onClick={ (): void =>  sortColumn(undefined, undefined, '.dropdown-header-menu')}
+                          >
+                            Reset
+                          </a>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -347,11 +352,10 @@ if (props.logic.production && props.logic.shareProductData) {
                     <div {...row.getRowProps()} className="tr" role="tr">
                       {row.cells.map(cell => {
                         return (
-                          <div
-                            {...cell.getCellProps()}
-                            title={getUSDString(cell.value)}
-                            className="td ellipsized"
-                            role="td"
+                          <div {...cell.getCellProps()}
+                               title={getUSDString(cell.value)}
+                               className="td ellipsized"
+                               role="td"
                           >
                             {cell.render('Cell')}
                           </div>
@@ -364,9 +368,7 @@ if (props.logic.production && props.logic.shareProductData) {
             </div>
           </div>
         </div>
-      ) : (
-        <p>No data available</p>
-      )}
+       : <p>No data available</p>}
     </div>
   );
 };
