@@ -630,3 +630,48 @@
   position: absolute !important;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |------------------------------- RADIO BUTTON GROUP STYLE ------------------------------------------------------> */
+
+/* Container for radio buttons */
+.radio-button-group {
+  position: relative;
+  width: 100%;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+/* Hide default radio button */
+.radio-button {
+  position: absolute;
+  clip: rect(0,0,0,0);
+  pointer-events: none;
+}
+
+/* Label is the wrapper of radio */
+.radio-button-label {
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.7s ease;
+}
+
+/* Set special borders for first and last buttons */
+.radio-button-group > div:first-child > .radio-button-label {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.radio-button-group > div:last-child .radio-button-label {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+/* Change colors radio is checked */
+.radio-button:checked+.radio-button-label {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */

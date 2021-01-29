@@ -20,6 +20,7 @@ import { formulabarMainSelect } from '../styles/reactSelectStyles';
 import CustomSelect from '../components/customSelect';
 import productTourSteps from '../productTour';
 import { Backend, Dataframe } from '../core/backend';
+import { RadioButtonGroup } from '../components/radioButtonGroup';
 
 /*
  Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
@@ -193,7 +194,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Add the behavior described above
   const widgets = {
-    SelectWidget: CustomSelect
+    SelectWidget: CustomSelect,
+    RadioWidget: RadioButtonGroup
   };
 
   // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
