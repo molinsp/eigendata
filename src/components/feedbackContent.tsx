@@ -1,3 +1,7 @@
+// [COMPONENT] Element with thumb and text
+//   -> Description: return JSX.Element with svg "thumb" and text
+//   -> Used in: Formulabar
+
 import React from 'react';
 
 export const FeedbackContent = (
