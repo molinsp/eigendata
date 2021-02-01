@@ -52,6 +52,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
+    console.log('Active tab', activeTab);
     if (isVariableTab(activeTab)) {
       const keys = Object.keys(variables[0]);
       const columns = keys.map((key, index) => ({
