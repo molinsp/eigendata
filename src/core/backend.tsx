@@ -48,6 +48,7 @@ export class Backend {
   public dataframesLoaded = [];
   public packagesImported = [];
   public packageNamespaces = [];
+  public importedFunctions = [];
 
   // Data transformation functions
   public transformationsList = [];
@@ -235,7 +236,8 @@ export class Backend {
    {'name': 'ed_get_dfs', 'parameters': {}},
    {'name': 'ed_get_imported_modules', 'parameters': {}},  
    {'name': 'ed_get_nondf_variables', 'parameters': {}},
-   {'name': 'ed_get_module_namespaces', 'parameters': {}}
+   {'name': 'ed_get_module_namespaces', 'parameters': {}},
+   {'name': 'ed_get_functions', 'parameters': {}}
   ])
   `;
 
@@ -766,6 +768,7 @@ export class Backend {
         this.resetStateDatavisualizerFlag = true;
         this.packagesImported = kernelData['ed_get_imported_modules'];
         this.packageNamespaces = kernelData['ed_get_module_namespaces'];
+        this.importedFunctions = kernelData['ed_get_functions'];
       } else {
         console.log('Refreshing dataframes');
         const dataframeList: Array<Dataframe> = [];
@@ -781,6 +784,7 @@ export class Backend {
         this.dataframesLoaded = dataframeList;
         this.packagesImported = kernelData['ed_get_imported_modules'];
         this.packageNamespaces = kernelData['ed_get_module_namespaces'];
+        this.importedFunctions = kernelData['ed_get_functions'];
       }
       // Emit signal to re-render the component
       this.signal.emit();

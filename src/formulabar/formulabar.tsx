@@ -358,7 +358,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       formResponse,
       dataframeSelection
     );
-    props.logic.dataframeSelection = resultVariable;
     /*-----------------------------------------------
     Tracking in amplitude
     -----------------------------------------------*/
@@ -370,38 +369,74 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       });
     }
     /*-----------------------------------------------
-    Import libraries if needed
+    Import libraries/functions if needed
     -----------------------------------------------*/
-    const library =
-      logic.transformationsConfig[formResponse.schema.function]['library'];
+    if(typeof(logic.transformationsConfig[formResponse.schema.function]['library']) == 'undefined'
+      && typeof(logic.transformationsConfig[formResponse.schema.function]['snippet']) != 'undefined'){
+      console.log('CG: Code-gen for snippet');
+      /*----------------
+        FUNC SNIPPETS
+      -----------------*/
+      const snippetFunction =
+        logic.transformationsConfig[formResponse.schema.function]['snippet'];
 
-    // Check if there is a need for a namespace
-    let hasNamespace: boolean = false;
-    if (typeof(library['namespace']) != 'undefined'){
-      hasNamespace = true;
-    }
-    // Check if the library is already imported or not
+      console.log('CG: Imported functions', logic.importedFunctions);
+      if (logic.importedFunctions.includes(snippetFunction['name']) ){
+        console.log('CG: Snippet already imported');
+      }else{
+        console.log(
+          'CG: Snippet not imported, using statement',
+          snippetFunction['name']
+        );
 
-    // Case 1: No namespace
-    if (hasNamespace == false && logic.packagesImported.includes(library['name'])) {
-      console.log('CG: Package already imported');
-    }
-    // Case 2: There is a namespace, in which case you need both the import and the namespace for it to work
-    else if (hasNamespace == true && logic.packagesImported.includes(library['name']) && logic.packageNamespaces.includes(library['namespace']) ){
-      console.log('CG: Package & namespace already imported');
-    }
-    else {
-      console.log(
-        'CG: Not importes, using statement',
-        library['importStatement']
-      );
+        try {
+          await logic.pythonImportLibraries(snippetFunction['code']);
+        } catch (error) {
+          console.log(error);
+        }
 
-      try {
-        await logic.pythonImportLibraries(library['importStatement']);
-      } catch (error) {
-        console.log(error);
+      }
+
+
+    }
+    else{
+      /*----------------
+        MODULES
+      -----------------*/
+      console.log('CG: Code-gen for module');
+
+      const library =
+        logic.transformationsConfig[formResponse.schema.function]['library'];
+
+      // Check if there is a need for a namespace
+      let hasNamespace: boolean = false;
+      if (typeof(library['namespace']) != 'undefined'){
+        hasNamespace = true;
+      }
+      // Check if the library is already imported or not
+
+      // Case 1: No namespace
+      if (hasNamespace == false && logic.packagesImported.includes(library['name'])) {
+        console.log('CG: Module already imported');
+      }
+      // Case 2: There is a namespace, in which case you need both the import and the namespace for it to work
+      else if (hasNamespace == true && logic.packagesImported.includes(library['name']) && logic.packageNamespaces.includes(library['namespace']) ){
+        console.log('CG: Package & namespace already imported');
+      }
+      else {
+        console.log(
+          'CG: Module not imported, using statement',
+          library['importStatement']
+        );
+
+        try {
+          await logic.pythonImportLibraries(library['importStatement']);
+        } catch (error) {
+          console.log(error);
+        }
       }
     }
+
 
     /*-----------------------------------------------
     Generate & execute code
@@ -409,6 +444,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
     try {
       await logic.writeToNotebookAndExecute(formula);
+
+      // If executed successfully, save the result variable and focus it on the data visualizer
+      props.logic.dataframeSelection = resultVariable;
+      
       // Write and execute the formula in the notebook
       // Add submitted transformation to the feedback state
       setFeedbackState({
