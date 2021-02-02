@@ -153,7 +153,7 @@ export default class QueryBuilder extends Component<
 
     for (const i of colNamesSorted) {
       const colName = i;
-      console.log('Col name', colName);
+      //console.log('Col name', colName);
       // Check if there is any blank space in the column names
       if (/\s/.test(colName)) {
         // It has any kind of whitespace
