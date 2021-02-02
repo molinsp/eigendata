@@ -52,17 +52,23 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
+    console.log('Variables', variables);
     console.log('Active tab', activeTab);
     if (isVariableTab(activeTab)) {
-      const keys = Object.keys(variables[0]);
-      const columns = keys.map((key, index) => ({
-        accessor: key,
-        Header: key,
-        Cell: (props): string => getUSDString(props.value),
-        width: columnSizes['variables'] ? columnSizes['variables'][index] : 80
-      }));
-      setColumns([...columns]);
-      setData([...variables]);
+      try{
+        const keys = Object.keys(variables[0]);
+        const columns = keys.map((key, index) => ({
+          accessor: key,
+          Header: key,
+          Cell: (props): string => getUSDString(props.value),
+          width: columnSizes['variables'] ? columnSizes['variables'][index] : 80
+        }));
+        setColumns([...columns]);
+        setData([...variables]);
+      }catch(e){
+        console.log('Error switching to the variables tab');
+      }
+
     }
   }, [activeTab, props.logic.variablesLoaded]);
 
