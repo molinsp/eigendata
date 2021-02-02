@@ -18,8 +18,8 @@
           "decimal" : {
             "type" : "string",
             "default" : ".",
-            "title" : "decimal character",
-            "description" : "Value used to indicate decimals."
+            "title" : "decimal",
+            "description" : "Character used to indicate decimals."
           },
           "new table name" : {
             "type" : "string"
@@ -1733,6 +1733,117 @@
         "new",
         "static",
         "constant"
+      ]
+    },
+    "apply" : {
+      "form" : {
+        "properties" : {
+          "func" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "pd.to_numeric"
+            ],
+            "enumNames" : [
+              "to numeric"
+            ]
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "func"
+        ],
+        "title" : "Apply function to all dataframe",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "apply",
+        "description" : "Apply a function to all the dataframe columns"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "convert",
+        "numeric",
+        "number"
+      ]
+    },
+    "set_index" : {
+      "form" : {
+        "properties" : {
+          "keys" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Columns used in the pivot table. Leave blank gor a simple aggregation without columns."
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "required" : [
+          "keys"
+        ],
+        "title" : "Set index",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "set_index",
+        "description" : "Set a column as a dataframe index (e.g. unique identifier for rows)."
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "index"
+      ]
+    },
+    "reset_index" : {
+      "form" : {
+        "properties" : {
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Reset index",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "reset_index",
+        "description" : "Reset the index of a dataframe"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "index",
+        "remove"
       ]
     },
     "round" : {
@@ -3911,6 +4022,16 @@
             "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "facet_col" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a column."
+          },
+          "facet_row" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a row."
           }
         },
         "required" : [
@@ -3956,6 +4077,16 @@
             "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "facet_col" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a column."
+          },
+          "facet_row" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a row."
           }
         },
         "required" : [
@@ -3984,31 +4115,85 @@
         "importStatement" : "import plotly.express as px"
       }
     },
-    "euclidean_distance" : {
-      "type" : "snippet",
+    "scatter" : {
       "form" : {
         "properties" : {
-          "df1" : {
+          "x" : {
             "type" : "string",
-            "codegenstyle" : "variable",
-            "$ref" : "#/definitions/dataframes",
-            "description" : "First dataframe"
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the x axis."
           },
+          "y" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the y axis."
+          },
+          "color" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "size" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Size of the scatter points based on a variable."
+          },
+          "facet_col" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a column."
+          },
+          "facet_row" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a row."
+          }
+        },
+        "required" : [
+          "x",
+          "y"
+        ],
+        "type" : "object",
+        "title" : "[Charts] Scatter plot",
+        "callerObject" : "px",
+        "function" : "scatter",
+        "description" : "Generate a line chart",
+        "returnType" : "none",
+        "selectionAsParameter" : true,
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "keywords" : [
+        "write"
+      ],
+      "library" : {
+        "name" : "plotly.express",
+        "importStatement" : "import plotly.express as px"
+      }
+    },
+    "euclidean_distance" : {
+      "form" : {
+        "properties" : {
           "df2" : {
             "type" : "string",
             "codegenstyle" : "variable",
             "$ref" : "#/definitions/dataframes",
             "description" : "Second dataframe"
+          },
+          "new table name" : {
+            "type" : "string"
           }
         },
         "required" : [
-          "df1",
           "df2"
         ],
         "type" : "object",
         "title" : "[Snippet] Euclidean distance",
-        "callerObject" : "",
-        "function" : "euclidean_dist",
+        "function" : "euclidean_distance",
         "description" : "Calculate the row-wise euclidean distance between two dataframes with the same columns. Returns a dataframe with the index of the first dataframe and the corresponding euclidean distances.",
         "returnType" : "DataFrame",
         "definitions" : {
@@ -4016,9 +4201,18 @@
             "type" : "string",
             "enum" : []
           }
-        }
+        },
+        "selectionAsParameter" : true
       },
-      "snippet" : "def euclidean_dist(df1, df2):\n    eucl_d = np.linalg.norm(df1.values - df2.values, axis=1)\n    return pd.DataFrame({'eucl_d':eucl_d}, index=df1.index)"
+      "snippet" : {
+        "code" : "def euclidean_distance(df1, df2):\n    import numpy as np\n    eucl_d = np.linalg.norm(df1.values - df2.values, axis=1)\n    return pd.DataFrame({'eucl_d':eucl_d}, index=df1.index).reset_index()",
+        "name" : "euclidean_distance"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
     },
     "notfound" : {
       "form" : {
