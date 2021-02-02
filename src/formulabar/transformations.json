@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.28",
+  "version" : "0.0.30",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -18,8 +18,8 @@
           "decimal" : {
             "type" : "string",
             "default" : ".",
-            "title" : "decimal character",
-            "description" : "Value used to indicate decimals."
+            "title" : "decimal",
+            "description" : "Character used to indicate decimals."
           },
           "new table name" : {
             "type" : "string"
@@ -42,7 +42,8 @@
       },
       "library" : {
         "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "importStatement" : "import pandas as pd",
+        "namespace" : "pd"
       },
       "keywords" : [
         "csv",
@@ -132,6 +133,9 @@
       "uischema" : {
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -387,11 +391,11 @@
         "properties" : {
           "index" : {
             "$ref" : "#/definitions/columns",
-            "title" : "pivot table rows"
+            "description" : "Rows used in the pivot table."
           },
           "columns" : {
             "$ref" : "#/definitions/columns",
-            "title" : "pivot table columns"
+            "description" : "Columns used in the pivot table. Leave blank gor a simple aggregation without columns."
           },
           "mode" : {
             "type" : "string",
@@ -581,11 +585,14 @@
               "classNames" : "right-field"
             }
           }
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
         "count",
@@ -651,7 +658,6 @@
     "get_dummies" : {
       "form" : {
         "required" : [
-          "data",
           "columns"
         ],
         "definitions" : {
@@ -662,20 +668,9 @@
               "type" : "string",
               "enum" : []
             }
-          },
-          "dataframes" : {
-            "type" : "string",
-            "enum" : []
           }
         },
         "properties" : {
-          "data" : {
-            "type" : "string",
-            "codegenstyle" : "variable",
-            "$ref" : "#/definitions/dataframes",
-            "title" : "table",
-            "description" : "table to transform"
-          },
           "columns" : {
             "$ref" : "#/definitions/columns",
             "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators.",
@@ -700,7 +695,8 @@
         "description" : "Create new columns with 0/1 for each unique value in a column. Returns table with additional columns.",
         "type" : "object",
         "callerObject" : "pd",
-        "function" : "get_dummies"
+        "function" : "get_dummies",
+        "selectionAsParameter" : true
       },
       "uischema" : {
         "new table name" : {
@@ -797,8 +793,8 @@
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
         "expand",
@@ -1180,6 +1176,9 @@
         },
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "keywords" : [
@@ -1230,12 +1229,241 @@
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
         "hierarchical",
         "index"
+      ]
+    },
+    "clean_text_columns" : {
+      "form" : {
+        "properties" : {
+          "columns" : {
+            "$ref" : "#/definitions/columns"
+          },
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "custom",
+              "before_character",
+              "after_character",
+              "email",
+              "n_digits",
+              "between"
+            ],
+            "enumNames" : [
+              "custom",
+              "before character",
+              "after character",
+              "email",
+              "n_digits",
+              "between"
+            ],
+            "description" : "Use a preset to clean the text column or enter a custom regular expression."
+          }
+        },
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "custom"
+                    ]
+                  },
+                  "regex" : {
+                    "type" : "string",
+                    "description" : "Regular expression to clean data."
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "before_character"
+                    ]
+                  },
+                  "character" : {
+                    "type" : "string",
+                    "description" : "Keep the text before the entered character."
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "after_character"
+                    ]
+                  },
+                  "character" : {
+                    "type" : "string",
+                    "description" : "Keep the text after the entered character."
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "email"
+                    ]
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "n_digits"
+                    ]
+                  },
+                  "digits" : {
+                    "type" : "string"
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "between"
+                    ]
+                  },
+                  "start" : {
+                    "type" : "string"
+                  },
+                  "end" : {
+                    "type" : "string"
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "enumNames" : [
+                      "Include index",
+                      "Exclude index"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new table name" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "required" : [
+          "columns",
+          "mode"
+        ],
+        "title" : "Clean text from multiple columns",
+        "type" : "object",
+        "callerObject" : "DataFrame.fdt",
+        "function" : "clean_text_columns",
+        "description" : "Clean text from column using regex or function.",
+        "returnType" : "dataframe"
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
+        }
+      },
+      "library" : {
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
+      },
+      "keywords" : [
+        "substring",
+        "extract",
+        "clean"
       ]
     },
     "rename" : {
@@ -1457,52 +1685,6 @@
         "remove"
       ]
     },
-    "extract_number_from_string" : {
-      "form" : {
-        "properties" : {
-          "column" : {
-            "$ref" : "#/definitions/column",
-            "codegenstyle" : "ignore"
-          },
-          "dtype" : {
-            "type" : "string",
-            "default" : "int64",
-            "enum" : [
-              "int64",
-              "float64"
-            ],
-            "enumNames" : [
-              "Integer (e.g. 1, 2, 3)",
-              "Decimal number (e.g. 49.99)"
-            ],
-            "title" : "Number type"
-          },
-          "new column name" : {
-            "type" : "string"
-          }
-        },
-        "title" : "[Column] Extract number from text",
-        "description" : "Extract the first occurrence of a number from a text column",
-        "type" : "object",
-        "callerObject" : "DataFrame[Series].fdt",
-        "function" : "extract_number_from_string",
-        "definitions" : {
-          "column" : {
-            "type" : "string",
-            "enum" : []
-          }
-        }
-      },
-      "uischema" : {
-        "new column name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      },
-      "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
-      }
-    },
     "insert" : {
       "form" : {
         "required" : [
@@ -1551,6 +1733,117 @@
         "new",
         "static",
         "constant"
+      ]
+    },
+    "apply" : {
+      "form" : {
+        "properties" : {
+          "func" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "pd.to_numeric"
+            ],
+            "enumNames" : [
+              "to numeric"
+            ]
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "func"
+        ],
+        "title" : "Apply function to all dataframe",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "apply",
+        "description" : "Apply a function to all the dataframe columns"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "convert",
+        "numeric",
+        "number"
+      ]
+    },
+    "set_index" : {
+      "form" : {
+        "properties" : {
+          "keys" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Columns used in the pivot table. Leave blank gor a simple aggregation without columns."
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "required" : [
+          "keys"
+        ],
+        "title" : "Set index",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "set_index",
+        "description" : "Set a column as a dataframe index (e.g. unique identifier for rows)."
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "index"
+      ]
+    },
+    "reset_index" : {
+      "form" : {
+        "properties" : {
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "title" : "Reset index",
+        "type" : "object",
+        "callerObject" : "DataFrame",
+        "function" : "reset_index",
+        "description" : "Reset the index of a dataframe"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "index",
+        "remove"
       ]
     },
     "round" : {
@@ -1662,7 +1955,7 @@
         "check"
       ]
     },
-    "extract" : {
+    "clean_text_column" : {
       "form" : {
         "properties" : {
           "column" : {
@@ -1670,13 +1963,25 @@
             "title" : "column",
             "codegenstyle" : "ignore"
           },
-          "pat" : {
-            "title" : "pattern",
-            "description" : "Find this pattern in the column (includes partial matches)",
-            "type" : "string"
-          },
-          "new column name" : {
-            "type" : "string"
+          "mode" : {
+            "type" : "string",
+            "enum" : [
+              "custom",
+              "before_character",
+              "after_character",
+              "email",
+              "n_digits",
+              "between"
+            ],
+            "enumNames" : [
+              "custom",
+              "before character",
+              "after character",
+              "email",
+              "n_digits",
+              "between"
+            ],
+            "description" : "Use a preset to clean the text column or enter a custom regular expression."
           }
         },
         "definitions" : {
@@ -1685,27 +1990,196 @@
             "enum" : []
           }
         },
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "custom"
+                    ]
+                  },
+                  "regex" : {
+                    "type" : "string",
+                    "description" : "Regular expression to clean data."
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "before_character"
+                    ]
+                  },
+                  "character" : {
+                    "type" : "string",
+                    "description" : "Keep the text before the entered character."
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "after_character"
+                    ]
+                  },
+                  "character" : {
+                    "type" : "string",
+                    "description" : "Keep the text after the entered character."
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "email"
+                    ]
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "n_digits"
+                    ]
+                  },
+                  "digits" : {
+                    "type" : "string"
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "between"
+                    ]
+                  },
+                  "start" : {
+                    "type" : "string"
+                  },
+                  "end" : {
+                    "type" : "string"
+                  },
+                  "keep_unmatched" : {
+                    "type" : "string",
+                    "default" : "False",
+                    "enum" : [
+                      "True",
+                      "False"
+                    ],
+                    "enumNames" : [
+                      "Include index",
+                      "Exclude index"
+                    ],
+                    "codegenstyle" : "variable",
+                    "title" : "keep unmatched"
+                  },
+                  "new column name" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
         "required" : [
           "column",
-          "pat"
+          "mode"
         ],
-        "title" : "[Column] Extract text from column",
+        "title" : "[Column] Clean text from column",
         "type" : "object",
-        "callerObject" : "DataFrame[Series].str",
-        "function" : "extract",
-        "description" : "Extract capture groups in the regex pat as columns."
+        "callerObject" : "DataFrame[Series].fdt",
+        "function" : "clean_text_column",
+        "description" : "Clean text from column using regex or function.",
+        "returnType" : "series"
       },
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
-        "substring"
+        "substring",
+        "extract",
+        "clean"
       ]
     },
     "find" : {
@@ -2108,7 +2582,6 @@
                       "both",
                       "neither"
                     ],
-                    "default" : "right",
                     "description" : "For example, breaks of [1, 3, 5 o] closed on the right implies that nubmer 3 will be part of the interval (1-3]. If closed on the let, then 3 would be part of interval [3-5)"
                   },
                   "new column name" : {
@@ -2119,7 +2592,7 @@
             ]
           }
         },
-        "title" : "[Column] Bucket columns",
+        "title" : "[Column] Bin columns",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "bin_column",
         "type" : "object",
@@ -2129,11 +2602,14 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
         "bin",
@@ -2231,6 +2707,9 @@
         },
         "value" : {
           "ui:placeholder" : "E.g. \"text\" / 45"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "keywords" : [
@@ -2241,8 +2720,8 @@
         "replace"
       ],
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       }
     },
     "uppercase" : {
@@ -2416,6 +2895,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -2616,6 +3098,82 @@
         "importStatement" : "import pandas as pd"
       }
     },
+    "hour" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get datetime hour",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "hour",
+        "type" : "object",
+        "transformationType" : "property",
+        "description" : "Gets the hour value from a datetime column."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      }
+    },
+    "minute" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Get datetime minute",
+        "callerObject" : "DataFrame[Series].dt",
+        "function" : "minute",
+        "type" : "object",
+        "transformationType" : "property",
+        "description" : "Gets the minute value from a datetime column."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      }
+    },
     "divide" : {
       "form" : {
         "properties" : {
@@ -2697,6 +3255,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -2785,6 +3346,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -2873,6 +3437,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -2961,6 +3528,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3052,6 +3622,9 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
         }
       },
       "library" : {
@@ -3123,8 +3696,8 @@
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
         "new",
@@ -3431,6 +4004,215 @@
         "left",
         "right"
       ]
+    },
+    "line" : {
+      "form" : {
+        "properties" : {
+          "x" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the x axis."
+          },
+          "y" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the y axis."
+          },
+          "color" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "facet_col" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a column."
+          },
+          "facet_row" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a row."
+          }
+        },
+        "required" : [
+          "x",
+          "y"
+        ],
+        "type" : "object",
+        "title" : "[Charts] Line chart",
+        "callerObject" : "px",
+        "function" : "line",
+        "description" : "Generate a line chart",
+        "returnType" : "none",
+        "selectionAsParameter" : true,
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "keywords" : [
+        "write"
+      ],
+      "library" : {
+        "name" : "plotly.express",
+        "importStatement" : "import plotly.express as px"
+      }
+    },
+    "bar" : {
+      "form" : {
+        "properties" : {
+          "x" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the x axis."
+          },
+          "y" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the y axis."
+          },
+          "color" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "facet_col" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a column."
+          },
+          "facet_row" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a row."
+          }
+        },
+        "required" : [
+          "x",
+          "y"
+        ],
+        "type" : "object",
+        "title" : "[Charts] Bar chart",
+        "callerObject" : "px",
+        "function" : "bar",
+        "description" : "Generate a line chart",
+        "returnType" : "none",
+        "selectionAsParameter" : true,
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "keywords" : [
+        "write"
+      ],
+      "library" : {
+        "name" : "plotly.express",
+        "importStatement" : "import plotly.express as px"
+      }
+    },
+    "scatter" : {
+      "form" : {
+        "properties" : {
+          "x" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the x axis."
+          },
+          "y" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the y axis."
+          },
+          "color" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "size" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Size of the scatter points based on a variable."
+          },
+          "facet_col" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a column."
+          },
+          "facet_row" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a row."
+          }
+        },
+        "required" : [
+          "x",
+          "y"
+        ],
+        "type" : "object",
+        "title" : "[Charts] Scatter plot",
+        "callerObject" : "px",
+        "function" : "scatter",
+        "description" : "Generate a line chart",
+        "returnType" : "none",
+        "selectionAsParameter" : true,
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "keywords" : [
+        "write"
+      ],
+      "library" : {
+        "name" : "plotly.express",
+        "importStatement" : "import plotly.express as px"
+      }
+    },
+    "euclidean_distance" : {
+      "form" : {
+        "properties" : {
+          "df2" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes",
+            "description" : "Second dataframe"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "df2"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Euclidean distance",
+        "function" : "euclidean_distance",
+        "description" : "Calculate the row-wise euclidean distance between two dataframes with the same columns. Returns a dataframe with the index of the first dataframe and the corresponding euclidean distances.",
+        "returnType" : "DataFrame",
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "selectionAsParameter" : true
+      },
+      "snippet" : {
+        "code" : "def euclidean_distance(df1, df2):\n    import numpy as np\n    eucl_d = np.linalg.norm(df1.values - df2.values, axis=1)\n    return pd.DataFrame({'eucl_d':eucl_d}, index=df1.index).reset_index()",
+        "name" : "euclidean_distance"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
     },
     "notfound" : {
       "form" : {

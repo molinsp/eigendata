@@ -1,15 +1,17 @@
 /*eslint @typescript-eslint/no-unused-vars: ["off", {"varsIgnorePattern": "^_"}]*/
 import {
   BasicConfig,
+  Config,
   Operators,
   Settings,
   Types,
   Widgets
 } from 'react-awesome-query-builder';
 
-import React, { useEffect, useState } from 'react';
-import Select from 'react-select';
-import { querySelectStyles } from './styles/reactSelectStyles';
+import { QuerybuilderCustomSelect } from './querybuilderCustomSelect';
+import { QuerybuilderCustomMultiselect } from './querybuilderCustomMultiselect';
+
+import React from 'react';
 
 const InitialConfig = BasicConfig; // or BasicConfig or MaterialConfig
 
@@ -159,16 +161,11 @@ const types: Types = {
     }
   },
   boolean: {
-    defaultOperator: "equal",
+    defaultOperator: 'equal',
     valueSources: ['value'],
     widgets: {
       boolean: {
-        operators: [
-          "equal",
-          "not_equal",
-          'is_empty',
-          'is_not_empty'
-        ],
+        operators: ['equal', 'not_equal', 'is_empty', 'is_not_empty'],
         widgetProps: {
           //you can enable this if you don't use fields as value sources
           // hideOperator: true,
@@ -176,13 +173,10 @@ const types: Types = {
         }
       },
       field: {
-        operators: [
-          "equal",
-          "not_equal",
-        ],
+        operators: ['equal', 'not_equal']
       }
-    },
-  },
+    }
+  }
 };
 
 const widgets: Widgets = {
@@ -190,7 +184,9 @@ const widgets: Widgets = {
   multiselect: {
     ...InitialConfig.widgets.multiselect,
     type: 'multiselect',
-    factory: (props): JSX.Element => <CustomMultiSelect {...props} />,
+    factory: (props): JSX.Element => (
+      <QuerybuilderCustomMultiselect {...props} />
+    ),
     sqlFormatValue: (val): string => {
       return val.map(value => `'${value}'`);
     }
@@ -226,14 +222,14 @@ const operators: Operators = {
 const settings: Settings = {
   ...InitialConfig.settings,
   renderOperator: props => {
-    return <CustomSelect {...props} />;
+    return <QuerybuilderCustomSelect {...props} operatorField />;
   },
   renderField: props => {
-    return <CustomSelect {...props} />;
+    return <QuerybuilderCustomSelect {...props} />;
   }
 };
 
-const customConfig: any = {
+const customConfig: Config = {
   ...InitialConfig,
   types,
   operators,
@@ -242,54 +238,3 @@ const customConfig: any = {
 };
 
 export default customConfig;
-
-const CustomMultiSelect = (props): JSX.Element => {
-  const [options, setOptions] = useState([]);
-  useEffect(() => {
-    // React select requires 'value' field for options
-    const modifiedOptions = props.listValues.map(listValue => {
-      return { label: listValue.title, value: listValue.value };
-    });
-    setOptions(modifiedOptions);
-  }, []);
-  return (
-    <Select
-      onChange={(selection: ISelection[]): void => {
-        props.setValue(selection.map(item => item.value));
-      }}
-      isMulti
-      options={options}
-      menuPortalTarget={document.body}
-      styles={querySelectStyles}
-    />
-  );
-};
-
-const CustomSelect = (props): JSX.Element => {
-  const [options, setOptions] = useState([]);
-
-  useEffect(() => {
-    // React select requires 'value' field for options
-    const modifiedOptions = props.items.map(item => {
-      return { value: item.key, label: item.label };
-    });
-
-    setOptions(modifiedOptions);
-  }, []);
-
-  return (
-    <Select
-      onChange={(selection: ISelection): void => {
-        props.setField(selection.value);
-      }}
-      options={options}
-      menuPortalTarget={document.body}
-      styles={querySelectStyles}
-    />
-  );
-};
-
-interface ISelection {
-  value: string;
-  label: string;
-}

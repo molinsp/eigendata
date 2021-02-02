@@ -44,6 +44,13 @@
   display: flex !important;
 }
 
+/* Add ellipsis */
+.ellipsized {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 /* |----------------------- FORMULABAR: GENERAL STYLING -----------------------------------------------------------> */
@@ -71,6 +78,7 @@
   justify-content: space-between;
   width: 100%;
   margin-bottom: 10px;
+  position: relative;
 }
 
 /* Left and right fields of side-by-side container */
@@ -325,7 +333,7 @@
   display: block;
   padding: 2px 10px;
   color: #212529;
-  width: 100%;
+  width: max-content;
   text-decoration: none;
 }
 
@@ -361,7 +369,8 @@
 
 /* Container for table */
 .tab-item {
-  width: 100%;
+  width: fit-content;
+  max-width: 100%;
   margin-bottom: 15px;
   overflow: auto;
   border: 1px solid #ddd;
@@ -396,6 +405,64 @@
 .th > *{
   padding: .35rem;
 }
+
+.header {
+  position: relative;
+}
+
+.header:hover > .dropdown-header-button {
+  right: 0;
+}
+
+/* Dropdown button for column headers*/
+.dropdown-header-button {
+  border: 1px solid #949494;
+  transition: right 0.3s ease;
+  position: absolute;
+  width: 34px;
+  max-width: 100%;
+  right: -34px;
+  top: 0;
+  height: 90%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 4px 0 0 4px;
+  background-color: #969696;
+}
+
+.dropdown-header-button:hover {
+  cursor: pointer;
+}
+
+/* Header for dropdown menu */
+.sort-header {
+  color: #888888;
+  padding: 0 0 0 10px;
+  margin: 0;
+}
+
+/* Dropdown menu for column headers */
+.dropdown-header-menu {
+  padding: 10px;
+  border-radius: 5px;
+  position: absolute;
+  left: 0;
+  top: 50%;
+  z-index: 5;
+  background-color: #e3e3e3;
+  display: none;
+}
+
+/* Position of sort arrow */
+.sort-arrow {
+  position: absolute;
+  right: 10%;
+  top: 0;
+  color: white;
+  display: none;
+}
+
 /* Add different style to index column */
 .index-column-header {
   background-color: #585757;
@@ -427,11 +494,7 @@
   top: 0;
 }
 
-/* Add ellipsis to cells */
 .th, .td {
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow: hidden;
   cursor: text;
 }
 
@@ -456,10 +519,10 @@
 
 .delimiter-wrapper {
   background-color: transparent;
-  width: 20px;
+  width: 8px;
   position: absolute;
   top: 0;
-  right: -4px;
+  right: -2px;
   padding: 0;
   height: 100%;
   z-index: 5;
@@ -557,5 +620,58 @@
 .svg-icon circle {
   stroke: #4691f6;
   stroke-width: 1;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- CHAT WIDGET STYLE -------------------------------------------------------------> */
+
+/* Rewrite native style */
+.Papercups-toggleButtonContainer,
+.Papercups-chatWindowContainer {
+  position: absolute !important;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |------------------------------- RADIO BUTTON GROUP STYLE ------------------------------------------------------> */
+
+/* Container for radio buttons */
+.radio-button-group {
+  position: relative;
+  width: 100%;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+/* Hide default radio button */
+.radio-button {
+  position: absolute;
+  clip: rect(0,0,0,0);
+  pointer-events: none;
+}
+
+/* Label is the wrapper of radio */
+.radio-button-label {
+  color: #0d6efd;
+  border: 1px solid #0d6efd;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.7s ease;
+}
+
+/* Set special borders for first and last buttons */
+.radio-button-group > div:first-child > .radio-button-label {
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+.radio-button-group > div:last-child .radio-button-label {
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+}
+
+/* Change colors radio is checked */
+.radio-button:checked+.radio-button-label {
+  color: #fff;
+  background-color: #0d6efd;
+  border-color: #0d6efd;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */

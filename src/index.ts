@@ -4,15 +4,14 @@ import {
   ILayoutRestorer
 } from '@jupyterlab/application';
 
-import { MainAreaWidget, WidgetTracker} from '@jupyterlab/apputils';
-import { FormWidget, Backend } from './formulabar';
-import { DataVisualizerWidget } from './datavisualizer';
+import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
+import { FormWidget } from './components/formWidget';
+import { Backend } from './core/backend';
+import { DataVisualizerWidget } from './datavisualizer/datavisualizer';
 import { inspectorIcon } from '@jupyterlab/ui-components';
 import { searchIcon } from '@jupyterlab/ui-components';
 
-import {
-    INotebookTracker
-} from '@jupyterlab/notebook';
+import { INotebookTracker } from '@jupyterlab/notebook';
 
 import { IMainMenu } from '@jupyterlab/mainmenu';
 
@@ -35,11 +34,17 @@ const extension: JupyterFrontEndPlugin<void> = {
   id: '@molinsp/eigendata:plugin',
   autoStart: true,
   requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry],
-  activate: (app: JupyterFrontEnd, notebook_tracker: INotebookTracker, mainMenu: IMainMenu, restorer: ILayoutRestorer, settingRegistry: ISettingRegistry) => {
+  activate: (
+    app: JupyterFrontEnd,
+    notebook_tracker: INotebookTracker,
+    mainMenu: IMainMenu,
+    restorer: ILayoutRestorer,
+    settingRegistry: ISettingRegistry
+  ) => {
     console.log('JupyterLab Eigendata is activated!');
-    
-    let formulawidget : MainAreaWidget<FormWidget>;
-    let datavizwidget : MainAreaWidget<DataVisualizerWidget>;
+
+    let formulawidget: MainAreaWidget<FormWidget>;
+    let datavizwidget: MainAreaWidget<DataVisualizerWidget>;
 
     const { commands } = app;
     const command = CommandIDs.create;
@@ -63,8 +68,8 @@ const extension: JupyterFrontEndPlugin<void> = {
           //app.shell.add(formulawidget, 'main');
         }
         if (!tracker.has(formulawidget)) {
-        // Track the state of the formulawidget for later restoration
-        tracker.add(formulawidget);
+          // Track the state of the formulawidget for later restoration
+          tracker.add(formulawidget);
         }
         if (!formulawidget.isAttached) {
           // Attach the formulawidget to the main work area if it's not there
@@ -74,9 +79,9 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         // Activate the formulawidget
         app.shell.activateById(formulawidget.id);
-        }
+      }
     });
-    
+
     commands.addCommand(datavizcommand, {
       caption: 'Create a new Data Data Visualizer',
       label: 'Data Visualizer',
@@ -92,7 +97,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           //app.shell.add(datavizwidget, 'main');
         }
         if (!tracker.has(datavizwidget)) {
-        // Track the state of the datavizwidget for later restoration
+          // Track the state of the datavizwidget for later restoration
           viztracker.add(datavizwidget);
         }
         if (!datavizwidget.isAttached) {
@@ -103,11 +108,11 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         // Activate the datavizwidget
         app.shell.activateById(datavizwidget.id);
-        }
+      }
     });
-   
+
     // Track and restore the formulawidget state
-    let tracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
+    const tracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
       namespace: 'ed'
     });
     restorer.restore(tracker, {
@@ -115,15 +120,15 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: () => 'ed'
     });
 
-    // Track and restore the data visualizer state  
-    let viztracker = new WidgetTracker<MainAreaWidget<DataVisualizerWidget>>({
+    // Track and restore the data visualizer state
+    const viztracker = new WidgetTracker<MainAreaWidget<DataVisualizerWidget>>({
       namespace: 'dv'
     });
     restorer.restore(viztracker, {
       command: datavizcommand,
       name: () => 'dv'
     });
-   
+
     // Create a menu
     const tutorialMenu: Menu = new Menu({ commands });
     tutorialMenu.title.label = 'Eigendata';
@@ -131,7 +136,10 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Add the command to the menu
     tutorialMenu.addItem({ command, args: { origin: 'from the menu' } });
-    tutorialMenu.addItem({ command: datavizcommand, args: { origin: 'from the menu' } });
+    tutorialMenu.addItem({
+      command: datavizcommand,
+      args: { origin: 'from the menu' }
+    });
   }
 };
 

@@ -1,4 +1,4 @@
-export const python_initialization_script = `
+export const pythonInitializationScript = `
 # ---------------- Multi-backend caller ----------------
 def call_backend_functions(functions):
     results = {}
@@ -45,6 +45,25 @@ def ed_keep_nondf_variables(v):
             return False
     except:
         pass
+
+def ed_keep_modules(v):
+    try:
+        obj = eval(v)
+        # Ignore internal variables
+        if getattr(obj, "__version__", None) != None:
+            return True
+    except:
+        pass
+
+def ed_keep_functions(v):
+    try:
+        obj = eval(v)
+        # Check if it is a function
+        # and ignore internal eigendata functions
+        if callable(obj) and v[:2] != 'ed':
+            return True
+    except:
+        pass
     
 def ed_get_nondf_variables():
     values = _jupyterlab_variableinspector_nms.who_ls()
@@ -62,6 +81,16 @@ def ed_get_dfs():
 
 def ed_get_imported_modules():
     return list(sys.modules.keys())
+
+def ed_get_module_namespaces():
+    values = _jupyterlab_variableinspector_nms.who_ls()
+    vararray = [_v for _v in values if ed_keep_modules(_v)]
+    return vararray
+
+def ed_get_functions():
+    values = _jupyterlab_variableinspector_nms.who_ls()
+    vararray = [_v for _v in values if ed_keep_functions(_v)]
+    return vararray
 
 # ---------------- GET DF COLUMNS AS JSON ----------------
 def ed_get_json_column_values(df):
@@ -230,7 +259,7 @@ def ed_format_data_for_visualization(df_data):
             #If not handled, treat as a string
             df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
 
-def ed_prep_data_for_visualization(dfmi,index=False):
+def ed_prep_data_for_visualization(dfmi,index=False, sortby=None, ascending=False):
     """
     Prepare multiindex dataframe (data) and options
     to display it with corresponding row grouping and
@@ -241,6 +270,8 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     """
 
     df_data = dfmi.copy()
+    if sortby != None:
+        df_data = df_data.sort_values(by=sortby, ascending=ascending)
     
     # Abreviations: mi is multi index
 
@@ -314,6 +345,4 @@ def ed_prep_data_for_visualization(dfmi,index=False):
     
     # 3. Return as JSON
     return json.dumps(result, ensure_ascii=False, allow_nan=False)
-# ---------------- FASTDATA IMPORT ----------------
-from fastdata.core import *
 `;
