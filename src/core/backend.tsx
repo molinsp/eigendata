@@ -1,6 +1,19 @@
 // -------------------------------------------------------------------------------------------------------------
 // BACKEND LOGIC
 // -------------------------------------------------------------------------------------------------------------
+/*
+  The Eigendata backend communicates between the Magic Formula Bar and the Jupyter Kernel
+  Major functionality include:
+  - (A) HANDLE CHANGE OF NOTEBOOK: Keeping track of notebooks in the Jupyter applicaiton
+  - (B) HANDLE CODE RUNNING IN NOTEBOOK: Keeping track of the state in each Jupyter notebook, and update it every time code runs
+    - This includes thigns like dataframes loaded, other variables, imported packages, imported functions, etc.
+    - Most of the code for this is in initscript.ts
+  - (C) API FOR REACT GUI: Handle execution of GUI tasks in the backend
+    - Examples include completing the transformations form with kernel data
+  - (D) UTILITIES: Utilities to communicate with the kernel   
+*/
+
+
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 // KernelConnector class. See file for more details.
 import { KernelConnector } from './kernelconnector';
@@ -243,7 +256,9 @@ export class Backend {
   `;
 
   // -------------------------------------------------------------------------------------------------------------
-  // INTERNAL UTILITIES
+  //
+  // (D) INTERNAL UTILITIES
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   /*----------------------------------------------------------------------------------------------------
@@ -301,7 +316,9 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // API FOR REACT GUI
+  //
+  // (C) API FOR REACT GUI
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   /*----------------------------------------------------------------------------------------------------
@@ -556,7 +573,9 @@ export class Backend {
   }
 
   /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Remove table
+  [FUNCTION] Remove table from python kernel
+  -> Returns: na
+  -> Writes: na
   -----------------------------------------------------------------------------------------------------*/
   public async pythonRemoveTable(table: string): Promise<void> {
     const codeToRun = 'del ' + table;
@@ -573,7 +592,9 @@ export class Backend {
   }
 
   /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Import library with given statment
+  [FUNCTION] Import library/ snippet with given statment
+  -> Returns: na
+  -> Writes: na
   -----------------------------------------------------------------------------------------------------*/
   public async pythonImportLibraries(importStatement: string): Promise<void> {
     // Execute the import in the kernel
@@ -611,7 +632,9 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // HANDLE CHANGE OF NOTEBOOK
+  //
+  // (A) HANDLE CHANGE OF NOTEBOOK
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   /*----------------------------------------------------------------------------------------------------
@@ -685,7 +708,9 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // HANDLE CODE RUNNING IN NOTEBOOK
+  //
+  // (B) HANDLE CODE RUNNING IN NOTEBOOK
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   // Overview: codeRunningOnNotebook ->  pythonRequestDataframes -> handleGetDataframesResponse
