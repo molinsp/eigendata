@@ -22,31 +22,25 @@ import productTourSteps from '../productTour';
 import { Backend, Dataframe } from '../core/backend';
 import { RadioButtonGroup } from '../components/radioButtonGroup';
 
+// -------------------------------------------------------------------------------------------------------------
+// FORMULABAR COMPONENT
+// -------------------------------------------------------------------------------------------------------------
 /*
- Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
- Components:
-   1.  REACT GUI
-       - Form code generator: A function that takes the form input and generates+executes the code in the notebook
-   2.  BACKEND LOGIC
-       - Variable tracker: There is a set of functions that keeps track of what dataframes are in the kernel
-         The variable tracker takes the form of a set of Python scripts that are rendered to python
-       - Functions that execute code against the Python Kernel
+ This magic formula bar provides a GUI over python functions with the goal of facilitating the use by non experts
+ and non technical users
+
+ How this works on a high-level is that we define a json schema for each function, and render that as a form for
+ the end user. The end user can interact with the form, and upon submission this form generates "code" in a 
+ notebook cell
+
+ Functionality in this file:
+   - (A) Search: Find transformations using keywords and log data when users search
+   - (B) Form handling: Display form when user selects data and transformation and request the json schema
+   - (C) Code generation: Update internal state after generating code and generating the "text" out of the
+       json object returned by reactjsonschemaform
+   - (D) Logic to get feedback from users after they have used a transformation
 */
 
-// -------------------------------------------------------------------------------------------------------------
-// 1. REACT GUI
-// -------------------------------------------------------------------------------------------------------------
-
-/**
- React component that renders forms based on JSON
- Inputs from the backend:
-   Functions:
-     - getTransformationFormSchema: Gets the transformation form from the backend
-     - pythonGetDataframeColumns: Used to update the forms dynamically
-   Properties:
-     - dataframesLoaded: Available dataframes
-     - transformationsList: Available transformationsList
- */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
 export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Access backend class through logic object
@@ -76,7 +70,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     return result;
   };
 
-  /* State of the component:
+  /* Main state of the component:
       - Transformation form
       - UI schema
       - Show or not show form: If we don't have both dataframe and transformation selected, we don't show the form
@@ -106,8 +100,37 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   });
 
   /*-----------------------------------
-  REACT SELECT LOG SEARCH
+  RESET STATE LOGIC
   -----------------------------------*/
+  if (logic.resetStateFormulabarFlag === true) {
+    console.log('RESETING FORMULABAR STATE');
+    setState({
+      ...state,
+      transformationForm: transformationForm,
+      transformationUI: defaultUISchema,
+      showForm: true,
+      dataframeSelection: null,
+      transformationSelection: defaultTransformationSelection,
+      formData: {},
+      queryConfig: null
+    });
+    logic.resetStateFormulabarFlag = false;
+
+    // This starts the product tour. It's here because it needs to load after the rest of the elements
+    if (logic.completedProductTour === false) {
+      setProductTourState({ run: true });
+      // Change the settings for it not to run next time (next refresh)
+      logic.eigendataSettings.set('completedProductTour', true);
+      // Set to true for it not to run again in the current session
+      logic.completedProductTour = true;
+    }
+  }
+
+
+  /*-----------------------------------
+    (A) SEARCH
+  -----------------------------------*/
+  // Log what the users are searching
   let prevInput = '';
   const handleInputChange = (inputValue): void => {
     if (inputValue.length === 0 && prevInput.length !== 0) {
@@ -137,36 +160,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     prevInput = inputValue;
   };
 
-  /*-----------------------------------
-  RESET STATE LOGIC: Backend triggers FE reset
-  -----------------------------------*/
-  if (logic.resetStateFormulabarFlag === true) {
-    console.log('RESETING FORMULABAR STATE');
-    setState({
-      ...state,
-      transformationForm: transformationForm,
-      transformationUI: defaultUISchema,
-      showForm: true,
-      dataframeSelection: null,
-      transformationSelection: defaultTransformationSelection,
-      formData: {},
-      queryConfig: null
-    });
-    logic.resetStateFormulabarFlag = false;
-
-    // This starts the product tour. It's here because it needs to load after the rest of the elements
-    if (logic.completedProductTour === false) {
-      setProductTourState({ run: true });
-      // Change the settings for it not to run next time (next refresh)
-      logic.eigendataSettings.set('completedProductTour', true);
-      // Set to true for it not to run again in the current session
-      logic.completedProductTour = true;
-    }
-  }
-
-  /*-----------------------------------
-  Custom search for transformations
-  -----------------------------------*/
+  // Search logic
   const getKeywordsForFilter = (option, rawInput) => {
     // Add keywords to search
     let keywords = '';
@@ -192,11 +186,16 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     );
   };
 
+  /*--------------------------------------
+    (B) FORM HANDLING
+  ---------------------------------------*/
+
   // Add the behavior described above
   const widgets = {
     SelectWidget: CustomSelect,
     RadioWidget: RadioButtonGroup
   };
+
 
   // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
   const handleFormChange = async (data): Promise<void> => {
@@ -317,6 +316,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       });
     }
   };
+
+  /*--------------------------------------
+    (C) GENERATE CODE & UPDATE INTERNALS
+  ---------------------------------------*/
 
   // Generate python code and write in the notebook
   const callGeneratePythonCode = async (formResponse: any): Promise<void> => {
@@ -497,9 +500,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   /*--------------------------------------
-  SELECT TRANSFORMATION: When data loaded
+    (D) FEEDBACK LOGIC
   ---------------------------------------*/
-  // To-do: Add button to load data even in this case
 
   const extraErrors = state.error
     ? { form: { __errors: [state.error.message] } }
@@ -634,6 +636,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             widgets={widgets}
             uiSchema={state.transformationUI}
             extraErrors={extraErrors}
+            omitExtraData={true}
           />
         )}
         {state.queryConfig && (

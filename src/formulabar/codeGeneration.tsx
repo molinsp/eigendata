@@ -201,9 +201,9 @@ export const generatePythonCode = (
       // Name of the field that holds the dependencies. WE ONLY SUPPORT ONE FIELD
       const modeFieldName = Object.keys(formResponse.schema.dependencies)[0];
 
-      // Selected item in dependency enum
+      // Get mode selected by the user
       const selectedMode = formData[modeFieldName];
-      // Index of selected enum
+      // Get index of that mode
       const selectedModeIndex = formResponse.schema.properties[modeFieldName][
         'enum'
       ].findIndex(element => element.localeCompare(selectedMode) === 0);
@@ -212,6 +212,8 @@ export const generatePythonCode = (
         '--->',
         formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
       );
+
+      // Get the schema from the dependencies
       fieldSchema =
         formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
           .properties[key];
