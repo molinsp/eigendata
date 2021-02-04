@@ -1,3 +1,4 @@
+import 'abortcontroller-polyfill';
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 import React, { useState, useEffect } from 'react';
 import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
@@ -16,6 +17,9 @@ import {
  * @returns The React component
  */
 
+const controller = new window.AbortController();
+const signal = controller.signal;
+
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
@@ -25,6 +29,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [shape, setShape] = useState({});
   const [columnSizes, setColumnSizes] = useState({});
   const [sortConfig, setSortConfig] = useState({sortBy: undefined, ascending: undefined})
+  const [loading, setLoading] = useState(false);
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
@@ -52,8 +57,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
-    console.log('Variables', variables);
-    console.log('Active tab', activeTab);
     if (isVariableTab(activeTab)) {
       try{
         const keys = Object.keys(variables[0]);
@@ -65,7 +68,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         }));
         setColumns([...columns]);
         setData([...variables]);
-      }catch(e){
+      } catch(e){
         console.log('Error switching to the variables tab');
       }
 
@@ -78,6 +81,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       try {
         const dataframes = props.logic.dataframesLoaded;
         if (dataframes[activeTab]) {
+          setLoading(true);
           const result = await props.logic.pythonGetDataForVisualization(
             dataframes[activeTab].value, sortConfig.sortBy, sortConfig.ascending
           );
@@ -101,13 +105,32 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         }
       } catch (e) {
         setShowTable(false);
+      } finally {
+        setLoading(false);
       }
     };
 
-    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
-    if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
-      getDataForVisualization();
+    const getDataForVisualizationWrapper = (signal): Promise<any> => {
+      return new Promise((resolve, reject) => {
+        getDataForVisualization().then(() => resolve());
+        signal.addEventListener('abort', () => {
+          reject('Promise aborted')
+        });
+      });
     }
+
+    const cancelPromise = (): void => {
+      controller.abort()
+      console.log(controller);
+    }
+
+    if (loading) {
+      cancelPromise();
+    } else {
+      getDataForVisualizationWrapper(signal).catch((e) => console.log(e));
+    }
+
+
   }, [activeTab, props.logic.dataframesLoaded, sortConfig]);
 
   // Default size of columns
