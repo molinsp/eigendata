@@ -8,7 +8,7 @@ export const RadioButtonGroup = (props): JSX.Element => {
   return (
     <div className="radio-button-group">
       {props.options.enumOptions.map((option, index) => (
-        <div key={option.label + index}>
+        <div key={option.label + index} className="radio-wrapper">
           <input
             type="radio"
             className="radio-button"
@@ -18,7 +18,10 @@ export const RadioButtonGroup = (props): JSX.Element => {
             }}
             checked={props.value === option.value}
           />
-          <label className="radio-button-label" htmlFor={`rb-${index}`}>
+          <label
+            className="radio-button-label ellipsized"
+            htmlFor={`rb-${index}`}
+          >
             {option.label}
           </label>
         </div>
