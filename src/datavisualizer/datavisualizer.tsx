@@ -123,13 +123,14 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       controller.abort()
       console.log(controller);
     }
-
-    if (loading) {
-      cancelPromise();
-    } else {
-      getDataForVisualizationWrapper(signal).catch((e) => console.log(e));
+    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
+    if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
+      if (loading) {
+        cancelPromise();
+      } else {
+        getDataForVisualizationWrapper(signal).catch((e) => console.log(e));
+      }
     }
-
 
   }, [activeTab, props.logic.dataframesLoaded, sortConfig]);
 
