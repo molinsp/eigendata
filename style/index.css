@@ -641,6 +641,10 @@
   vertical-align: middle;
 }
 
+.radio-wrapper {
+  min-width: 65px;
+}
+
 /* Hide default radio button */
 .radio-button {
   position: absolute;
@@ -655,6 +659,7 @@
   padding: 6px 12px;
   cursor: pointer;
   transition: all 0.7s ease;
+  width: 100%;
 }
 
 /* Set special borders for first and last buttons */
