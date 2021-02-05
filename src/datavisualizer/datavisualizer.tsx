@@ -11,6 +11,7 @@ import {
   separateThousands
 } from '../utils/stringUtils';
 import { binIcon } from '../assets/svgs';
+import { PaginationPanel } from '../components/paginationPanel';
 
 /**
  * React component for a counter.
@@ -21,6 +22,14 @@ import { binIcon } from '../assets/svgs';
 //A controller object that allows to abort requests as and when desired
 const controller = new window.AbortController();
 const signal = controller.signal;
+const paginationSelectOptions = [
+  {value: 10, label: 'Show 10'},
+  {value: 15, label: 'Show 15'},
+  {value: 20, label: 'Show 20'},
+  {value: 25, label: 'Show 25'},
+  {value: 30, label: 'Show 30'},
+  {value: 35, label: 'Show 35'}
+]
 
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columns, setColumns] = useState([]);
@@ -32,6 +41,8 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columnSizes, setColumnSizes] = useState({});
   const [sortConfig, setSortConfig] = useState({sortBy: undefined, ascending: undefined})
   const [loading, setLoading] = useState(false);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [rowsShown, setRowsShown] = useState(paginationSelectOptions[3]);
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
@@ -425,6 +436,16 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               </div>
             </div>
           </div>
+          <PaginationPanel
+            onTextChange={setPageNumber}
+            textValue={pageNumber}
+            pageCount={2}
+            selectionConfig={{
+              options: paginationSelectOptions,
+              selectedValue: rowsShown,
+              onSelect: setRowsShown
+            }}
+          />
         </div>
        : <p>No data available</p>}
     </div>
