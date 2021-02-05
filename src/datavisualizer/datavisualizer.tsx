@@ -17,6 +17,7 @@ import {
  * @returns The React component
  */
 
+//A controller object that allows to abort requests as and when desired
 const controller = new window.AbortController();
 const signal = controller.signal;
 
@@ -81,6 +82,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       try {
         const dataframes = props.logic.dataframesLoaded;
         if (dataframes[activeTab]) {
+          //start data loading (get dataframes from backend)
           setLoading(true);
           const result = await props.logic.pythonGetDataForVisualization(
             dataframes[activeTab].value, sortConfig.sortBy, sortConfig.ascending
@@ -106,13 +108,16 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       } catch (e) {
         setShowTable(false);
       } finally {
+        //loading is finished (no matter success or not)
         setLoading(false);
       }
     };
 
-    const getDataForVisualizationWrapper = (signal): Promise<any> => {
+    //wrap getDataForVisualization() function in cancelable Promise
+    const getDataForVisualizationWrapper = (signal): Promise<void> => {
       return new Promise((resolve, reject) => {
         getDataForVisualization().then(() => resolve());
+        //if abort() method was called we reject this Promise
         signal.addEventListener('abort', () => {
           reject('Promise aborted')
         });
@@ -121,14 +126,16 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
     const cancelPromise = (): void => {
       controller.abort()
-      console.log(controller);
     }
+
     const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
     if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
+      //if new update requests are coming reject previous requests
       if (loading) {
         cancelPromise();
+      //else let it (the last one) be resolved
       } else {
-        getDataForVisualizationWrapper(signal).catch((e) => console.log(e));
+        getDataForVisualizationWrapper(signal).catch();
       }
     }
 
