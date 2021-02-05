@@ -10,6 +10,7 @@ import {
   cutString,
   separateThousands
 } from '../utils/stringUtils';
+import { binIcon } from '../assets/svgs';
 
 /**
  * React component for a counter.
@@ -65,11 +66,16 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           accessor: key,
           Header: key,
           Cell: (props): string => getUSDString(props.value),
-          width: columnSizes['variables'] ? columnSizes['variables'][index] : 80
+          //if there are custom sizes for columns - apply them
+          width: columnSizes['variables'] ? columnSizes['variables'][index]
+            // else - use default 160 : 80 : 160 sizes for columns
+            : (index === 0 || index === 2) ? 160 : 80
         }));
         setColumns([...columns]);
         setData([...variables]);
       } catch(e){
+        props.logic.dataframeSelection = props.logic.dataframesLoaded[0].value;
+        setActiveTab(0);
         console.log('Error switching to the variables tab');
       }
 
@@ -189,9 +195,17 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   const deleteTab = async (table: string, menusToClose: string): Promise<void> => {
-    await props.logic.pythonRemoveTable(table);
+    await props.logic.pythonRemoveData(table);
     closeDropdownMenus(menusToClose);
   };
+
+  const deleteVariable = async (variable: string): Promise<void> => {
+    await props.logic.pythonRemoveData(variable);
+    if (props.logic.variablesLoaded.length === 0) {
+      setActiveTab(0);
+      props.logic.dataframeSelection = props.logic.dataframesLoaded[0].value;
+    }
+  }
 
   const isLastRow = (row: number): boolean => {
     return row === headerGroups.length - 1;
@@ -399,6 +413,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                           </div>
                         );
                       })}
+                      <button
+                        className="trash-bin-button"
+                        onClick={async (): Promise<void> => await deleteVariable(row.cells[0].value)}
+                      >
+                        {isVariableTab(activeTab) && binIcon}
+                      </button>
                     </div>
                   );
                 })}
