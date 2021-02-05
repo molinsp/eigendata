@@ -70,6 +70,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     return result;
   };
 
+  const dataframeSelectionRef = React.useRef();
+
   /* Main state of the component:
       - Transformation form
       - UI schema
@@ -99,6 +101,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     run: false
   });
 
+  const setFocusOnElement = (element: HTMLElement): void => {
+    element.focus();
+  };
+
   /*-----------------------------------
   RESET STATE LOGIC
   -----------------------------------*/
@@ -125,7 +131,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       logic.completedProductTour = true;
     }
   }
-
 
   /*-----------------------------------
     (A) SEARCH
@@ -195,7 +200,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     SelectWidget: CustomSelect,
     RadioWidget: RadioButtonGroup
   };
-
 
   // UPDATE FORMS DYNAMICALLY, i.e. when the input of a form field changes, the form itself changes
   const handleFormChange = async (data): Promise<void> => {
@@ -374,8 +378,14 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     /*-----------------------------------------------
     Import libraries/functions if needed
     -----------------------------------------------*/
-    if(typeof(logic.transformationsConfig[formResponse.schema.function]['library']) == 'undefined'
-      && typeof(logic.transformationsConfig[formResponse.schema.function]['snippet']) != 'undefined'){
+    if (
+      typeof logic.transformationsConfig[formResponse.schema.function][
+        'library'
+      ] === 'undefined' &&
+      typeof logic.transformationsConfig[formResponse.schema.function][
+        'snippet'
+      ] !== 'undefined'
+    ) {
       console.log('CG: Code-gen for snippet');
       /*----------------
         FUNC SNIPPETS
@@ -384,9 +394,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         logic.transformationsConfig[formResponse.schema.function]['snippet'];
 
       console.log('CG: Imported functions', logic.importedFunctions);
-      if (logic.importedFunctions.includes(snippetFunction['name']) ){
+      if (logic.importedFunctions.includes(snippetFunction['name'])) {
         console.log('CG: Snippet already imported');
-      }else{
+      } else {
         console.log(
           'CG: Snippet not imported, using statement',
           snippetFunction['name']
@@ -397,12 +407,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         } catch (error) {
           console.log(error);
         }
-
       }
-
-
-    }
-    else{
+    } else {
       /*----------------
         MODULES
       -----------------*/
@@ -412,21 +418,24 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         logic.transformationsConfig[formResponse.schema.function]['library'];
 
       // Check if there is a need for a namespace
-      let hasNamespace: boolean = false;
-      if (typeof(library['namespace']) != 'undefined'){
+      let hasNamespace = false;
+      if (typeof library['namespace'] !== 'undefined') {
         hasNamespace = true;
       }
       // Check if the library is already imported or not
 
       // Case 1: No namespace
-      if (hasNamespace == false && logic.packagesImported.includes(library['name'])) {
+      if (!hasNamespace && logic.packagesImported.includes(library['name'])) {
         console.log('CG: Module already imported');
       }
       // Case 2: There is a namespace, in which case you need both the import and the namespace for it to work
-      else if (hasNamespace == true && logic.packagesImported.includes(library['name']) && logic.packageNamespaces.includes(library['namespace']) ){
+      else if (
+        hasNamespace &&
+        logic.packagesImported.includes(library['name']) &&
+        logic.packageNamespaces.includes(library['namespace'])
+      ) {
         console.log('CG: Package & namespace already imported');
-      }
-      else {
+      } else {
         console.log(
           'CG: Module not imported, using statement',
           library['importStatement']
@@ -440,7 +449,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       }
     }
 
-
     /*-----------------------------------------------
     Generate & execute code
     -----------------------------------------------*/
@@ -451,10 +459,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       console.log('CG: Return type', returnType);
       // If executed successfully, save the result variable and focus it on the data visualizer
       // Only if we have saves a new dataframe or series, exclude the case where execution result is not saved
-      if(returnType.localeCompare('none') != 0){
+      if (returnType.localeCompare('none') !== 0) {
         props.logic.dataframeSelection = resultVariable;
       }
-      
+
       // Write and execute the formula in the notebook
       // Add submitted transformation to the feedback state
       setFeedbackState({
@@ -481,6 +489,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           error: null
         }));
       }
+      setFocusOnElement(dataframeSelectionRef.current);
     } catch (error) {
       // Log transformation errors
       if (logic.production && logic.shareProductData) {
@@ -624,6 +633,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             filterOption={getKeywordsForFilter}
             maxMenuHeight={400}
             styles={formulabarMainSelect}
+            autoFocus={true}
+            ref={dataframeSelectionRef}
           />
         </fieldset>
         <div className="centered formulaFormDivider" />
