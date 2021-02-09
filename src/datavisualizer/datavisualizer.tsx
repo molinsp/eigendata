@@ -1,3 +1,4 @@
+import 'abortcontroller-polyfill';
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 import React, { useState, useEffect } from 'react';
 import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
@@ -16,6 +17,10 @@ import {
  * @returns The React component
  */
 
+//A controller object that allows to abort requests as and when desired
+const controller = new window.AbortController();
+const signal = controller.signal;
+
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
@@ -25,6 +30,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [shape, setShape] = useState({});
   const [columnSizes, setColumnSizes] = useState({});
   const [sortConfig, setSortConfig] = useState({sortBy: undefined, ascending: undefined})
+  const [loading, setLoading] = useState(false);
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
@@ -52,8 +58,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   //Rerender variables table
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
-    console.log('Variables', variables);
-    console.log('Active tab', activeTab);
     if (isVariableTab(activeTab)) {
       try{
         const keys = Object.keys(variables[0]);
@@ -65,7 +69,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         }));
         setColumns([...columns]);
         setData([...variables]);
-      }catch(e){
+      } catch(e){
         console.log('Error switching to the variables tab');
       }
 
@@ -78,6 +82,8 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       try {
         const dataframes = props.logic.dataframesLoaded;
         if (dataframes[activeTab]) {
+          //start data loading (get dataframes from backend)
+          setLoading(true);
           const result = await props.logic.pythonGetDataForVisualization(
             dataframes[activeTab].value, sortConfig.sortBy, sortConfig.ascending
           );
@@ -101,13 +107,38 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         }
       } catch (e) {
         setShowTable(false);
+      } finally {
+        //loading is finished (no matter success or not)
+        setLoading(false);
       }
     };
 
+    //wrap getDataForVisualization() function in cancelable Promise
+    const getDataForVisualizationWrapper = (signal): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        getDataForVisualization().then(() => resolve());
+        //if abort() method was called we reject this Promise
+        signal.addEventListener('abort', () => {
+          reject('Promise aborted')
+        });
+      });
+    }
+
+    const cancelPromise = (): void => {
+      controller.abort()
+    }
+
     const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
     if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
-      getDataForVisualization();
+      //if new update requests are coming reject previous requests
+      if (loading) {
+        cancelPromise();
+      //else let it (the last one) be resolved
+      } else {
+        getDataForVisualizationWrapper(signal).catch();
+      }
     }
+
   }, [activeTab, props.logic.dataframesLoaded, sortConfig]);
 
   // Default size of columns
