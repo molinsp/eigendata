@@ -1,57 +1,86 @@
+// [COMPONENT] Panel for pagination control
+//   -> Description: return JSX.Element with buttons and selects
+// that allows to add pagination for table
+//   -> Used in: Datavizualizer
+
 import React from 'react';
 import Select from 'react-select';
 
 export const PaginationPanel = (props: Props): JSX.Element => {
+  const modifiedSelectedOption = {
+    ...props.currentPageConfig.selectedOption
+  };
+  modifiedSelectedOption.label =
+    props.currentPageConfig.selectedOption.label + ` of ${props.pageSize}`;
   return (
     <div className="pagination-panel">
-      <button className="pagination-segment" onClick={props.onFirstClick}>
+      <button
+        className="pagination-segment"
+        onClick={props.onFirstClick}
+        disabled={props.currentPageConfig.selectedOption.value === 1}
+      >
         First
       </button>
-      <button className="pagination-segment" onClick={props.onPrevClick}>
+      <button
+        className="pagination-segment"
+        onClick={props.onPrevClick}
+        disabled={props.currentPageConfig.selectedOption.value === 1}
+      >
         &#10094;
       </button>
-      <button className="pagination-segment" onClick={props.onNextClick}>
+      <button
+        className="pagination-segment"
+        onClick={props.onNextClick}
+        disabled={
+          props.currentPageConfig.selectedOption.value === props.pageSize
+        }
+      >
         &#10095;
       </button>
-      <button className="pagination-segment" onClick={props.onLastClick}>
+      <button
+        className="pagination-segment"
+        onClick={props.onLastClick}
+        disabled={
+          props.currentPageConfig.selectedOption.value === props.pageSize
+        }
+      >
         Last
       </button>
-      <div className="pagination-segment">Page 1 of {props.pageCount}</div>
-      <div className="pagination-segment">
-        <input
-          onChange={(e): void => {
-            let value = Number(e.target.value) > 0 ? e.target.value : 1;
-            value = value <= props.pageCount ? value : props.pageCount;
-            props.onTextChange(value);
-          }}
-          value={props.textValue}
-          type="number"
-        />
-      </div>
       <Select
-        options={props.selectionConfig.options}
-        value={props.selectionConfig.selectedValue}
-        onChange={props.selectionConfig.onSelect}
+        options={props.currentPageConfig.options}
+        value={modifiedSelectedOption}
+        onChange={(value): void => props.currentPageConfig.onSelect(value)}
         className="pagination-select"
+        placeholder="Go to the page..."
+        menuPlacement="auto"
+        isSearchable
+      />
+      <Select
+        options={props.pageSizeSelectionConfig.options}
+        value={props.pageSizeSelectionConfig.selectedOption}
+        onChange={(value): void =>
+          props.pageSizeSelectionConfig.onSelect(value)
+        }
+        className="pagination-select"
+        menuPlacement="auto"
       />
     </div>
   );
 };
 
 type Props = {
-  textValue: number;
-  onTextChange(value): void;
-  pageCount: number;
+  pageSize: number;
   onNextClick?(): void;
   onPrevClick?(): void;
   onFirstClick?(): void;
   onLastClick?(): void;
-  selectionConfig?: SelectionConfig;
+  pageSizeSelectionConfig?: SelectionConfig;
+  currentPageConfig?: SelectionConfig;
 };
 
 type SelectionConfig = {
   options: Option[];
-  selectedValue: Option;
+  selectedOption: Option;
   onSelect(value): void;
 };
 

@@ -558,6 +558,7 @@
   width: 100%;
   display: flex;
   border-radius: 3px;
+  flex-wrap: wrap;
 }
 
 .pagination-segment {

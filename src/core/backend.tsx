@@ -525,15 +525,24 @@ export class Backend {
   public async pythonGetDataForVisualization(
     dataframe: string,
     sortBy?: string,
-    ascending?: boolean
+    ascending?: boolean,
+    page?: number,
+    pageSize?: number
   ) {
     const isAscending = (): string => (ascending ? 'True' : 'False');
-    let codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe})`;
+    let codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe}`;
     if (sortBy) {
-      codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe}, sortby="${sortBy}", ${
-        ascending !== undefined ? 'ascending=' + isAscending() : ''
-      })`;
+      codeToRun += `, sortby="${sortBy}" ${
+        ascending !== undefined ? ', ascending=' + isAscending() : ''
+      }`;
     }
+    if (page) {
+      codeToRun += `, page=${page}`;
+    }
+    if (pageSize) {
+      codeToRun += `, page_size=${pageSize}`;
+    }
+    codeToRun += ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this.codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
