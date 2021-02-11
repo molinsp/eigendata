@@ -584,6 +584,15 @@
   border-radius: 0 3px 3px 0;
 }
 
+button.pagination-segment {
+  background-color: white;
+}
+
+button.pagination-segment:disabled {
+  background-color: #dedede;
+  color: #797979;
+}
+
 button.pagination-segment:active {
   background-color: silver;
 }
