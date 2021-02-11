@@ -552,6 +552,53 @@
 
 /* <---------------------------------------------------------------------------------------------------------------| */
 
+/* |---------------------------------------- PAGINATION PANEL -----------------------------------------------------> */
+
+.pagination-panel {
+  width: 100%;
+  display: flex;
+  border-radius: 3px;
+  flex-wrap: wrap;
+}
+
+.pagination-segment {
+  padding: 5px 12px;
+  border: 1px solid hsl(0, 0%, 80%);
+  min-width: 50px;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-select {
+  width: 200px;
+}
+
+.pagination-segment:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.pagination-segment:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
+button.pagination-segment {
+  background-color: white;
+}
+
+button.pagination-segment:disabled {
+  background-color: #dedede;
+  color: #797979;
+}
+
+button.pagination-segment:active {
+  background-color: silver;
+}
+
+/* <---------------------------------------------------------------------------------------------------------------| */
+
 /* |-------------------------------- FEEDBACK BUTTONS STYLE RULES -------------------------------------------------> */
 
 .BinaryFeedback__container,

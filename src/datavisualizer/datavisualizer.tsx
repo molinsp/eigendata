@@ -11,6 +11,8 @@ import {
   separateThousands
 } from '../utils/stringUtils';
 import { binIcon } from '../assets/svgs';
+import { PaginationPanel } from '../components/paginationPanel';
+import { Option } from 'react-select/src/filters';
 
 /**
  * React component for a counter.
@@ -22,6 +24,21 @@ import { binIcon } from '../assets/svgs';
 const controller = new window.AbortController();
 const signal = controller.signal;
 
+const getOptions = (from: number, to: number, counter: number, label: string): Option[] => {
+  const array = [];
+  for (let i = from; i <= to; i += counter) {
+    array.push({value: i, label: `${label} ${i}`})
+  }
+  return array
+}
+
+const defaultPanelState = {
+  currentPageOptions: [],
+  pageSizeOptions: getOptions(10, 40, 5, 'Show'),
+  currentPageSelection: {value: 1, label: 'Page 1'},
+  pageSizeSelection: {value: 25, label: 'Show 25'}
+}
+
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columns, setColumns] = useState([]);
   const [data, setData] = useState([]);
@@ -32,6 +49,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columnSizes, setColumnSizes] = useState({});
   const [sortConfig, setSortConfig] = useState({sortBy: undefined, ascending: undefined})
   const [loading, setLoading] = useState(false);
+  const [paginationPanelState, setPaginationPanelState] = useState({ ...defaultPanelState });
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
@@ -45,16 +63,14 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     props.logic.resetStateDatavisualizerFlag = false;
   }
 
-  // Set active tab to the latest dataframe/variable
+  // Set options of current page Select when shape is loaded
   useEffect(() => {
-    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
-    if (dataframeValues.length > 0) {
-      const currentDataframeValue = props.logic.dataframeSelection;
-      //if there is variable name, indexOf returns -1 - index of variable tab
-      const index = dataframeValues.indexOf(currentDataframeValue)
-      setActiveTab(index);
-    }
-  }, [props.logic.dataframeSelection]);
+    const pageSize = Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value);
+    setPaginationPanelState({
+      ...defaultPanelState,
+      currentPageOptions: getOptions(1, pageSize, 1, 'Page')
+    });
+  }, [shape['rows'], props.logic.dataframeSelection])
 
   //Rerender variables table
   useEffect(() => {
@@ -91,7 +107,11 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           //start data loading (get dataframes from backend)
           setLoading(true);
           const result = await props.logic.pythonGetDataForVisualization(
-            dataframes[activeTab].value, sortConfig.sortBy, sortConfig.ascending
+            dataframes[activeTab].value,
+            sortConfig.sortBy,
+            sortConfig.ascending,
+            paginationPanelState.currentPageSelection.value,
+            paginationPanelState.pageSizeSelection.value
           );
           // Add missing methods and properties
           const columns = result['columns'].map((column, index) => {
@@ -105,11 +125,11 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             column.Cell = (props): string => getUSDString(props.value);
             return column;
           });
-            setShowTable(true);
-            setColumns([...columns]);
-            setData([...result['data']]);
-            setColumnTypes([...result['columnTypes']]);
-            setShape({ ...result['shape'] });
+          setShowTable(true);
+          setColumns([...columns]);
+          setData([...result['data']]);
+          setColumnTypes([...result['columnTypes']]);
+          setShape({ ...result['shape'] });
         }
       } catch (e) {
         setShowTable(false);
@@ -134,18 +154,14 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       controller.abort()
     }
 
-    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
-    if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
-      //if new update requests are coming reject previous requests
-      if (loading) {
-        cancelPromise();
-      //else let it (the last one) be resolved
-      } else {
-        getDataForVisualizationWrapper(signal).catch();
-      }
+    if (loading) {
+      cancelPromise();
+    //else let it (the last one) be resolved
+    } else {
+      getDataForVisualizationWrapper(signal).catch();
     }
 
-  }, [activeTab, props.logic.dataframesLoaded, sortConfig]);
+  }, [activeTab, props.logic.dataframesLoaded, sortConfig, paginationPanelState]);
 
   // Default size of columns
   const defaultColumn = React.useMemo(
@@ -226,6 +242,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         });
     }
     setSortConfig({sortBy: undefined, ascending: undefined});
+    setPaginationPanelState({ ...defaultPanelState })
   }
 
   const onMouseUpHandler = (): void => {
@@ -260,6 +277,13 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       default: return '';
     }
   }
+
+  const goToThePage = (page: number): void => {
+    setPaginationPanelState({
+      ...paginationPanelState,
+      currentPageSelection: paginationPanelState.currentPageOptions[page-1]
+    })
+  };
 
   return (
     <div className="full-height-container"> {binderUrl &&
@@ -327,8 +351,9 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               ? <p className="disclaimer">Data shape: {separateThousands(props.logic.variablesLoaded.length)} rows.</p>
               : <p className="disclaimer">
                 Data shape: {separateThousands(shape['rows'])} rows and{' '}
-                {shape['columns']} columns. Preview: first {data.length} rows
-                and {shape['displayedColumns']} columns.
+                {shape['columns']} columns. {shape['columns'] > shape['displayedColumns']
+                ? 'Only '+ shape['displayedColumns'] + ' displayed.'
+                : ''}
               </p>}
           </nav>
           <div className="tab-item">
@@ -425,6 +450,35 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               </div>
             </div>
           </div>
+          {(!isVariableTab(activeTab)) &&
+            <PaginationPanel
+              pageSize={Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value)}
+              pageSizeSelectionConfig={{
+                options: paginationPanelState.pageSizeOptions,
+                selectedOption: paginationPanelState.pageSizeSelection,
+                onSelect: (value): void => {
+                  const pageSize: number = Math.ceil(shape['rows']/value.value);
+                  setPaginationPanelState({
+                    ...paginationPanelState,
+                    currentPageOptions: getOptions(1, pageSize, 1, 'Page'),
+                    pageSizeSelection: value,
+                    currentPageSelection: paginationPanelState.currentPageSelection.value > pageSize
+                      ? { value: pageSize, label: 'Page ' + (pageSize) }
+                      : paginationPanelState.currentPageSelection
+                  });
+                }
+              }}
+              currentPageConfig={{
+                options: paginationPanelState.currentPageOptions,
+                selectedOption: paginationPanelState.currentPageSelection,
+                onSelect: (value): void => setPaginationPanelState({...paginationPanelState, currentPageSelection: value})
+              }}
+              onFirstClick={(): void => goToThePage(1)}
+              onLastClick={(): void => goToThePage(Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value))}
+              onPrevClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value - 1)}
+              onNextClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value + 1)}
+            />
+          }
         </div>
        : <p>No data available</p>}
     </div>
