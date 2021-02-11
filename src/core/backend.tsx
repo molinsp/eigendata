@@ -13,7 +13,6 @@
   - (D) UTILITIES: Utilities to communicate with the kernel   
 */
 
-
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 // KernelConnector class. See file for more details.
 import { KernelConnector } from './kernelconnector';
@@ -90,7 +89,7 @@ export class Backend {
   public resetStateFormulabarFlag = false;
   public resetStateDatavisualizerFlag = false;
 
-  // Production flag that determines if usage analytics are captured 
+  // Production flag that determines if usage analytics are captured
   public production = false;
 
   public eigendataSettings: ISettingRegistry.ISettings;
@@ -526,15 +525,24 @@ export class Backend {
   public async pythonGetDataForVisualization(
     dataframe: string,
     sortBy?: string,
-    ascending?: boolean
+    ascending?: boolean,
+    page?: number,
+    pageSize?: number
   ) {
     const isAscending = (): string => (ascending ? 'True' : 'False');
-    let codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe})`;
+    let codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe}`;
     if (sortBy) {
-      codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe}, sortby="${sortBy}", ${
-        ascending !== undefined ? 'ascending=' + isAscending() : ''
-      })`;
+      codeToRun += `, sortby="${sortBy}" ${
+        ascending !== undefined ? ', ascending=' + isAscending() : ''
+      }`;
     }
+    if (page) {
+      codeToRun += `, page=${page}`;
+    }
+    if (pageSize) {
+      codeToRun += `, page_size=${pageSize}`;
+    }
+    codeToRun += ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this.codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
@@ -573,12 +581,12 @@ export class Backend {
   }
 
   /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Remove table from python kernel
+  [FUNCTION] Remove table or variable from python kernel
   -> Returns: na
   -> Writes: na
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonRemoveTable(table: string): Promise<void> {
-    const codeToRun = 'del ' + table;
+  public async pythonRemoveData(data: string): Promise<void> {
+    const codeToRun = 'del ' + data;
     console.log('Request expression', codeToRun);
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
@@ -592,7 +600,7 @@ export class Backend {
   }
 
   /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Import library/ snippet with given statment
+  [FUNCTION] Import library/ snippet with given statement
   -> Returns: na
   -> Writes: na
   -----------------------------------------------------------------------------------------------------*/
@@ -784,9 +792,7 @@ export class Backend {
 
       const variables = kernelData['ed_get_nondf_variables'];
 
-      if (variables.length > 0) {
-        this.variablesLoaded = variables;
-      }
+      this.variablesLoaded = variables;
 
       if (dataframes.length === 0) {
         // If there is no data loaded, reset frontend component
