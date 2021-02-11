@@ -63,7 +63,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     props.logic.resetStateDatavisualizerFlag = false;
   }
 
-  // Set options of current page Select when shape is loaded
+  /*--------------------------------------------------------------------
+    PAGINATION: Set the page number the user is seeing
+    Triggered when:
+      - shape['rows']: When the size of the data changes
+      - props.logic.dataframeSelection: The user changes the dataframe
+  ----------------------------------------------------------------------*/
   useEffect(() => {
     const pageSize = Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value);
     setPaginationPanelState({
@@ -72,7 +77,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     });
   }, [shape['rows'], props.logic.dataframeSelection])
 
-  //Rerender variables table
+  /*--------------------------------------------------------------------
+    VARIABLES TAB: Display variables
+    Triggered when:
+      - activeTab: Change the variables tab
+      - props.logic.variablesLoaded: Change in variables loaded
+  ----------------------------------------------------------------------*/
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
     if (isVariableTab(activeTab)) {
@@ -98,7 +108,14 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     }
   }, [activeTab, props.logic.variablesLoaded]);
 
-  //Rerender other tables
+  /*--------------------------------------------------------------------
+    DATAFRAMES TABS: Display variables
+    Triggered when:
+      - activeTab: Change the variables tab
+      - dataframesLoaded:
+      - sortConfig:
+      - paginationPanelState:
+  ----------------------------------------------------------------------*/
   useEffect(() => {
     const getDataForVisualization = async (): Promise<void> => {
       try {
