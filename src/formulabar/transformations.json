@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.30",
+  "version" : "0.0.31",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -611,7 +611,8 @@
         "for",
         "each",
         "group",
-        "by"
+        "by",
+        "over"
       ]
     },
     "transpose" : {
@@ -2617,6 +2618,52 @@
         "group"
       ]
     },
+    "extract_json" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "path" : {
+            "type" : "string",
+            "description" : "See examples here https://jmespath.org/examples.html"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "path",
+          "column"
+        ],
+        "title" : "[Column] Extract JSON",
+        "description" : "Extract json using path",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].fdt",
+        "function" : "extract_json",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      },
+      "library" : {
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
+      },
+      "keywords" : [
+        "hierarchical",
+        "index"
+      ]
+    },
     "fill_empty" : {
       "form" : {
         "properties" : {
@@ -2834,7 +2881,6 @@
           "mode" : {
             "oneOf" : [
               {
-                "title" : "From date text",
                 "properties" : {
                   "mode" : {
                     "enum" : [
