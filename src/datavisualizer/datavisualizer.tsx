@@ -65,7 +65,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Set options of current page Select when shape is loaded
   useEffect(() => {
-    const pageSize = Math.round(shape['rows']/paginationPanelState.pageSizeSelection.value);
+    const pageSize = Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value);
     setPaginationPanelState({
       ...defaultPanelState,
       currentPageOptions: getOptions(1, pageSize, 1, 'Page')
@@ -452,12 +452,12 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           </div>
           {(!isVariableTab(activeTab)) &&
             <PaginationPanel
-              pageSize={Math.round(shape['rows']/paginationPanelState.pageSizeSelection.value)}
+              pageSize={Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value)}
               pageSizeSelectionConfig={{
                 options: paginationPanelState.pageSizeOptions,
                 selectedOption: paginationPanelState.pageSizeSelection,
                 onSelect: (value): void => {
-                  const pageSize: number = Math.round(shape['rows']/value.value);
+                  const pageSize: number = Math.ceil(shape['rows']/value.value);
                   setPaginationPanelState({
                     ...paginationPanelState,
                     currentPageOptions: getOptions(1, pageSize, 1, 'Page'),
@@ -474,7 +474,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                 onSelect: (value): void => setPaginationPanelState({...paginationPanelState, currentPageSelection: value})
               }}
               onFirstClick={(): void => goToThePage(1)}
-              onLastClick={(): void => goToThePage(Math.round(shape['rows']/paginationPanelState.pageSizeSelection.value))}
+              onLastClick={(): void => goToThePage(Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value))}
               onPrevClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value - 1)}
               onNextClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value + 1)}
             />
