@@ -47,7 +47,9 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   // Set active tab to the latest dataframe/variable
   useEffect(() => {
     const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
-    if (dataframeValues.length > 0) {
+    // Handle case of no dataframeSelection
+    console.log('DV: Focus on the selected dataframe');
+    if (dataframeValues.length > 0 && props.logic.dataframeSelection) {
       const currentDataframeValue = props.logic.dataframeSelection;
       //if there is variable name, indexOf returns -1 - index of variable tab
       const index = dataframeValues.indexOf(currentDataframeValue)
