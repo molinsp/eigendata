@@ -555,7 +555,6 @@
 /* |---------------------------------------- PAGINATION PANEL -----------------------------------------------------> */
 
 .pagination-panel {
-  width: 100%;
   display: flex;
   border-radius: 3px;
   flex-wrap: wrap;
@@ -761,5 +760,34 @@ button.pagination-segment:active {
   font-weight: bold;
   font-size: 14px;
   color: #109CF1;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- RELOAD BUTTON STYLE -----------------------------------------------------------> */
+.reload-button__container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reload-button__container:active *{
+  color: #a4d1f8;
+}
+
+.reload-button__container > button {
+  border: none;
+  background-color: transparent;
+}
+
+.reload-button__container > label{
+  font-style: normal;
+  font-weight: bold;
+  font-size: 12px;
+  color: #109CF1;
+  cursor: pointer;
+}
+
+.reload-button__container:hover > * {
+  color: #23527c;
+  text-decoration: underline;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
