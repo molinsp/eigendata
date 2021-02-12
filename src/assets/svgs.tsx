@@ -79,7 +79,7 @@ export const noDataMagnifier: JSX.Element = (
       r="86.0656"
       fill="#F1F1F1"
       stroke="#C4C4C4"
-      stroke-width="2"
+      strokeWidth="2"
     />
     <circle
       cx="164.41"
@@ -87,7 +87,7 @@ export const noDataMagnifier: JSX.Element = (
       r="61.1897"
       fill="#FFFEFF"
       stroke="#C4C4C4"
-      stroke-width="2"
+      strokeWidth="2"
     />
     <path
       d="M164.41 135.128C164.41 134.215 163.669 133.472 162.756 133.504C151.33 133.902 140.411 138.423 132.037 146.261C123.662 154.099 118.43 164.695 117.277 176.07C117.185 176.979 117.877 177.767 118.789 177.828C119.7 177.888 120.484 177.197 120.579 176.289C121.675 165.752 126.535 155.94 134.297 148.676C142.058 141.411 152.17 137.21 162.756 136.813C163.669 136.779 164.41 136.042 164.41 135.128Z"
@@ -102,7 +102,7 @@ export const noDataMagnifier: JSX.Element = (
       transform="rotate(-45 232.151 273.177)"
       fill="#F1F1F1"
       stroke="#C4C4C4"
-      stroke-width="2"
+      strokeWidth="2"
     />
     <rect
       x="260.672"
