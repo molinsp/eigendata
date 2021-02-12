@@ -457,11 +457,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       await logic.writeToNotebookAndExecute(formula);
 
       console.log('CG: Return type', returnType);
-      // If executed successfully, save the result variable and focus it on the data visualizer
-      // Only if we have saves a new dataframe or series, exclude the case where execution result is not saved
-      if (returnType.localeCompare('none') !== 0) {
-        props.logic.dataframeSelection = resultVariable;
-      }
 
       // Write and execute the formula in the notebook
       // Add submitted transformation to the feedback state

@@ -112,9 +112,9 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     DATAFRAMES TABS: Display variables
     Triggered when:
       - activeTab: Change the variables tab
-      - dataframesLoaded:
-      - sortConfig:
-      - paginationPanelState:
+      - dataframesLoaded: User load new or delete dataframe
+      - sortConfig: User select one of sort options
+      - paginationPanelState: User interacts with pagination panel
   ----------------------------------------------------------------------*/
   useEffect(() => {
     const getDataForVisualization = async (): Promise<void> => {
@@ -178,7 +178,13 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       getDataForVisualizationWrapper(signal).catch();
     }
 
-  }, [activeTab, props.logic.dataframesLoaded, sortConfig, paginationPanelState]);
+  }, [
+    activeTab,
+    props.logic.dataframesLoaded,
+    sortConfig,
+    paginationPanelState.pageSizeSelection,
+    paginationPanelState.currentPageSelection
+  ]);
 
   // Default size of columns
   const defaultColumn = React.useMemo(
@@ -259,7 +265,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
         });
     }
     setSortConfig({sortBy: undefined, ascending: undefined});
-    setPaginationPanelState({ ...defaultPanelState })
   }
 
   const onMouseUpHandler = (): void => {
