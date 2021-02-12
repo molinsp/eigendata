@@ -528,7 +528,7 @@
   width: 8px;
   position: absolute;
   top: 0;
-  right: -2px;
+  right: -3px;
   padding: 0;
   height: 100%;
   z-index: 5;
@@ -585,6 +585,7 @@
 
 button.pagination-segment {
   background-color: white;
+  color: black;
 }
 
 button.pagination-segment:disabled {
@@ -630,6 +631,7 @@ button.pagination-segment:active {
 
 #feedback {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
   justify-content: space-between;
 }
@@ -637,10 +639,12 @@ button.pagination-segment:active {
 #feedback__negative-description {
   display: none;
   width: 66%;
+  min-width: 310px;
 }
 
 #feedback__buttons {
   width: 33%;
+  min-width: 230px;
 }
 
 .feedback__content {
