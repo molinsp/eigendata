@@ -13,6 +13,7 @@ import {
 import { binIcon } from '../assets/svgs';
 import { PaginationPanel } from '../components/paginationPanel';
 import { Option } from 'react-select/src/filters';
+import { EmptyStateComponent } from '../components/noDataLoadedComponent';
 
 /**
  * React component for a counter.
@@ -502,7 +503,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             />
           }
         </div>
-       : <p>No data available</p>}
+       : <EmptyStateComponent/>}
     </div>
   );
 };
