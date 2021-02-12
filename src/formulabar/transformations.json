@@ -2664,6 +2664,59 @@
         "index"
       ]
     },
+    "add_timedelta" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "title" : "column",
+            "codegenstyle" : "ignore"
+          },
+          "value" : {
+            "type" : "string",
+            "description" : "Can be negative or positive. Accept text following this format \"2 days 2 hours 15 minutes 30 seconds\""
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "value",
+          "column"
+        ],
+        "title" : "[Column] Calculate time difference",
+        "description" : "Calculate time difference",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].fdt",
+        "function" : "add_timedelta",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      },
+      "library" : {
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
+      },
+      "keywords" : [
+        "time",
+        "date",
+        "day",
+        "month",
+        "year",
+        "minute",
+        "add",
+        "subtract",
+        "calculate"
+      ]
+    },
     "fill_empty" : {
       "form" : {
         "properties" : {
