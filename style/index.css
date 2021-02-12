@@ -739,3 +739,27 @@ button.pagination-segment:active {
   border-color: #0d6efd;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- EMPTY STATE COMPONENT STYLE ---------------------------------------------------> */
+.empty-state__container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-state__title {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 34px;
+  color: #858585;
+}
+
+.empty-state__link {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 14px;
+  color: #109CF1;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
