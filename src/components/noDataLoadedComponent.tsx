@@ -18,5 +18,5 @@ export const EmptyStateComponent = ({ onLinkClick }: Props): JSX.Element => {
 };
 
 type Props = {
-  onLinkClick(): void;
+  onLinkClick?(): void;
 };
