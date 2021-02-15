@@ -14,6 +14,7 @@ import { binIcon } from '../assets/svgs';
 import { PaginationPanel } from '../components/paginationPanel';
 import { Option } from 'react-select/src/filters';
 import { EmptyStateComponent } from '../components/noDataLoadedComponent';
+import { ReloadButton } from '../components/reloadButton';
 
 /**
  * React component for a counter.
@@ -55,14 +56,23 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
 
-  if (props.logic.resetStateDatavisualizerFlag === true) {
+  const resetState = (): void => {
     console.log('RESETING DATA VISUALIZER STATE');
     setColumns([]);
     setData([]);
     setShowTable(false);
     setActiveTab(0);
-    props.logic.resetStateDatavisualizerFlag = false;
+    setPaginationPanelState({...defaultPanelState});
+    setSortConfig({sortBy: undefined, ascending: undefined});
+    setColumnSizes({});
+    setColumnTypes([]);
+    setShape({});
   }
+
+    if (props.logic.resetStateDatavisualizerFlag === true) {
+     resetState();
+     props.logic.resetStateDatavisualizerFlag = false;
+    }
 
   /*--------------------------------------------------------------------
     PAGINATION: Set the page number the user is seeing
@@ -474,36 +484,39 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
             </div>
           </div>
           {(!isVariableTab(activeTab)) &&
-            <PaginationPanel
-              pageSize={Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value)}
-              pageSizeSelectionConfig={{
-                options: paginationPanelState.pageSizeOptions,
-                selectedOption: paginationPanelState.pageSizeSelection,
-                onSelect: (value): void => {
-                  const pageSize: number = Math.ceil(shape['rows']/value.value);
-                  setPaginationPanelState({
-                    ...paginationPanelState,
-                    currentPageOptions: getOptions(1, pageSize, 1, 'Page'),
-                    pageSizeSelection: value,
-                    currentPageSelection: paginationPanelState.currentPageSelection.value > pageSize
-                      ? { value: pageSize, label: 'Page ' + (pageSize) }
-                      : paginationPanelState.currentPageSelection
-                  });
-                }
-              }}
-              currentPageConfig={{
-                options: paginationPanelState.currentPageOptions,
-                selectedOption: paginationPanelState.currentPageSelection,
-                onSelect: (value): void => setPaginationPanelState({...paginationPanelState, currentPageSelection: value})
-              }}
-              onFirstClick={(): void => goToThePage(1)}
-              onLastClick={(): void => goToThePage(Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value))}
-              onPrevClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value - 1)}
-              onNextClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value + 1)}
-            />
+            <div style={{display: 'flex'}}>
+              <PaginationPanel
+                pageSize={Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value)}
+                pageSizeSelectionConfig={{
+                  options: paginationPanelState.pageSizeOptions,
+                  selectedOption: paginationPanelState.pageSizeSelection,
+                  onSelect: (value): void => {
+                    const pageSize: number = Math.ceil(shape['rows']/value.value);
+                    setPaginationPanelState({
+                      ...paginationPanelState,
+                      currentPageOptions: getOptions(1, pageSize, 1, 'Page'),
+                      pageSizeSelection: value,
+                      currentPageSelection: paginationPanelState.currentPageSelection.value > pageSize
+                        ? { value: pageSize, label: 'Page ' + (pageSize) }
+                        : paginationPanelState.currentPageSelection
+                    });
+                  }
+                }}
+                currentPageConfig={{
+                  options: paginationPanelState.currentPageOptions,
+                  selectedOption: paginationPanelState.currentPageSelection,
+                  onSelect: (value): void => setPaginationPanelState({...paginationPanelState, currentPageSelection: value})
+                }}
+                onFirstClick={(): void => goToThePage(1)}
+                onLastClick={(): void => goToThePage(Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value))}
+                onPrevClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value - 1)}
+                onNextClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value + 1)}
+              />
+              <ReloadButton title="Reload datavizualizer" onClick={resetState}/>
+            </div>
           }
         </div>
-       : <EmptyStateComponent/>}
+       : <EmptyStateComponent onReloadButtonClick={resetState}/>}
     </div>
   );
 };

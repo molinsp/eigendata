@@ -163,3 +163,35 @@ export const noDataMagnifier: JSX.Element = (
     />
   </svg>
 );
+
+export const reloadIcon: JSX.Element = (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 18 18"
+    fill="none"
+  >
+    <g clipPath="url(#clip0)">
+      <path
+        d="M17.25 3V7.5H12.75"
+        stroke="#109CF1"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15.3675 11.25C14.88 12.6299 13.9572 13.8141 12.7382 14.6239C11.5191 15.4337 10.0699 15.8254 8.60885 15.74C7.14782 15.6545 5.75415 15.0965 4.63785 14.15C3.52155 13.2036 2.7431 11.9199 2.41981 10.4926C2.09651 9.06518 2.24589 7.5714 2.84543 6.23631C3.44497 4.90122 4.46219 3.79716 5.7438 3.09049C7.02541 2.38382 8.50198 2.11284 9.951 2.31837C11.4 2.5239 12.743 3.19481 13.7775 4.23001L17.25 7.50001"
+        stroke="#109CF1"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </g>
+    <defs>
+      <clipPath id="clip0">
+        <rect width="18" height="18" fill="white" />
+      </clipPath>
+    </defs>
+  </svg>
+);
