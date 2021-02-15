@@ -21,6 +21,10 @@
             "title" : "decimal",
             "description" : "Character used to indicate decimals."
           },
+          "header" : {
+            "type" : "number",
+            "description" : "Row to use for the column labels (first row is 0)."
+          },
           "new table name" : {
             "type" : "string"
           }
