@@ -16,16 +16,6 @@ export const EmptyStateComponent = ({
       <p className="empty-state__link">
         Use the Magic Formula Bar to load data
       </p>
-      <a
-        className="empty-state__link"
-        onClick={(): void => {
-          if (onLinkClick) {
-            onLinkClick();
-          }
-        }}
-      >
-        Click here to load data with the magic formula bar
-      </a>
       <div>{noDataMagnifier}</div>
       <ReloadButton
         title="Reload datavizualizer"
