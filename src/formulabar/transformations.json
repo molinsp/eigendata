@@ -515,8 +515,7 @@
                     "description" : "Aggregations to perform in the pivot table (e.g. calculating the average)."
                   },
                   "new table name" : {
-                    "type" : "string",
-                    "default" : "pivot"
+                    "type" : "string"
                   }
                 }
               },
@@ -566,8 +565,7 @@
                     }
                   },
                   "new table name" : {
-                    "type" : "string",
-                    "default" : "pivot"
+                    "type" : "string"
                   }
                 }
               }
@@ -623,8 +621,7 @@
       "form" : {
         "properties" : {
           "new table name" : {
-            "type" : "string",
-            "default" : "transposed"
+            "type" : "string"
           }
         },
         "required" : [],
@@ -1097,7 +1094,8 @@
       "keywords" : [
         "keep",
         "columns",
-        "column"
+        "column",
+        "filter"
       ]
     },
     "fillna" : {
@@ -3735,7 +3733,8 @@
         "importStatement" : "import pandas as pd"
       },
       "keywords" : [
-        "minus"
+        "minus",
+        "difference"
       ]
     },
     "replace_based_on_condition" : {
@@ -4156,7 +4155,8 @@
         }
       },
       "keywords" : [
-        "write"
+        "plot",
+        "chart"
       ],
       "library" : {
         "name" : "plotly.express",
@@ -4271,7 +4271,87 @@
         }
       },
       "keywords" : [
-        "write"
+        "plot",
+        "chart"
+      ],
+      "library" : {
+        "name" : "plotly.express",
+        "importStatement" : "import plotly.express as px"
+      }
+    },
+    "histogram" : {
+      "form" : {
+        "properties" : {
+          "x" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Column to use for the x axis."
+          },
+          "bins" : {
+            "type" : "number",
+            "description" : "Number of bins."
+          }
+        },
+        "required" : [
+          "x"
+        ],
+        "type" : "object",
+        "title" : "[Charts] Histogram",
+        "callerObject" : "px",
+        "function" : "histogram",
+        "description" : "Plots the distribution of values for a variable",
+        "returnType" : "none",
+        "selectionAsParameter" : true,
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "keywords" : [
+        "plot",
+        "chart"
+      ],
+      "library" : {
+        "name" : "plotly.express",
+        "importStatement" : "import plotly.express as px"
+      }
+    },
+    "pie" : {
+      "form" : {
+        "properties" : {
+          "values" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Set values associated to sectors."
+          },
+          "names" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Labels for sectors."
+          }
+        },
+        "required" : [
+          "values"
+        ],
+        "type" : "object",
+        "title" : "[Charts] Pie Chart",
+        "callerObject" : "px",
+        "function" : "pie",
+        "description" : "Generate a pie chart.",
+        "returnType" : "none",
+        "selectionAsParameter" : true,
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "keywords" : [
+        "plot",
+        "chart"
       ],
       "library" : {
         "name" : "plotly.express",
@@ -4310,6 +4390,45 @@
       "snippet" : {
         "code" : "def euclidean_distance(df1, df2):\n    import numpy as np\n    eucl_d = np.linalg.norm(df1.values - df2.values, axis=1)\n    return pd.DataFrame({'eucl_d':eucl_d}, index=df1.index).reset_index()",
         "name" : "euclidean_distance"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "analyze_multi_column_selection" : {
+      "form" : {
+        "properties" : {
+          "column_indices" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Enter column numbers as [start, finish], e.g. [6,7]. First column is 0."
+          },
+          "keyword" : {
+            "type" : "string"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [],
+        "type" : "object",
+        "title" : "[Snippet] Analyze multi-column selections",
+        "function" : "analyze_multi_column_selection",
+        "description" : "Analyze multi-select as dummy columns",
+        "returnType" : "DataFrame",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "selectionAsParameter" : true
+      },
+      "snippet" : {
+        "code" : "def analyze_multi_column_selection(df, column_indices, keyword):\n    res = {'category':[],'count': []}\n    for name, val in data.iloc[:,column_indices[0]:column_indices[1]].iteritems():\n        res['count'].append((val == keyword).sum())\n        res['category'].append(name)\n    return pd.DataFrame(res)",
+        "name" : "analyze_multi_column_selection"
       },
       "uischema" : {
         "new table name" : {
