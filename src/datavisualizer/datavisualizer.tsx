@@ -267,6 +267,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
   const onTabClick = (index: number): void => {
     setActiveTab(index);
+    setPaginationPanelState({...defaultPanelState});
     props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
     if (props.logic.production && props.logic.shareProductData) {
       amplitude
