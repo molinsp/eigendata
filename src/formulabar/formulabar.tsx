@@ -87,7 +87,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     transformationSelection: null,
     formData: {},
     queryConfig: null,
-    formKey: Date.now(),
+    formKey: Date.now(), //is necessary to re-render Form
     error: null
   });
 
@@ -317,6 +317,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         queryConfig: null,
         formData: {},
         error: null,
+        // Re-render Form each time new transformation is loaded
+        // by generating new key
         formKey: Date.now()
       });
     }
@@ -644,6 +646,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             uiSchema={state.transformationUI}
             extraErrors={extraErrors}
             omitExtraData={true}
+            // React renders new Element for each key.
+            // We need to re-render Form to update shown errors
             key={state.formKey}
           />
         )}
