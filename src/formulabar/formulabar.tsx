@@ -87,6 +87,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     transformationSelection: null,
     formData: {},
     queryConfig: null,
+    formKey: Date.now(),
     error: null
   });
 
@@ -234,7 +235,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Save the input of the Dataframe selection in the UI to the state
   const handleDataframeSelectionChange = async (input): Promise<void> => {
-    //console.log(this);
     if (state.transformationSelection) {
       console.log('Formulabar: get transformation to state');
       await getTransformationFormToState(input, state.transformationSelection);
@@ -316,7 +316,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         transformationSelection: transformationSelection,
         queryConfig: null,
         formData: {},
-        error: null
+        error: null,
+        formKey: Date.now()
       });
     }
   };
@@ -340,7 +341,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         error: null
       }));
 
-      //console.log('Loge event', formResponse.formData.description);
       // Log event
       if (logic.production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: request transformation', {
@@ -498,7 +498,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       console.log('Error in submit', error);
       setState(state => ({
         ...state,
-        error: error
+        error: error,
+        formData: { ...formResponse.formData }
       }));
     }
   };
@@ -511,7 +512,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     ? { form: { __errors: [state.error.message] } }
     : undefined;
 
-  // Action when click "Worked" button
+  // Action when click "Didn't work" button
   const onNegativeClick = (): void => {
     console.log('Logged: ', feedbackState.submittedTransformation.value);
     // Log result
@@ -527,7 +528,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     elem.className = 'show_flex';
   };
 
-  // Action when click "Didn't work" button
+  // Action when click "Worked" button
   const onPositiveClick = (): void => {
     console.log('Logged: ', feedbackState.submittedTransformation.value);
     // Log result
@@ -643,6 +644,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             uiSchema={state.transformationUI}
             extraErrors={extraErrors}
             omitExtraData={true}
+            key={state.formKey}
           />
         )}
         {state.queryConfig && (
