@@ -148,7 +148,8 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                 column.width = 55;
               }
             } else {
-              column.width = columnSizes[dataframes[activeTab].value][index]
+              // eslint-disable-next-line prettier/prettier
+              column.width = columnSizes[dataframes[activeTab].value][index] ?? 80
             }
             column.Cell = (props): string => getUSDString(props.value);
             return column;
