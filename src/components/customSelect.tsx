@@ -1,24 +1,23 @@
 /*-----------------------------------
- CUSTOM SELECT: Use React select with JSONschema form
+ CUSTOM SELECT: Use React select with JSONSchema form
  -----------------------------------*/
 // Inspired by example here https://codesandbox.io/s/13vo8wj13?file=/src/formGenerationEngine/Form.js
 // To-do: Move custom components to separate files
 import Select from 'react-select';
 import React from 'react';
 
-const CustomSelect = (props: any): JSX.Element => {
-  const processSingleSelect = (selection: any): any => {
+const CustomSelect = (props): JSX.Element => {
+  const processSingleSelect = (selection: OptionType): string => {
     const { value } = selection;
     return value;
   };
 
-  const processMultiSelect = (selection: any): any => {
+  const processMultiSelect = (selection: OptionType[]): string[] => {
     // Handle the case when the user removes selections
     if (selection === null) {
       return [];
     }
-
-    return selection.map((item: any) => item.value);
+    return selection.map(item => item.value);
   };
 
   // If defined as array, use the multi-select
@@ -26,27 +25,33 @@ const CustomSelect = (props: any): JSX.Element => {
     return (
       <Select
         options={props.options.enumOptions}
-        onChange={(selection): void =>
+        onChange={(selection: OptionType[]): void =>
           props.onChange(processMultiSelect(selection))
         }
         isMulti={true}
+        value={props.options.enumOptions.filter((option: OptionType) =>
+          props.value.includes(option.value)
+        )}
       />
     );
   } else {
     return (
       <Select
+        value={props.options.enumOptions.filter(
+          (option: OptionType) => option.value === props.value
+        )}
         options={props.options.enumOptions}
-        onChange={(selection): void =>
+        onChange={(selection: OptionType): void =>
           props.onChange(processSingleSelect(selection))
         }
-        //Default value is a dict {value: "", label: ""} and thus the need to filter from the available options
-        //defaultValue={props.value}
-        defaultValue={props.options.enumOptions.filter(
-          (option: any) => option.value === props.value
-        )}
       />
     );
   }
 };
 
 export default CustomSelect;
+
+type OptionType = {
+  value: string;
+  label: string;
+};
