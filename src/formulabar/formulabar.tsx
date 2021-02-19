@@ -21,6 +21,7 @@ import CustomSelect from '../components/customSelect';
 import productTourSteps from '../productTour';
 import { Backend, Dataframe } from '../core/backend';
 import { RadioButtonGroup } from '../components/radioButtonGroup';
+import { Spinner } from '../components/spinner';
 
 // -------------------------------------------------------------------------------------------------------------
 // FORMULABAR COMPONENT
@@ -592,6 +593,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           }
         }}
       />
+      {props.logic.kernelStatus === 'busy' && <Spinner />}
       <div className="side-by-side-fields">
         <div className="centered" />
         <fieldset className="data-transformation-form">
