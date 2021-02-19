@@ -71,6 +71,8 @@ export class Backend {
   public variablesLoaded = [];
 
   public completedProductTour: boolean;
+
+  public kernelStatus: string;
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -732,7 +734,8 @@ export class Backend {
     msg: KernelMessage.IExecuteInputMsg
   ): void => {
     //console.log('------> Code running in the notebook');
-    const msgType = msg.header.msg_type;
+    const msgType: string = msg.header.msg_type;
+    //console.log('[DEBUG]', msg);
     switch (msgType) {
       case 'execute_input':
         const code = msg.content.code;
@@ -746,6 +749,9 @@ export class Backend {
           this.pythonRequestDataframes();
         }
         break;
+      case 'status':
+        this.kernelStatus = msg.content['execution_state'];
+        console.log('Kernel Status', this.kernelStatus);
       default:
         break;
     }
