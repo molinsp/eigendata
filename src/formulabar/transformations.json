@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.31",
+  "version" : "0.0.32",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -80,6 +80,9 @@
               "Load using sheet name"
             ],
             "default" : "number"
+          },
+          "new table name" : {
+            "type" : "string"
           }
         },
         "required" : [
@@ -101,9 +104,6 @@
                     "title" : "sheet number",
                     "description" : "Number of the sheet (first sheet is 0).",
                     "default" : 0
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -118,9 +118,6 @@
                     "type" : "string",
                     "title" : "sheet name",
                     "description" : "Name of the sheet to load."
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -140,7 +137,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new table name"
+        ]
       },
       "library" : {
         "name" : "pandas",
@@ -371,14 +372,20 @@
         "importStatement" : "import pandas as pd"
       }
     },
-    "info" : {
+    "count_nulls" : {
       "form" : {
-        "title" : "Overview: Null values and types",
+        "properties" : {
+          "new table name" : {
+            "type" : "string",
+            "default" : "nulls"
+          }
+        },
+        "title" : "Overview of null values in each column",
         "type" : "object",
-        "callerObject" : "DataFrame",
-        "function" : "info",
-        "returnType" : "none",
-        "description" : "Get the number of non-null values and datatypes of all columns."
+        "callerObject" : "DataFrame.fdt",
+        "function" : "count_nulls",
+        "returnType" : "DataFrame",
+        "description" : "Get the number of non-null values in each column."
       },
       "uischema" : {
         "new table name" : {
@@ -427,6 +434,9 @@
               "Hierarchical indexes"
             ],
             "description" : "Enable or disable pandas hierarchical indexes."
+          },
+          "new table name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -513,9 +523,6 @@
                     },
                     "title" : "aggregations",
                     "description" : "Aggregations to perform in the pivot table (e.g. calculating the average)."
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -563,9 +570,6 @@
                         "\"var\""
                       ]
                     }
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -590,7 +594,12 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "index_type",
+          "new table name"
+        ]
       },
       "library" : {
         "name" : "fastdata.core",
@@ -627,7 +636,7 @@
         "required" : [],
         "title" : "Transpose table",
         "type" : "object",
-        "callerObject" : "DataFrame",
+        "callerObject" : "DataFrame.fdt",
         "function" : "transpose",
         "description" : "Reflect the table over its main diagonal by writing rows as columns and vice-versa."
       },
@@ -1109,6 +1118,9 @@
             ],
             "default" : "value",
             "codegenstyle" : "ignore"
+          },
+          "new table name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -1140,9 +1152,6 @@
                       "forward fill (take the one above)",
                       "backward fill (take the one below)"
                     ]
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -1157,9 +1166,6 @@
                     "type" : "string",
                     "codegenstyle" : "variable",
                     "description" : ""
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -1182,7 +1188,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new table name"
+        ]
       },
       "keywords" : [
         "nan",
@@ -1261,10 +1271,23 @@
               "before character",
               "after character",
               "email",
-              "n_digits",
+              "N digits",
               "between"
             ],
             "description" : "Use a preset to clean the text column or enter a custom regular expression."
+          },
+          "keep_unmatched" : {
+            "type" : "string",
+            "default" : "False",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "codegenstyle" : "variable",
+            "title" : "keep unmatched"
+          },
+          "new table name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -1285,24 +1308,12 @@
                   "mode" : {
                     "enum" : [
                       "custom"
-                    ]
+                    ],
+                    "description" : "Test"
                   },
                   "regex" : {
                     "type" : "string",
                     "description" : "Regular expression to clean data."
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -1316,19 +1327,6 @@
                   "character" : {
                     "type" : "string",
                     "description" : "Keep the text before the entered character."
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -1342,19 +1340,6 @@
                   "character" : {
                     "type" : "string",
                     "description" : "Keep the text after the entered character."
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -1364,19 +1349,6 @@
                     "enum" : [
                       "email"
                     ]
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new table name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -1388,20 +1360,8 @@
                     ]
                   },
                   "digits" : {
-                    "type" : "string"
-                  },
-                  "keep_unmatched" : {
                     "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new table name" : {
-                    "type" : "string"
+                    "description" : "Extract a number with N digits from text. E.g. enter 5 to extract ZIP codes in an address text."
                   }
                 }
               },
@@ -1413,27 +1373,12 @@
                     ]
                   },
                   "start" : {
-                    "type" : "string"
+                    "type" : "string",
+                    "description" : "Extract text after start input. E.g. if text is \"tel:1234#\", entering start as \"tel:\", will start extracting \"1234#\"."
                   },
                   "end" : {
-                    "type" : "string"
-                  },
-                  "keep_unmatched" : {
                     "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "enumNames" : [
-                      "Include index",
-                      "Exclude index"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new table name" : {
-                    "type" : "string"
+                    "description" : "Extract text before end input. E.g. if text is \"tel:1234#\", entering end as \"#\", will start extracting extract \"1234\"."
                   }
                 }
               }
@@ -1452,12 +1397,17 @@
         "returnType" : "dataframe"
       },
       "uischema" : {
-        "new column name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "keep_unmatched",
+          "new table name"
+        ]
       },
       "library" : {
         "name" : "fastdata.core",
@@ -1708,8 +1658,8 @@
           },
           "column" : {
             "type" : "string",
-            "title" : "new column name",
-            "description" : ""
+            "title" : "column",
+            "description" : "Name of the new column."
           },
           "value" : {
             "type" : "string",
@@ -1981,10 +1931,23 @@
               "before character",
               "after character",
               "email",
-              "n_digits",
+              "N digits",
               "between"
             ],
             "description" : "Use a preset to clean the text column or enter a custom regular expression."
+          },
+          "keep_unmatched" : {
+            "type" : "string",
+            "default" : "False",
+            "enum" : [
+              "True",
+              "False"
+            ],
+            "codegenstyle" : "variable",
+            "title" : "keep unmatched"
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -2006,19 +1969,6 @@
                   "regex" : {
                     "type" : "string",
                     "description" : "Regular expression to clean data."
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2032,19 +1982,6 @@
                   "character" : {
                     "type" : "string",
                     "description" : "Keep the text before the entered character."
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2058,19 +1995,6 @@
                   "character" : {
                     "type" : "string",
                     "description" : "Keep the text after the entered character."
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2080,19 +2004,6 @@
                     "enum" : [
                       "email"
                     ]
-                  },
-                  "keep_unmatched" : {
-                    "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2104,7 +2015,8 @@
                     ]
                   },
                   "digits" : {
-                    "type" : "string"
+                    "type" : "string",
+                    "description" : "Use a preset to clean the text column or enter a custom regular expression."
                   },
                   "keep_unmatched" : {
                     "type" : "string",
@@ -2129,27 +2041,12 @@
                     ]
                   },
                   "start" : {
-                    "type" : "string"
+                    "type" : "string",
+                    "description" : "Extract text after start input. E.g. if text is \"tel:1234#\", entering start as \"tel:\", will start extracting \"1234#\"."
                   },
                   "end" : {
-                    "type" : "string"
-                  },
-                  "keep_unmatched" : {
                     "type" : "string",
-                    "default" : "False",
-                    "enum" : [
-                      "True",
-                      "False"
-                    ],
-                    "enumNames" : [
-                      "Include index",
-                      "Exclude index"
-                    ],
-                    "codegenstyle" : "variable",
-                    "title" : "keep unmatched"
-                  },
-                  "new column name" : {
-                    "type" : "string"
+                    "description" : "Extract text before end input. E.g. if text is \"tel:1234#\", entering end as \"#\", will start extracting extract \"1234\"."
                   }
                 }
               }
@@ -2173,7 +2070,12 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "keep_unmatched",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "fastdata.core",
@@ -2491,6 +2393,9 @@
               "Custom interval ranges"
             ],
             "default" : "size"
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -2524,9 +2429,6 @@
                   "end" : {
                     "type" : "number",
                     "description" : "Inclusive: Number at which to end the buckets. E.g. if start = 5, size =10 and end is set to 17, it will only create a category (5,15]. The next valid end would be 25."
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2541,9 +2443,6 @@
                     "type" : "number",
                     "title" : "bin number",
                     "description" : "Number of equally spaced bins used. Bin width is then (max-min)/bin number."
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2557,9 +2456,6 @@
                   "quantiles" : {
                     "type" : "number",
                     "description" : "Number of quantiles. 10 for deciles, 4 for quartiles, etc."
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2586,9 +2482,6 @@
                       "neither"
                     ],
                     "description" : "For example, breaks of [1, 3, 5 o] closed on the right implies that nubmer 3 will be part of the interval (1-3]. If closed on the let, then 3 would be part of interval [3-5)"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -2608,7 +2501,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "fastdata.core",
@@ -2734,6 +2631,9 @@
               "value"
             ],
             "default" : "function"
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -2770,9 +2670,6 @@
                       "most frequent",
                       "average/mean"
                     ]
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2787,9 +2684,6 @@
                     "type" : "string",
                     "codegenstyle" : "variable",
                     "description" : ""
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -2812,7 +2706,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "keywords" : [
         "nan",
@@ -2920,6 +2818,9 @@
               "From number (e.g. 1605552766)"
             ],
             "default" : "string"
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -2945,9 +2846,6 @@
                   "format" : {
                     "type" : "string",
                     "description" : "Examples: %d/%m/%Y (day/month/year), %H:%M:%S (hour:minute:second)"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -2977,9 +2875,6 @@
                     ],
                     "default" : "ns",
                     "description" : "Unit of the date column."
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -2999,7 +2894,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "pandas",
@@ -3295,6 +3194,9 @@
               "Divide by a value",
               "Divide by another column"
             ]
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -3320,9 +3222,6 @@
                   "other" : {
                     "type" : "number",
                     "title" : "value"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -3337,9 +3236,6 @@
                     "$ref" : "#/definitions/column",
                     "codegenstyle" : "seriesColumn",
                     "title" : "column"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -3359,7 +3255,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "pandas",
@@ -3386,6 +3286,9 @@
               "Multiply by a value",
               "Multiply by another column"
             ]
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -3411,9 +3314,6 @@
                   "other" : {
                     "type" : "number",
                     "title" : "value"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -3428,9 +3328,6 @@
                     "$ref" : "#/definitions/column",
                     "codegenstyle" : "seriesColumn",
                     "title" : "column"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -3450,7 +3347,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "pandas",
@@ -3477,6 +3378,9 @@
               "Exponentiate by a value",
               "Exponentiate by another column"
             ]
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -3502,9 +3406,6 @@
                   "other" : {
                     "type" : "number",
                     "title" : "value"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -3519,9 +3420,6 @@
                     "$ref" : "#/definitions/column",
                     "codegenstyle" : "seriesColumn",
                     "title" : "column"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -3541,7 +3439,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "pandas",
@@ -3568,6 +3470,9 @@
               "Add a value",
               "Add another column"
             ]
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -3593,9 +3498,6 @@
                   "other" : {
                     "type" : "number",
                     "title" : "value"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -3610,9 +3512,6 @@
                     "$ref" : "#/definitions/column",
                     "codegenstyle" : "seriesColumn",
                     "title" : "column"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -3632,7 +3531,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "pandas",
@@ -3662,6 +3565,9 @@
               "Subtract a value",
               "Subtract another column"
             ]
+          },
+          "new column name" : {
+            "type" : "string"
           }
         },
         "definitions" : {
@@ -3687,9 +3593,6 @@
                   "other" : {
                     "type" : "number",
                     "title" : "value"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               },
@@ -3704,9 +3607,6 @@
                     "$ref" : "#/definitions/column",
                     "codegenstyle" : "seriesColumn",
                     "title" : "column"
-                  },
-                  "new column name" : {
-                    "type" : "string"
                   }
                 }
               }
@@ -3726,7 +3626,11 @@
         },
         "mode" : {
           "ui:widget" : "radio"
-        }
+        },
+        "ui:order" : [
+          "*",
+          "new column name"
+        ]
       },
       "library" : {
         "name" : "pandas",
