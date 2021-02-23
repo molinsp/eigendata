@@ -501,6 +501,12 @@
 .tr {
   width: 100% !important;
   border-top: 1px solid #dee2e6;
+  align-items: center;
+}
+
+.trash-bin-button {
+  border: none;
+  background-color: transparent;
 }
 
 /* White row for data types background */
@@ -522,7 +528,7 @@
   width: 8px;
   position: absolute;
   top: 0;
-  right: -2px;
+  right: -3px;
   padding: 0;
   height: 100%;
   z-index: 5;
@@ -543,6 +549,53 @@
 /* <------------------------- */
 
 /* <----------------------------------------------------------- */
+
+/* <---------------------------------------------------------------------------------------------------------------| */
+
+/* |---------------------------------------- PAGINATION PANEL -----------------------------------------------------> */
+
+.pagination-panel {
+  display: flex;
+  border-radius: 3px;
+  flex-wrap: wrap;
+}
+
+.pagination-segment {
+  padding: 5px 12px;
+  border: 1px solid hsl(0, 0%, 80%);
+  min-width: 50px;
+  border-radius: 0;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pagination-select {
+  width: 200px;
+}
+
+.pagination-segment:first-child {
+  border-radius: 3px 0 0 3px;
+}
+
+.pagination-segment:last-child {
+  border-radius: 0 3px 3px 0;
+}
+
+button.pagination-segment {
+  background-color: white;
+  color: black;
+}
+
+button.pagination-segment:disabled {
+  background-color: #dedede;
+  color: #797979;
+}
+
+button.pagination-segment:active {
+  background-color: silver;
+}
 
 /* <---------------------------------------------------------------------------------------------------------------| */
 
@@ -578,6 +631,7 @@
 
 #feedback {
   display: flex;
+  flex-wrap: wrap;
   width: 100%;
   justify-content: space-between;
 }
@@ -585,10 +639,12 @@
 #feedback__negative-description {
   display: none;
   width: 66%;
+  min-width: 310px;
 }
 
 #feedback__buttons {
   width: 33%;
+  min-width: 230px;
 }
 
 .feedback__content {
@@ -600,27 +656,33 @@
 }
 
 .feedback__buttons-text {
-  margin: 0;
-  margin-left: 5px;
+  margin: 0 0 0 5px;
   white-space: nowrap;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
 /* |--------------------------------- STYLES FOR SVG ICONS --------------------------------------------------------> */
-.svg-icon {
+.svg-magnifier {
   width: 100%;
   height: 100%;
 }
 
-.svg-icon path,
-.svg-icon polygon,
-.svg-icon rect {
+.svg-magnifier path,
+.svg-magnifier polygon,
+.svg-magnifier rect {
   fill: #4691f6;
 }
 
-.svg-icon circle {
+.svg-magnifier circle {
   stroke: #4691f6;
   stroke-width: 1;
 }
+
+.svg-bin path,
+.svg-bin polygon,
+.svg-bin rect {
+  fill: red;
+}
+
 /* <---------------------------------------------------------------------------------------------------------------| */
 /* |------------------------------- CHAT WIDGET STYLE -------------------------------------------------------------> */
 
@@ -641,6 +703,10 @@
   vertical-align: middle;
 }
 
+.radio-wrapper {
+  min-width: 65px;
+}
+
 /* Hide default radio button */
 .radio-button {
   position: absolute;
@@ -655,6 +721,7 @@
   padding: 6px 12px;
   cursor: pointer;
   transition: all 0.7s ease;
+  width: 100%;
 }
 
 /* Set special borders for first and last buttons */
@@ -673,5 +740,58 @@
   color: #fff;
   background-color: #0d6efd;
   border-color: #0d6efd;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- EMPTY STATE COMPONENT STYLE ---------------------------------------------------> */
+.empty-state__container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.empty-state__title {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 34px;
+  color: #858585;
+}
+
+.empty-state__link {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 14px;
+  color: #109CF1;
+}
+/* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- RELOAD BUTTON STYLE -----------------------------------------------------------> */
+.reload-button__container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.reload-button__container:active *{
+  color: #a4d1f8;
+}
+
+.reload-button__container > button {
+  border: none;
+  background-color: transparent;
+}
+
+.reload-button__container > label{
+  font-style: normal;
+  font-weight: bold;
+  font-size: 12px;
+  color: #109CF1;
+  cursor: pointer;
+}
+
+.reload-button__container:hover > * {
+  color: #23527c;
+  text-decoration: underline;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */

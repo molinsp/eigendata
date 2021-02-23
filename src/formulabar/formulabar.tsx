@@ -22,31 +22,25 @@ import productTourSteps from '../productTour';
 import { Backend, Dataframe } from '../core/backend';
 import { RadioButtonGroup } from '../components/radioButtonGroup';
 
+// -------------------------------------------------------------------------------------------------------------
+// FORMULABAR COMPONENT
+// -------------------------------------------------------------------------------------------------------------
 /*
- Description: This extension provides a GUI over pandas data transformationsList, with the goal of facilitating the use by non experts
- Components:
-   1.  REACT GUI
-       - Form code generator: A function that takes the form input and generates+executes the code in the notebook
-   2.  BACKEND LOGIC
-       - Variable tracker: There is a set of functions that keeps track of what dataframes are in the kernel
-         The variable tracker takes the form of a set of Python scripts that are rendered to python
-       - Functions that execute code against the Python Kernel
+ This magic formula bar provides a GUI over python functions with the goal of facilitating the use by non experts
+ and non technical users
+
+ How this works on a high-level is that we define a json schema for each function, and render that as a form for
+ the end user. The end user can interact with the form, and upon submission this form generates "code" in a 
+ notebook cell
+
+ Functionality in this file:
+   - (A) Search: Find transformations using keywords and log data when users search
+   - (B) Form handling: Display form when user selects data and transformation and request the json schema
+   - (C) Code generation: Update internal state after generating code and generating the "text" out of the
+       json object returned by reactjsonschemaform
+   - (D) Logic to get feedback from users after they have used a transformation
 */
 
-// -------------------------------------------------------------------------------------------------------------
-// 1. REACT GUI
-// -------------------------------------------------------------------------------------------------------------
-
-/**
- React component that renders forms based on JSON
- Inputs from the backend:
-   Functions:
-     - getTransformationFormSchema: Gets the transformation form from the backend
-     - pythonGetDataframeColumns: Used to update the forms dynamically
-   Properties:
-     - dataframesLoaded: Available dataframes
-     - transformationsList: Available transformationsList
- */
 // Component takes props with the main class (FormWidget) that handles all the logic, communication with kernel etc.
 export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Access backend class through logic object
@@ -76,7 +70,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     return result;
   };
 
-  /* State of the component:
+  const dataframeSelectionRef = React.useRef();
+
+  /* Main state of the component:
       - Transformation form
       - UI schema
       - Show or not show form: If we don't have both dataframe and transformation selected, we don't show the form
@@ -91,6 +87,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     transformationSelection: null,
     formData: {},
     queryConfig: null,
+    formKey: Date.now(), //is necessary to re-render Form
     error: null
   });
 
@@ -105,9 +102,41 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     run: false
   });
 
+  const setFocusOnElement = (element: HTMLElement): void => {
+    element.focus();
+  };
+
   /*-----------------------------------
-  REACT SELECT LOG SEARCH
+  RESET STATE LOGIC
   -----------------------------------*/
+  if (logic.resetStateFormulabarFlag === true) {
+    console.log('RESETING FORMULABAR STATE');
+    setState({
+      ...state,
+      transformationForm: transformationForm,
+      transformationUI: defaultUISchema,
+      showForm: true,
+      dataframeSelection: null,
+      transformationSelection: defaultTransformationSelection,
+      formData: {},
+      queryConfig: null
+    });
+    logic.resetStateFormulabarFlag = false;
+
+    // This starts the product tour. It's here because it needs to load after the rest of the elements
+    if (logic.completedProductTour === false) {
+      setProductTourState({ run: true });
+      // Change the settings for it not to run next time (next refresh)
+      logic.eigendataSettings.set('completedProductTour', true);
+      // Set to true for it not to run again in the current session
+      logic.completedProductTour = true;
+    }
+  }
+
+  /*-----------------------------------
+    (A) SEARCH
+  -----------------------------------*/
+  // Log what the users are searching
   let prevInput = '';
   const handleInputChange = (inputValue): void => {
     if (inputValue.length === 0 && prevInput.length !== 0) {
@@ -137,36 +166,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     prevInput = inputValue;
   };
 
-  /*-----------------------------------
-  RESET STATE LOGIC: Backend triggers FE reset
-  -----------------------------------*/
-  if (logic.resetStateFormulabarFlag === true) {
-    console.log('RESETING FORMULABAR STATE');
-    setState({
-      ...state,
-      transformationForm: transformationForm,
-      transformationUI: defaultUISchema,
-      showForm: true,
-      dataframeSelection: null,
-      transformationSelection: defaultTransformationSelection,
-      formData: {},
-      queryConfig: null
-    });
-    logic.resetStateFormulabarFlag = false;
-
-    // This starts the product tour. It's here because it needs to load after the rest of the elements
-    if (logic.completedProductTour === false) {
-      setProductTourState({ run: true });
-      // Change the settings for it not to run next time (next refresh)
-      logic.eigendataSettings.set('completedProductTour', true);
-      // Set to true for it not to run again in the current session
-      logic.completedProductTour = true;
-    }
-  }
-
-  /*-----------------------------------
-  Custom search for transformations
-  -----------------------------------*/
+  // Search logic
   const getKeywordsForFilter = (option, rawInput) => {
     // Add keywords to search
     let keywords = '';
@@ -191,6 +191,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       true
     );
   };
+
+  /*--------------------------------------
+    (B) FORM HANDLING
+  ---------------------------------------*/
 
   // Add the behavior described above
   const widgets = {
@@ -231,7 +235,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Save the input of the Dataframe selection in the UI to the state
   const handleDataframeSelectionChange = async (input): Promise<void> => {
-    //console.log(this);
     if (state.transformationSelection) {
       console.log('Formulabar: get transformation to state');
       await getTransformationFormToState(input, state.transformationSelection);
@@ -313,10 +316,17 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         transformationSelection: transformationSelection,
         queryConfig: null,
         formData: {},
-        error: null
+        error: null,
+        // Re-render Form each time new transformation is loaded
+        // by generating new key
+        formKey: Date.now()
       });
     }
   };
+
+  /*--------------------------------------
+    (C) GENERATE CODE & UPDATE INTERNALS
+  ---------------------------------------*/
 
   // Generate python code and write in the notebook
   const callGeneratePythonCode = async (formResponse: any): Promise<void> => {
@@ -333,7 +343,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         error: null
       }));
 
-      //console.log('Loge event', formResponse.formData.description);
       // Log event
       if (logic.production && logic.shareProductData) {
         amplitude.getInstance().logEvent('Formulabar: request transformation', {
@@ -371,8 +380,14 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     /*-----------------------------------------------
     Import libraries/functions if needed
     -----------------------------------------------*/
-    if(typeof(logic.transformationsConfig[formResponse.schema.function]['library']) == 'undefined'
-      && typeof(logic.transformationsConfig[formResponse.schema.function]['snippet']) != 'undefined'){
+    if (
+      typeof logic.transformationsConfig[formResponse.schema.function][
+        'library'
+      ] === 'undefined' &&
+      typeof logic.transformationsConfig[formResponse.schema.function][
+        'snippet'
+      ] !== 'undefined'
+    ) {
       console.log('CG: Code-gen for snippet');
       /*----------------
         FUNC SNIPPETS
@@ -381,9 +396,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         logic.transformationsConfig[formResponse.schema.function]['snippet'];
 
       console.log('CG: Imported functions', logic.importedFunctions);
-      if (logic.importedFunctions.includes(snippetFunction['name']) ){
+      if (logic.importedFunctions.includes(snippetFunction['name'])) {
         console.log('CG: Snippet already imported');
-      }else{
+      } else {
         console.log(
           'CG: Snippet not imported, using statement',
           snippetFunction['name']
@@ -394,12 +409,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         } catch (error) {
           console.log(error);
         }
-
       }
-
-
-    }
-    else{
+    } else {
       /*----------------
         MODULES
       -----------------*/
@@ -409,21 +420,24 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         logic.transformationsConfig[formResponse.schema.function]['library'];
 
       // Check if there is a need for a namespace
-      let hasNamespace: boolean = false;
-      if (typeof(library['namespace']) != 'undefined'){
+      let hasNamespace = false;
+      if (typeof library['namespace'] !== 'undefined') {
         hasNamespace = true;
       }
       // Check if the library is already imported or not
 
       // Case 1: No namespace
-      if (hasNamespace == false && logic.packagesImported.includes(library['name'])) {
+      if (!hasNamespace && logic.packagesImported.includes(library['name'])) {
         console.log('CG: Module already imported');
       }
       // Case 2: There is a namespace, in which case you need both the import and the namespace for it to work
-      else if (hasNamespace == true && logic.packagesImported.includes(library['name']) && logic.packageNamespaces.includes(library['namespace']) ){
+      else if (
+        hasNamespace &&
+        logic.packagesImported.includes(library['name']) &&
+        logic.packageNamespaces.includes(library['namespace'])
+      ) {
         console.log('CG: Package & namespace already imported');
-      }
-      else {
+      } else {
         console.log(
           'CG: Module not imported, using statement',
           library['importStatement']
@@ -437,7 +451,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       }
     }
 
-
     /*-----------------------------------------------
     Generate & execute code
     -----------------------------------------------*/
@@ -446,12 +459,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       await logic.writeToNotebookAndExecute(formula);
 
       console.log('CG: Return type', returnType);
-      // If executed successfully, save the result variable and focus it on the data visualizer
-      // Only if we have saves a new dataframe or series, exclude the case where execution result is not saved
-      if(returnType.localeCompare('none') != 0){
-        props.logic.dataframeSelection = resultVariable;
-      }
-      
+
       // Write and execute the formula in the notebook
       // Add submitted transformation to the feedback state
       setFeedbackState({
@@ -478,6 +486,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           error: null
         }));
       }
+      setFocusOnElement(dataframeSelectionRef.current);
     } catch (error) {
       // Log transformation errors
       if (logic.production && logic.shareProductData) {
@@ -491,21 +500,21 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       console.log('Error in submit', error);
       setState(state => ({
         ...state,
-        error: error
+        error: error,
+        formData: { ...formResponse.formData }
       }));
     }
   };
 
   /*--------------------------------------
-  SELECT TRANSFORMATION: When data loaded
+    (D) FEEDBACK LOGIC
   ---------------------------------------*/
-  // To-do: Add button to load data even in this case
 
   const extraErrors = state.error
     ? { form: { __errors: [state.error.message] } }
     : undefined;
 
-  // Action when click "Worked" button
+  // Action when click "Didn't work" button
   const onNegativeClick = (): void => {
     console.log('Logged: ', feedbackState.submittedTransformation.value);
     // Log result
@@ -521,7 +530,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     elem.className = 'show_flex';
   };
 
-  // Action when click "Didn't work" button
+  // Action when click "Worked" button
   const onPositiveClick = (): void => {
     console.log('Logged: ', feedbackState.submittedTransformation.value);
     // Log result
@@ -622,6 +631,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             filterOption={getKeywordsForFilter}
             maxMenuHeight={400}
             styles={formulabarMainSelect}
+            autoFocus={true}
+            ref={dataframeSelectionRef}
           />
         </fieldset>
         <div className="centered formulaFormDivider" />
@@ -634,6 +645,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             widgets={widgets}
             uiSchema={state.transformationUI}
             extraErrors={extraErrors}
+            omitExtraData={true}
+            // React renders new Element for each key.
+            // We need to re-render Form to update shown errors
+            key={state.formKey}
           />
         )}
         {state.queryConfig && (

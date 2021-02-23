@@ -259,7 +259,7 @@ def ed_format_data_for_visualization(df_data):
             #If not handled, treat as a string
             df_data[col_name] = df_data[col_name].astype('str').replace('nan','NaN')
 
-def ed_prep_data_for_visualization(dfmi,index=False, sortby=None, ascending=False):
+def ed_prep_data_for_visualization(dfmi,index=False, sortby=None, ascending=False, page=1, page_size=30):
     """
     Prepare multiindex dataframe (data) and options
     to display it with corresponding row grouping and
@@ -275,15 +275,20 @@ def ed_prep_data_for_visualization(dfmi,index=False, sortby=None, ascending=Fals
     
     # Abreviations: mi is multi index
 
-    # 1. Show only preview of 50 rows, but first get the real size
+    # 1. Adjust size
+    # First get real size
     n_rows =  df_data.shape[0]
     n_columns =  df_data.shape[1]
-    # Handle very wide dataframes
+    # Hide columns for very wide dataframes
     displayed_columns = n_columns
     if n_columns > 200:
         df_data = df_data.iloc[:,:200]
         displayed_columns = 200
-    df_data = df_data.head(50)
+
+    # Get number of row & cols for current page
+    row_start = (page-1)*page_size
+    row_end = page*page_size
+    df_data = df_data.iloc[row_start:row_end,:]
     
     # 2. Handle multi-level columns
     # Check it ther are multi-level columns, and generate the column definitions

@@ -129,19 +129,28 @@ export default class QueryBuilder extends Component<
       undefined,
       2
     );
-    console.log('SQL query', sqlQuery);
-    sqlQuery = sqlQuery.replace(/ IS EMPTY/g, '.isnull()');
-    sqlQuery = sqlQuery.replace(/ IS NOT EMPTY/g, '.notnull()');
-    sqlQuery = sqlQuery.replace(/AND/g, 'and');
-    sqlQuery = sqlQuery.replace(/OR/g, 'or');
-    sqlQuery = sqlQuery.replace(/true/g, 'True');
-    sqlQuery = sqlQuery.replace(/false/g, 'False');
-    // Handle the case of any in ['a','b'] instead of IN ('a', 'b')
-    sqlQuery = sqlQuery.replace(/NOT IN\s\((.*?)\)/g, 'not in [$1]');
-    sqlQuery = sqlQuery.replace(/IN\s\((.*?)\)/g, 'in [$1]');
-    sqlQuery = sqlQuery.replace(/NOT/g, '~');
-    sqlQuery = sqlQuery.replace(/ = /g, '==');
-    sqlQuery = sqlQuery.replace(/ <> /g, '!=');
+    console.log('Querybuilder: Original SQL query', sqlQuery);
+    
+    sqlQuery = sqlQuery
+      .replace(/ IS EMPTY/g, '.isnull()')
+      .replace(/ IS NOT EMPTY/g, '.notnull()')
+      .replace(/AND/g, 'and')
+      .replace(/OR/g, 'or')
+      .replace(/true/g, 'True')
+      .replace(/false/g, 'False') 
+      // Handle the case of any in ['a','b'] instead of IN ('a', 'b')  
+      .replace(/NOT IN\s\((.*?)\)/g, 'not in [$1]') 
+      // Not and not in in python
+      .replace(/IN\s\((.*?)\)/g, 'in [$1]')
+      .replace(/NOT/g, '~')
+      // Replace comparison to remove spaces (convention)
+      .replace(/ >= /g, '>=')
+      .replace(/ <= /g, '<=')
+      .replace(/ > /g, '>')
+      .replace(/ < /g, '<')
+      // Use python characters for equal to and distinct to
+      .replace(/ <> /g, '!=')
+      .replace(/ = /g, '==');
 
     const colNames = Object.entries(this.state.config.fields).map(
       ([k, v]) => v.label
@@ -151,21 +160,30 @@ export default class QueryBuilder extends Component<
     const colNamesSorted = colNames.sort((a, b) => b.length - a.length);
     //console.log('Querybuilder: Config fields sorted', colNamesSorted);
 
+    console.log('Querybuilder: Processed sql query', sqlQuery);
     for (const i of colNamesSorted) {
       const colName = i;
       //console.log('Col name', colName);
       // Check if there is any blank space in the column names
-      if (/\s/.test(colName)) {
+      if (/\s/.test(colName) && sqlQuery.includes(colName)) {
         // It has any kind of whitespace
-        // Replace with backticks to ensure pandas does not generate an error
-        console.log('replacing');
-        // Match any string finishing with space and a characte
-        // except a space and the word in (special keyword)
-        const regex = colName + '(?!( (?!in)\\S))';
-        console.log('Regex', regex);
-        const re = new RegExp(regex, 'g');
-        const replaceTo = '`' + colName + '`';
-        sqlQuery = sqlQuery.replace(re, replaceTo);
+        // Replace with backticks to ensure pandas does not generate an error;
+        // To avoid replacing columns that are substrings of other columns with backticks
+        // E.g. "col on", "cole one two" -> "`col one` two"
+        // To avoid this, we replace only strins that do not end with space
+        // since by convention we don't use spaces for comparison operators
+        // - Numercial operators. e.g. "col a>5"
+        // - String and null operators, e.g. "col a.isnull"
+        // EXCEPT for the cases of "in [" / "not in ["
+        const colsWithBlanks = "(" + colName + ")(?! (?!in \\[|not in \\[))";
+        const colsAlsoCategories = "'`" + colName + "`'";
+        const reColsWithBlanks = new RegExp(colsWithBlanks, 'g');
+        const reColsAlsoCategories = new RegExp(colsAlsoCategories,'g');
+        console.log('re',colsWithBlanks);
+        sqlQuery = sqlQuery
+          .replace(reColsWithBlanks,"`" + colName + "`")
+          .replace(reColsAlsoCategories,"'" + colName + "'");
+
       }
     }
 

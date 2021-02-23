@@ -1,6 +1,6 @@
 {
   "name": "@molinsp/eigendata",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Eigendata is jupyter for people that want to get things done.",
   "keywords": [
     "jupyter",
@@ -44,6 +44,7 @@
     "@rjsf/core": "^2.4.0",
     "@types/lodash": "^4.14.161",
     "@types/react-select": "^3.0.20",
+    "abortcontroller-polyfill": "^1.7.1",
     "amplitude-js": "^7.3.3",
     "bootstrap": "3",
     "loadash": "^1.0.0",

@@ -1,6 +1,18 @@
 // -------------------------------------------------------------------------------------------------------------
 // BACKEND LOGIC
 // -------------------------------------------------------------------------------------------------------------
+/*
+  The Eigendata backend communicates between the Magic Formula Bar and the Jupyter Kernel
+  Major functionality include:
+  - (A) HANDLE CHANGE OF NOTEBOOK: Keeping track of notebooks in the Jupyter applicaiton
+  - (B) HANDLE CODE RUNNING IN NOTEBOOK: Keeping track of the state in each Jupyter notebook, and update it every time code runs
+    - This includes thigns like dataframes loaded, other variables, imported packages, imported functions, etc.
+    - Most of the code for this is in initscript.ts
+  - (C) API FOR REACT GUI: Handle execution of GUI tasks in the backend
+    - Examples include completing the transformations form with kernel data
+  - (D) UTILITIES: Utilities to communicate with the kernel   
+*/
+
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 // KernelConnector class. See file for more details.
 import { KernelConnector } from './kernelconnector';
@@ -21,7 +33,7 @@ import amplitude from 'amplitude-js';
 import { Column } from 'react-table';
 import { Config } from 'react-awesome-query-builder';
 // Before deploying to production, we change this flag
-const packageVersion = '0.2.2';
+const packageVersion = '0.2.3';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -59,6 +71,8 @@ export class Backend {
   public variablesLoaded = [];
 
   public completedProductTour: boolean;
+
+  public kernelStatus: string;
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -77,7 +91,7 @@ export class Backend {
   public resetStateFormulabarFlag = false;
   public resetStateDatavisualizerFlag = false;
 
-  // Production flag that determines if usage analytics are captured 
+  // Production flag that determines if usage analytics are captured
   public production = true;
 
   public eigendataSettings: ISettingRegistry.ISettings;
@@ -243,7 +257,9 @@ export class Backend {
   `;
 
   // -------------------------------------------------------------------------------------------------------------
-  // INTERNAL UTILITIES
+  //
+  // (D) INTERNAL UTILITIES
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   /*----------------------------------------------------------------------------------------------------
@@ -301,7 +317,9 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // API FOR REACT GUI
+  //
+  // (C) API FOR REACT GUI
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   /*----------------------------------------------------------------------------------------------------
@@ -509,15 +527,24 @@ export class Backend {
   public async pythonGetDataForVisualization(
     dataframe: string,
     sortBy?: string,
-    ascending?: boolean
+    ascending?: boolean,
+    page?: number,
+    pageSize?: number
   ) {
     const isAscending = (): string => (ascending ? 'True' : 'False');
-    let codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe})`;
+    let codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe}`;
     if (sortBy) {
-      codeToRun = `ed_visualizer_data = ed_prep_data_for_visualization(${dataframe}, sortby="${sortBy}", ${
-        ascending !== undefined ? 'ascending=' + isAscending() : ''
-      })`;
+      codeToRun += `, sortby="${sortBy}" ${
+        ascending !== undefined ? ', ascending=' + isAscending() : ''
+      }`;
     }
+    if (page) {
+      codeToRun += `, page=${page}`;
+    }
+    if (pageSize) {
+      codeToRun += `, page_size=${pageSize}`;
+    }
+    codeToRun += ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this.codeToIgnore = codeToRun;
     console.log('DataViz: Request expression', codeToRun);
@@ -556,10 +583,12 @@ export class Backend {
   }
 
   /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Remove table
+  [FUNCTION] Remove table or variable from python kernel
+  -> Returns: na
+  -> Writes: na
   -----------------------------------------------------------------------------------------------------*/
-  public async pythonRemoveTable(table: string): Promise<void> {
-    const codeToRun = 'del ' + table;
+  public async pythonRemoveData(data: string): Promise<void> {
+    const codeToRun = 'del ' + data;
     console.log('Request expression', codeToRun);
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
@@ -573,7 +602,9 @@ export class Backend {
   }
 
   /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Import library with given statment
+  [FUNCTION] Import library/ snippet with given statement
+  -> Returns: na
+  -> Writes: na
   -----------------------------------------------------------------------------------------------------*/
   public async pythonImportLibraries(importStatement: string): Promise<void> {
     // Execute the import in the kernel
@@ -611,7 +642,9 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // HANDLE CHANGE OF NOTEBOOK
+  //
+  // (A) HANDLE CHANGE OF NOTEBOOK
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   /*----------------------------------------------------------------------------------------------------
@@ -685,7 +718,9 @@ export class Backend {
   }
 
   // -------------------------------------------------------------------------------------------------------------
-  // HANDLE CODE RUNNING IN NOTEBOOK
+  //
+  // (B) HANDLE CODE RUNNING IN NOTEBOOK
+  //
   // -------------------------------------------------------------------------------------------------------------
 
   // Overview: codeRunningOnNotebook ->  pythonRequestDataframes -> handleGetDataframesResponse
@@ -699,7 +734,8 @@ export class Backend {
     msg: KernelMessage.IExecuteInputMsg
   ): void => {
     //console.log('------> Code running in the notebook');
-    const msgType = msg.header.msg_type;
+    const msgType: string = msg.header.msg_type;
+    //console.log('[DEBUG]', msg);
     switch (msgType) {
       case 'execute_input':
         const code = msg.content.code;
@@ -713,6 +749,9 @@ export class Backend {
           this.pythonRequestDataframes();
         }
         break;
+      case 'status':
+        this.kernelStatus = msg.content['execution_state'];
+        console.log('Kernel Status', this.kernelStatus);
       default:
         break;
     }
@@ -759,9 +798,7 @@ export class Backend {
 
       const variables = kernelData['ed_get_nondf_variables'];
 
-      if (variables.length > 0) {
-        this.variablesLoaded = variables;
-      }
+      this.variablesLoaded = variables;
 
       if (dataframes.length === 0) {
         // If there is no data loaded, reset frontend component

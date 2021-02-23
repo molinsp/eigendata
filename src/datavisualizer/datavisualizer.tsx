@@ -1,3 +1,4 @@
+import 'abortcontroller-polyfill';
 import { ReactWidget, UseSignal } from '@jupyterlab/apputils';
 import React, { useState, useEffect } from 'react';
 import { useTable, useResizeColumns, useBlockLayout } from 'react-table';
@@ -9,12 +10,36 @@ import {
   cutString,
   separateThousands
 } from '../utils/stringUtils';
+import { binIcon } from '../assets/svgs';
+import { PaginationPanel } from '../components/paginationPanel';
+import { Option } from 'react-select/src/filters';
+import { EmptyStateComponent } from '../components/noDataLoadedComponent';
+import { ReloadButton } from '../components/reloadButton';
 
 /**
  * React component for a counter.
  *
  * @returns The React component
  */
+
+//A controller object that allows to abort requests as and when desired
+const controller = new window.AbortController();
+const signal = controller.signal;
+
+const getOptions = (from: number, to: number, counter: number, label: string): Option[] => {
+  const array = [];
+  for (let i = from; i <= to; i += counter) {
+    array.push({value: i, label: `${label} ${i}`})
+  }
+  return array
+}
+
+const defaultPanelState = {
+  currentPageOptions: [],
+  pageSizeOptions: getOptions(10, 40, 5, 'Show'),
+  currentPageSelection: {value: 1, label: 'Page 1'},
+  pageSizeSelection: {value: 25, label: 'Show 25'}
+}
 
 const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [columns, setColumns] = useState([]);
@@ -25,35 +50,52 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [shape, setShape] = useState({});
   const [columnSizes, setColumnSizes] = useState({});
   const [sortConfig, setSortConfig] = useState({sortBy: undefined, ascending: undefined})
+  const [loading, setLoading] = useState(false);
+  const [paginationPanelState, setPaginationPanelState] = useState({ ...defaultPanelState });
 
   const url = window.location.href;
   const binderUrl = url.includes('molinsp-eigendata-trial');
 
-  if (props.logic.resetStateDatavisualizerFlag === true) {
+  const resetState = (): void => {
     console.log('RESETING DATA VISUALIZER STATE');
     setColumns([]);
     setData([]);
     setShowTable(false);
     setActiveTab(0);
-    props.logic.resetStateDatavisualizerFlag = false;
+    setPaginationPanelState({...defaultPanelState});
+    setSortConfig({sortBy: undefined, ascending: undefined});
+    setColumnSizes({});
+    setColumnTypes([]);
+    setShape({});
   }
 
-  // Set active tab to the latest dataframe/variable
-  useEffect(() => {
-    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
-    if (dataframeValues.length > 0) {
-      const currentDataframeValue = props.logic.dataframeSelection;
-      //if there is variable name, indexOf returns -1 - index of variable tab
-      const index = dataframeValues.indexOf(currentDataframeValue)
-      setActiveTab(index);
+    if (props.logic.resetStateDatavisualizerFlag === true) {
+     resetState();
+     props.logic.resetStateDatavisualizerFlag = false;
     }
-  }, [props.logic.dataframeSelection]);
 
-  //Rerender variables table
+  /*--------------------------------------------------------------------
+    PAGINATION: Set the page number the user is seeing
+    Triggered when:
+      - shape['rows']: When the size of the data changes
+      - props.logic.dataframeSelection: The user changes the dataframe
+  ----------------------------------------------------------------------*/
+  useEffect(() => {
+    const pageSize = Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value);
+    setPaginationPanelState({
+      ...defaultPanelState,
+      currentPageOptions: getOptions(1, pageSize, 1, 'Page')
+    });
+  }, [shape['rows'], props.logic.dataframeSelection])
+
+  /*--------------------------------------------------------------------
+    VARIABLES TAB: Display variables
+    Triggered when:
+      - activeTab: Change the variables tab
+      - props.logic.variablesLoaded: Change in variables loaded
+  ----------------------------------------------------------------------*/
   useEffect(() => {
     const variables = props.logic.variablesLoaded;
-    console.log('Variables', variables);
-    console.log('Active tab', activeTab);
     if (isVariableTab(activeTab)) {
       try{
         const keys = Object.keys(variables[0]);
@@ -61,25 +103,43 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
           accessor: key,
           Header: key,
           Cell: (props): string => getUSDString(props.value),
-          width: columnSizes['variables'] ? columnSizes['variables'][index] : 80
+          //if there are custom sizes for columns - apply them
+          width: columnSizes['variables'] ? columnSizes['variables'][index]
+            // else - use default 160 : 80 : 160 sizes for columns
+            : (index === 0 || index === 2) ? 160 : 80
         }));
         setColumns([...columns]);
         setData([...variables]);
-      }catch(e){
+      } catch(e){
+        props.logic.dataframeSelection = props.logic.dataframesLoaded[0].value;
+        setActiveTab(0);
         console.log('Error switching to the variables tab');
       }
 
     }
   }, [activeTab, props.logic.variablesLoaded]);
 
-  //Rerender other tables
+  /*--------------------------------------------------------------------
+    DATAFRAMES TABS: Display variables
+    Triggered when:
+      - activeTab: Change the variables tab
+      - dataframesLoaded: User load new or delete dataframe
+      - sortConfig: User select one of sort options
+      - paginationPanelState: User interacts with pagination panel
+  ----------------------------------------------------------------------*/
   useEffect(() => {
     const getDataForVisualization = async (): Promise<void> => {
       try {
         const dataframes = props.logic.dataframesLoaded;
         if (dataframes[activeTab]) {
+          //start data loading (get dataframes from backend)
+          setLoading(true);
           const result = await props.logic.pythonGetDataForVisualization(
-            dataframes[activeTab].value, sortConfig.sortBy, sortConfig.ascending
+            dataframes[activeTab].value,
+            sortConfig.sortBy,
+            sortConfig.ascending,
+            paginationPanelState.currentPageSelection.value,
+            paginationPanelState.pageSizeSelection.value
           );
           // Add missing methods and properties
           const columns = result['columns'].map((column, index) => {
@@ -88,27 +148,55 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                 column.width = 55;
               }
             } else {
-              column.width = columnSizes[dataframes[activeTab].value][index]
+              // eslint-disable-next-line prettier/prettier
+              column.width = columnSizes[dataframes[activeTab].value][index] ?? 80
             }
             column.Cell = (props): string => getUSDString(props.value);
             return column;
           });
-            setShowTable(true);
-            setColumns([...columns]);
-            setData([...result['data']]);
-            setColumnTypes([...result['columnTypes']]);
-            setShape({ ...result['shape'] });
+          setShowTable(true);
+          setColumns([...columns]);
+          setData([...result['data']]);
+          setColumnTypes([...result['columnTypes']]);
+          setShape({ ...result['shape'] });
         }
       } catch (e) {
         setShowTable(false);
+      } finally {
+        //loading is finished (no matter success or not)
+        setLoading(false);
       }
     };
 
-    const dataframeValues = props.logic.dataframesLoaded.map(df => df?.value);
-    if (dataframeValues.includes(props.logic.dataframeSelection) || !props.logic.dataframeSelection) {
-      getDataForVisualization();
+    //wrap getDataForVisualization() function in cancelable Promise
+    const getDataForVisualizationWrapper = (signal): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        getDataForVisualization().then(() => resolve());
+        //if abort() method was called we reject this Promise
+        signal.addEventListener('abort', () => {
+          reject('Promise aborted')
+        });
+      });
     }
-  }, [activeTab, props.logic.dataframesLoaded, sortConfig]);
+
+    const cancelPromise = (): void => {
+      controller.abort()
+    }
+
+    if (loading) {
+      cancelPromise();
+    //else let it (the last one) be resolved
+    } else {
+      getDataForVisualizationWrapper(signal).catch();
+    }
+
+  }, [
+    activeTab,
+    props.logic.dataframesLoaded,
+    sortConfig,
+    paginationPanelState.pageSizeSelection,
+    paginationPanelState.currentPageSelection
+  ]);
 
   // Default size of columns
   const defaultColumn = React.useMemo(
@@ -158,9 +246,17 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   const deleteTab = async (table: string, menusToClose: string): Promise<void> => {
-    await props.logic.pythonRemoveTable(table);
+    await props.logic.pythonRemoveData(table);
     closeDropdownMenus(menusToClose);
   };
+
+  const deleteVariable = async (variable: string): Promise<void> => {
+    await props.logic.pythonRemoveData(variable);
+    if (props.logic.variablesLoaded.length === 0) {
+      setActiveTab(0);
+      props.logic.dataframeSelection = props.logic.dataframesLoaded[0].value;
+    }
+  }
 
   const isLastRow = (row: number): boolean => {
     return row === headerGroups.length - 1;
@@ -172,6 +268,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
 
   const onTabClick = (index: number): void => {
     setActiveTab(index);
+    setPaginationPanelState({...defaultPanelState});
     props.logic.dataframeSelection = props.logic.dataframesLoaded[index].value;
     if (props.logic.production && props.logic.shareProductData) {
       amplitude
@@ -215,6 +312,13 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
       default: return '';
     }
   }
+
+  const goToThePage = (page: number): void => {
+    setPaginationPanelState({
+      ...paginationPanelState,
+      currentPageSelection: paginationPanelState.currentPageOptions[page-1]
+    })
+  };
 
   return (
     <div className="full-height-container"> {binderUrl &&
@@ -282,8 +386,9 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               ? <p className="disclaimer">Data shape: {separateThousands(props.logic.variablesLoaded.length)} rows.</p>
               : <p className="disclaimer">
                 Data shape: {separateThousands(shape['rows'])} rows and{' '}
-                {shape['columns']} columns. Preview: first {data.length} rows
-                and {shape['displayedColumns']} columns.
+                {shape['columns']} columns. {shape['columns'] > shape['displayedColumns']
+                ? 'Only '+ shape['displayedColumns'] + ' displayed.'
+                : ''}
               </p>}
           </nav>
           <div className="tab-item">
@@ -368,14 +473,52 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                           </div>
                         );
                       })}
+                      <button
+                        className="trash-bin-button"
+                        onClick={async (): Promise<void> => await deleteVariable(row.cells[0].value)}
+                      >
+                        {isVariableTab(activeTab) && binIcon}
+                      </button>
                     </div>
                   );
                 })}
               </div>
             </div>
           </div>
+          {(!isVariableTab(activeTab)) &&
+            <div style={{display: 'flex'}}>
+              <PaginationPanel
+                pageSize={Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value)}
+                pageSizeSelectionConfig={{
+                  options: paginationPanelState.pageSizeOptions,
+                  selectedOption: paginationPanelState.pageSizeSelection,
+                  onSelect: (value): void => {
+                    const pageSize: number = Math.ceil(shape['rows']/value.value);
+                    setPaginationPanelState({
+                      ...paginationPanelState,
+                      currentPageOptions: getOptions(1, pageSize, 1, 'Page'),
+                      pageSizeSelection: value,
+                      currentPageSelection: paginationPanelState.currentPageSelection.value > pageSize
+                        ? { value: pageSize, label: 'Page ' + (pageSize) }
+                        : paginationPanelState.currentPageSelection
+                    });
+                  }
+                }}
+                currentPageConfig={{
+                  options: paginationPanelState.currentPageOptions,
+                  selectedOption: paginationPanelState.currentPageSelection,
+                  onSelect: (value): void => setPaginationPanelState({...paginationPanelState, currentPageSelection: value})
+                }}
+                onFirstClick={(): void => goToThePage(1)}
+                onLastClick={(): void => goToThePage(Math.ceil(shape['rows']/paginationPanelState.pageSizeSelection.value))}
+                onPrevClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value - 1)}
+                onNextClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value + 1)}
+              />
+              <ReloadButton title="Reload datavizualizer" onClick={resetState}/>
+            </div>
+          }
         </div>
-       : <p>No data available</p>}
+       : <EmptyStateComponent onReloadButtonClick={resetState}/>}
     </div>
   );
 };
