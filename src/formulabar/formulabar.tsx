@@ -45,6 +45,8 @@ import { RadioButtonGroup } from '../components/radioButtonGroup';
 export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Access backend class through logic object
   const logic = props.logic;
+  const url = window.location.href;
+  const binderUrl = url.includes('cloud.eigendata.co') || url.includes('molinsp-eigendata-trial') || url.includes('localhost');
 
   // Defaults for form and UI schema
   const transformationForm: JSONSchema7 = logic.transformationsConfig[
@@ -58,6 +60,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     label: 'Read CSV'
   };
 
+  // Display only transformations that load data when there is no data
   const loadingTransformations = (): Dataframe[] => {
     const result = [];
 
@@ -125,6 +128,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
     // This starts the product tour. It's here because it needs to load after the rest of the elements
     if (logic.completedProductTour === false) {
+      setState(state => ({ ...state, formData: {filepath_or_buffer: 'players_20.csv'}}));
+
       setProductTourState({ run: true });
       // Change the settings for it not to run next time (next refresh)
       logic.eigendataSettings.set('completedProductTour', true);
@@ -639,6 +644,14 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             ref={dataframeSelectionRef}
           />
         </fieldset>
+        {binderUrl &&
+        <div className="binderButtonSeparator">
+          <a href="https://calendly.com/molinsp/eigendata-demo"
+             className="binderButton"
+          >
+            BOOK A DEMO
+          </a>
+      </div>}
         <div className="centered formulaFormDivider" />
         {state.showForm && (
           <Form
