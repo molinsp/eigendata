@@ -33,7 +33,7 @@ const productTourSteps = [
     disableBeacon: true
   },
   {
-    content: 'Here is where you enter the parameters, like the csv file name.',
+    content: 'Here is where you enter the parameters, like the csv file name. We have already entered the name of a demo file for you.',
     target: '#root_filepath_or_buffer',
     // Remove beacon with circle to enable autostart
     disableBeacon: true
@@ -42,10 +42,10 @@ const productTourSteps = [
     content: (
       <div>
         <p>
-          To get the name of the csv files, you can use the file browser on the
+          To see your files, you can use the file browser on the
           left.
         </p>
-        <p>You can also hide it by clicking the browser icon</p>
+        <p>You can also hide it by clicking the browser icon on the top-left</p>
       </div>
     ),
     target: '#filebrowser',
@@ -55,7 +55,7 @@ const productTourSteps = [
   },
   {
     content:
-      'After entering the file-name, press Submit to run your transformations.',
+      'To execute a transformation, press Submit',
     target: '.btn-info',
     // Remove beacon with circle to enable autostart
     disableBeacon: true
@@ -64,13 +64,23 @@ const productTourSteps = [
     content: (
       <div>
         <p>The data will be displayed in the data visualizer.</p>
-        <p>Enjoy your data.</p>
       </div>
     ),
     target: '.full-height-container',
     // Remove beacon with circle to enable autostart
     disableBeacon: true,
     placement: 'left' as 'left'
+  },
+  {
+    content: (
+      <div>
+        <p>And the code will be written into the Jupyter Notebook</p>
+        <p>Enjoy your data!</p>
+      </div>
+    ),
+    target: 'li[data-type="document-title"][style="z-index: 0;"]',
+    // Remove beacon with circle to enable autostart
+    disableBeacon: true
   }
 ];
 

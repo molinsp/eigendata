@@ -393,8 +393,8 @@
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       }
     },
     "pivot_table" : {
@@ -606,6 +606,7 @@
         "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
+        "aggregation",
         "count",
         "mean",
         "sum",
@@ -657,8 +658,8 @@
         }
       },
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       },
       "keywords" : [
         "switch",
@@ -1104,7 +1105,8 @@
         "keep",
         "columns",
         "column",
-        "filter"
+        "filter",
+        "select"
       ]
     },
     "fillna" : {
@@ -1602,7 +1604,7 @@
             "type" : "string"
           }
         },
-        "title" : "Drop blanks / NAs",
+        "title" : "Drop NA",
         "description" : "Drop rows or columns that contain blanks",
         "type" : "object",
         "callerObject" : "DataFrame",
@@ -1635,7 +1637,8 @@
         "na",
         "null",
         "empty",
-        "remove"
+        "remove",
+        "blank"
       ]
     },
     "insert" : {
@@ -2240,7 +2243,7 @@
         "required" : [
           "column"
         ],
-        "title" : "[Column] Mean of a column",
+        "title" : "[Column] Mean of column values",
         "callerObject" : "DataFrame[Series]",
         "function" : "mean",
         "type" : "object",
@@ -2280,7 +2283,7 @@
         "required" : [
           "column"
         ],
-        "title" : "[Column] Sum of a column",
+        "title" : "[Column] Sum of column values",
         "callerObject" : "DataFrame[Series]",
         "function" : "sum",
         "type" : "object",
@@ -3518,7 +3521,7 @@
             ]
           }
         },
-        "title" : "[Column] Add to column values",
+        "title" : "[Column] Sum",
         "callerObject" : "DataFrame[Series]",
         "function" : "add",
         "type" : "object",
@@ -3687,7 +3690,7 @@
           "replace_with",
           "when"
         ],
-        "title" : "[Column] Change value based on indicator",
+        "title" : "[Column] Replace based on condition",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "replace_based_on_condition",
         "type" : "object",
@@ -3708,7 +3711,8 @@
       "keywords" : [
         "new",
         "true",
-        "false"
+        "false",
+        "if"
       ]
     },
     "rename_categories" : {
@@ -4333,6 +4337,56 @@
       "snippet" : {
         "code" : "def analyze_multi_column_selection(df, column_indices, keyword):\n    res = {'category':[],'count': []}\n    for name, val in data.iloc[:,column_indices[0]:column_indices[1]].iteritems():\n        res['count'].append((val == keyword).sum())\n        res['category'].append(name)\n    return pd.DataFrame(res)",
         "name" : "analyze_multi_column_selection"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "get_ftp_csv" : {
+      "form" : {
+        "properties" : {
+          "server_url" : {
+            "type" : "string"
+          },
+          "user" : {
+            "type" : "string"
+          },
+          "password" : {
+            "type" : "string"
+          },
+          "folder" : {
+            "type" : "string"
+          },
+          "filename" : {
+            "type" : "string"
+          },
+          "sep" : {
+            "type" : "string"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "server_url",
+          "user",
+          "password",
+          "folder",
+          "filename",
+          "sep"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Get csv from FTP server",
+        "function" : "get_ftp_csv",
+        "description" : "Get a csv file from an FTP server",
+        "returnType" : "DataFrame",
+        "transformationType" : "dataLoading"
+      },
+      "snippet" : {
+        "code" : "def get_ftp_csv(\n    server_url: str,\n    user: str,\n    password: str,\n    folder: str,\n    filename: str,\n    **kwargs):\n    from ftplib import FTP\n    import io\n    import pandas as pd\n    session = FTP(server_url, user, password)\n    session.cwd(folder)\n    download_file = io.BytesIO()\n    session.retrbinary(\"RETR {}\".format(filename), download_file.write)\n    download_file.seek(0)\n    return pd.read_csv(download_file, **kwargs)    ",
+        "name" : "get_ftp_csv"
       },
       "uischema" : {
         "new table name" : {

@@ -53,9 +53,6 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   const [loading, setLoading] = useState(false);
   const [paginationPanelState, setPaginationPanelState] = useState({ ...defaultPanelState });
 
-  const url = window.location.href;
-  const binderUrl = url.includes('molinsp-eigendata-trial');
-
   const resetState = (): void => {
     console.log('RESETING DATA VISUALIZER STATE');
     setColumns([]);
@@ -321,14 +318,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   return (
-    <div className="full-height-container"> {binderUrl &&
-      <div className="binderButtonSeparator">
-        <a href="https://calendly.com/molinsp/eigendata-demo"
-           className="binderButton"
-        >
-          BOOK A DEMO
-        </a>
-      </div>} {showTable ?
+    <div className="full-height-container"> {showTable ?
         <div className="full-height-container">
           <nav className="scroll-nav">
             <div className="dropdown-container">

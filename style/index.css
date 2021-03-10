@@ -235,9 +235,9 @@
 }
 
 .binderButton{
-  background-color: #4500D9;
+  background-color: #000000;
   color: #FFFFFF;
-  border-radius: 2rem;
+  border-radius: 1rem;
   border: 0;
   padding-top: 5px;
   padding-bottom: 5px;
@@ -247,7 +247,8 @@
 }
 
 .binderButton:hover{
-  background-color: #00FFD1 !important;
+  color: #FFFFFF;
+  background-color: #5249BA !important;
   text-decoration: none;
 }
 
