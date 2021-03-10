@@ -597,7 +597,11 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         <fieldset className="data-transformation-form">
           <Select
             name="Select dataframe"
-            placeholder="No data"
+            placeholder={
+              logic.dataframesLoaded.length !== 0
+                ? 'Select data'
+                : 'No data'
+            }
             options={logic.dataframesLoaded}
             value={state.dataframeSelection}
             label="Select data"
@@ -612,7 +616,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           />
           <Select
             name="Select transformation"
-            placeholder="select data loading transformation"
+            placeholder="Search transformation"
             options={
               logic.dataframesLoaded.length !== 0
                 ? logic.transformationsList
