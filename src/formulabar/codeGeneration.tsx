@@ -8,15 +8,23 @@ const mapFormResponseToPythonCode = (
   console.log('field schema type', typeof fieldSchema['$ref']);
 
   /*----------------------------------------------------------------------------------------------------------
-    CASE 1: Custom code generation style
+    CASE A: Custom code generation style
   ----------------------------------------------------------------------------------------------------------*/
   if (typeof fieldSchema['codegenstyle'] !== 'undefined') {
     console.log('1. CodeGenStyle detected');
     const codeGenStyle = fieldSchema['codegenstyle'];
+
+    /*----------------------------------------------------------------------------------------------------------
+      VARIABLES
+    ----------------------------------------------------------------------------------------------------------*/
     if (codeGenStyle.localeCompare('variable') === 0) {
       console.log('1.1 Variable codegenstyle');
       return fieldInput;
     }
+
+    /*----------------------------------------------------------------------------------------------------------
+      SERIES COLUMN
+    ----------------------------------------------------------------------------------------------------------*/
     // CASE where a series is passed as df[Series_Name]
     else if (codeGenStyle.localeCompare('seriesColumn') === 0) {
       console.log('1.2 Column as series');
@@ -24,8 +32,8 @@ const mapFormResponseToPythonCode = (
     }
     console.log('WARNING: No codeGenStyle');
   } else if (typeof fieldSchema['$ref'] !== 'undefined') {
-    /*----------------------------------------------------------------------------------------------------------
-    CASE 2: Reference to a column definition
+  /*----------------------------------------------------------------------------------------------------------
+    CASE B: Reference to a column definition
   ----------------------------------------------------------------------------------------------------------*/
     // Specific hardcoded cases
     console.log('2. REF detected');
@@ -40,8 +48,8 @@ const mapFormResponseToPythonCode = (
     }
     console.log('WARNING: No ref found');
   } else if (fieldSchema['type'].localeCompare('array') === 0) {
-    /*----------------------------------------------------------------------------------------------------------
-    CASE 3: Array
+  /*----------------------------------------------------------------------------------------------------------
+    CASE C: Array
   ----------------------------------------------------------------------------------------------------------*/
     console.log('3. Array detected');
     // Array of variables, i.e. no quotation marks
@@ -63,8 +71,8 @@ const mapFormResponseToPythonCode = (
       return JSON.stringify(fieldInput);
     }
   } else if (fieldSchema['type'].localeCompare('string') === 0) {
-    /*----------------------------------------------------------------------------------------------------------
-    CASE 4: Standard jsonschema form types
+  /*----------------------------------------------------------------------------------------------------------
+    CASE E: Standard jsonschema form types STRING/NUMBER
   ----------------------------------------------------------------------------------------------------------*/
     console.log('4. String detected');
     console.log('String detected');
