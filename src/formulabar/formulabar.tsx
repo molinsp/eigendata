@@ -46,7 +46,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Access backend class through logic object
   const logic = props.logic;
   const url = window.location.href;
-  const binderUrl = url.includes('cloud.eigendata.co') || url.includes('molinsp-eigendata-trial') || url.includes('localhost');
+  const binderUrl = url.includes('cloud.eigendata.co') || url.includes('molinsp-eigendata-trial');
 
   // Defaults for form and UI schema
   const transformationForm: JSONSchema7 = logic.transformationsConfig[
