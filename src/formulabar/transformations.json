@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.32",
+  "version" : "0.0.40",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -18,7 +18,6 @@
           "decimal" : {
             "type" : "string",
             "default" : ".",
-            "title" : "decimal",
             "description" : "Character used to indicate decimals."
           },
           "header" : {
@@ -32,7 +31,7 @@
         "required" : [
           "filepath_or_buffer"
         ],
-        "title" : "Read CSV",
+        "title" : "Read CSV file",
         "type" : "object",
         "callerObject" : "pd",
         "function" : "read_csv",
@@ -60,7 +59,6 @@
         "properties" : {
           "io" : {
             "type" : "string",
-            "title" : "file path",
             "description" : "Location of the file relative to the notebook. E.g. /Documents/Data/testdata.csv."
           },
           "header" : {
@@ -124,7 +122,7 @@
             ]
           }
         },
-        "title" : "Read Excel Sheet",
+        "title" : "Read Excel file",
         "type" : "object",
         "callerObject" : "pd",
         "function" : "read_excel",
@@ -164,19 +162,16 @@
       "form" : {
         "properties" : {
           "base" : {
-            "description" : "You can get the id from airtable.com/api.",
-            "type" : "string",
-            "title" : "id of the base"
+            "description" : "ID of the base. You can get the id from airtable.com/api.",
+            "type" : "string"
           },
           "table" : {
             "type" : "string",
-            "title" : "name of the table",
             "description" : "Name of the table as shown in Airtable UI."
           },
           "key" : {
             "type" : "string",
-            "title" : "api key",
-            "description" : "You can get the id from airtable.com/api (selecting show API key on the top right)."
+            "description" : "API key. You can get the id from airtable.com/api (selecting show API key on the top right)."
           },
           "new table name" : {
             "type" : "string"
@@ -187,7 +182,7 @@
           "table",
           "key"
         ],
-        "title" : "Read Airtable",
+        "title" : "Read Airtable Base",
         "type" : "object",
         "function" : "airtable_base_to_df",
         "transformationType" : "dataLoading",
@@ -219,19 +214,16 @@
             "$ref" : "#/definitions/dataframes"
           },
           "base" : {
-            "description" : "You can get the id from airtable.com/api.",
-            "type" : "string",
-            "title" : "id of the base"
+            "description" : "ID of the base. You can get the id from airtable.com/api.",
+            "type" : "string"
           },
           "table" : {
             "type" : "string",
-            "title" : "name of the table",
             "description" : "Name of the table as shown in Airtable UI."
           },
           "key" : {
             "type" : "string",
-            "title" : "api key",
-            "description" : "You can get the id from airtable.com/api (selecting show API key on the top right)."
+            "description" : "API key. You can get the id from airtable.com/api (selecting show API key on the top right)."
           }
         },
         "required" : [
@@ -240,7 +232,7 @@
           "table",
           "key"
         ],
-        "title" : "Save to Airtable",
+        "title" : "Save DataFrame to Airtable Base",
         "type" : "object",
         "function" : "df_to_airtable_base",
         "description" : "Save table to airtable.",
@@ -273,20 +265,19 @@
       "form" : {
         "properties" : {
           "url" : {
-            "title" : "URL of the sheet",
+            "description" : "URL of the google sheet",
             "type" : "string"
           },
           "start_row" : {
-            "title" : "start row number",
             "description" : "Row number for first row of headers or data.",
             "type" : "number",
-            "default" : 1
+            "default" : 1,
+            "title" : "start row"
           },
           "sheet" : {
             "type" : "number",
             "default" : 0,
-            "title" : "sheet number",
-            "description" : "Sheet number that will be pulled as a table."
+            "description" : "Number of the sheet. First sheet on the left is 0."
           },
           "new table name" : {
             "type" : "string"
@@ -295,7 +286,7 @@
         "required" : [
           "url"
         ],
-        "title" : "Read Google Sheets",
+        "title" : "Read Google Sheet",
         "type" : "object",
         "function" : "gsheet_to_df",
         "transformationType" : "dataLoading",
@@ -317,7 +308,7 @@
         "properties" : {
           "path_or_buf" : {
             "type" : "string",
-            "title" : "filename or path",
+            "title" : "file path",
             "description" : "Location of the file. You can also indicate a path to save it in a specific folder."
           },
           "index" : {
@@ -346,7 +337,9 @@
         "returnType" : "none"
       },
       "keywords" : [
-        "write"
+        "write",
+        "save",
+        "store"
       ],
       "library" : {
         "name" : "pandas",
@@ -355,7 +348,7 @@
     },
     "describe" : {
       "form" : {
-        "title" : "Overview: Column statistics",
+        "title" : "Describe column statistics",
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "describe",
@@ -370,7 +363,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "overview",
+        "statistics",
+        "mean"
+      ]
     },
     "count_nulls" : {
       "form" : {
@@ -380,7 +378,7 @@
             "default" : "nulls"
           }
         },
-        "title" : "Overview of null values in each column",
+        "title" : "Count nulls",
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "count_nulls",
@@ -395,7 +393,12 @@
       "library" : {
         "name" : "fastdata.core",
         "importStatement" : "from fastdata.core import *"
-      }
+      },
+      "keywords" : [
+        "null",
+        "na",
+        "empty"
+      ]
     },
     "pivot_table" : {
       "form" : {
@@ -478,12 +481,10 @@
                       "type" : "object",
                       "properties" : {
                         "column" : {
-                          "$ref" : "#/definitions/column",
-                          "title" : "column"
+                          "$ref" : "#/definitions/column"
                         },
                         "function" : {
                           "uniqueItems" : true,
-                          "title" : "aggregations",
                           "type" : "array",
                           "items" : {
                             "codegenstyle" : "variable",
@@ -521,7 +522,7 @@
                         }
                       }
                     },
-                    "title" : "aggregations",
+                    "title" : "aggregation",
                     "description" : "Aggregations to perform in the pivot table (e.g. calculating the average)."
                   }
                 }
@@ -535,7 +536,7 @@
                   },
                   "aggfunc" : {
                     "uniqueItems" : true,
-                    "title" : "aggregations",
+                    "title" : "aggregation",
                     "type" : "array",
                     "items" : {
                       "codegenstyle" : "variable",
@@ -635,7 +636,7 @@
           }
         },
         "required" : [],
-        "title" : "Transpose table",
+        "title" : "Transpose dataframe",
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "transpose",
@@ -685,8 +686,7 @@
         "properties" : {
           "columns" : {
             "$ref" : "#/definitions/columns",
-            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators.",
-            "title" : "expand columns"
+            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
           },
           "dummy_na" : {
             "title" : "NaN column",
@@ -703,7 +703,7 @@
             "type" : "string"
           }
         },
-        "title" : "Create 0/1 indicators for a column",
+        "title" : "Create dummies for a column (0/1 indicators)",
         "description" : "Create new columns with 0/1 for each unique value in a column. Returns table with additional columns.",
         "type" : "object",
         "callerObject" : "pd",
@@ -888,7 +888,7 @@
         "function" : "merge",
         "callerObject" : "DataFrame",
         "type" : "object",
-        "title" : "Join tables",
+        "title" : "Merge dataframes",
         "description" : "Join the selected table with another table."
       },
       "uischema" : {
@@ -919,7 +919,11 @@
         "vlookup",
         "index",
         "match",
-        "lookup"
+        "lookup",
+        "join",
+        "inner",
+        "left",
+        "right"
       ]
     },
     "append" : {
@@ -978,12 +982,8 @@
               "True",
               "False"
             ],
-            "enumNames" : [
-              "Ascending",
-              "Descending"
-            ],
             "codegenstyle" : "variable",
-            "title" : "sorting type"
+            "description" : "Sort the data ascending (ascending=True) or descending (ascending=False)."
           },
           "new table name" : {
             "type" : "string"
@@ -999,11 +999,11 @@
           "by",
           "ascending"
         ],
-        "title" : "Sort data",
+        "title" : "Sort values ",
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "sort_values",
-        "description" : "Sort the table based on one column. "
+        "description" : "Sort the dataframe based on one column. "
       },
       "uischema" : {
         "new table name" : {
@@ -1086,7 +1086,7 @@
             "type" : "string"
           }
         },
-        "title" : "Keep columns",
+        "title" : "Filter columns",
         "description" : "Keep only specific columns from the table.",
         "type" : "object",
         "callerObject" : "DataFrame",
@@ -1315,7 +1315,8 @@
                   },
                   "regex" : {
                     "type" : "string",
-                    "description" : "Regular expression to clean data."
+                    "description" : "Regular expression to clean data.",
+                    "title" : "regular expression"
                   }
                 }
               },
@@ -1430,8 +1431,7 @@
               "type" : "object",
               "properties" : {
                 "column" : {
-                  "$ref" : "#/definitions/column",
-                  "title" : "Column to rename"
+                  "$ref" : "#/definitions/column"
                 },
                 "newname" : {
                   "type" : "string",
@@ -1494,8 +1494,7 @@
               "type" : "object",
               "properties" : {
                 "column" : {
-                  "$ref" : "#/definitions/column",
-                  "title" : "Column to rename"
+                  "$ref" : "#/definitions/column"
                 },
                 "type" : {
                   "type" : "string",
@@ -1711,7 +1710,7 @@
         "required" : [
           "func"
         ],
-        "title" : "Apply function to all dataframe",
+        "title" : "Apply function to all items in dataframe",
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "apply",
@@ -1847,7 +1846,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "pat" : {
@@ -1872,7 +1870,7 @@
               "False"
             ],
             "default" : "False",
-            "title" : "",
+            "title" : "regular expression",
             "description" : "[Advanced] extraction using a regular expression.",
             "codegenstyle" : "variable"
           },
@@ -1916,7 +1914,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -2095,12 +2092,11 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "sub" : {
             "type" : "string",
-            "title" : "pattern",
+            "title" : "substring",
             "description" : "Find this pattern in the column (includes partial matches)"
           },
           "start" : {
@@ -2150,12 +2146,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "pat" : {
             "type" : "string",
-            "title" : "text to replace"
+            "title" : "pattern",
+            "description" : "Text to replace"
           },
           "repl" : {
             "type" : "string",
@@ -2184,7 +2180,7 @@
               "False"
             ],
             "default" : "False",
-            "title" : "",
+            "title" : "regular expression",
             "description" : "[Advanced] extraction using a regular expression.",
             "codegenstyle" : "variable"
           },
@@ -2198,7 +2194,7 @@
           "repl"
         ],
         "type" : "object",
-        "title" : "[Column] Replace text",
+        "title" : "[Column] Replace text pattern",
         "callerObject" : "DataFrame[Series].str",
         "function" : "replace",
         "definitions" : {
@@ -2222,12 +2218,79 @@
         "change"
       ]
     },
+    "map" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "codegenstyle" : "ignore"
+          },
+          "arg" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "value_from" : {
+                  "type" : "string",
+                  "title" : "value from"
+                },
+                "value_to" : {
+                  "type" : "string",
+                  "title" : "value to"
+                }
+              }
+            },
+            "title" : "Values to map"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "type" : "object",
+        "title" : "[Column] Map text",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "map",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "description" : "Map (i.e. replace) text form A->B."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "arg" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "value_from" : {
+              "classNames" : "left-field"
+            },
+            "value_to" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "change",
+        "replace"
+      ]
+    },
     "mean" : {
       "form" : {
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new variable name" : {
@@ -2267,7 +2330,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new variable name" : {
@@ -2304,7 +2366,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new variable name" : {
@@ -2491,7 +2552,7 @@
             ]
           }
         },
-        "title" : "[Column] Bin columns",
+        "title" : "[Column] Bin column",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "bin_column",
         "type" : "object",
@@ -2525,7 +2586,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "path" : {
@@ -2571,7 +2631,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "value" : {
@@ -2732,7 +2791,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -2806,7 +2864,6 @@
         "properties" : {
           "arg" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "seriesColumn"
           },
           "mode" : {
@@ -2917,7 +2974,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -2955,7 +3011,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -2993,7 +3048,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3031,7 +3085,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3069,7 +3122,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3106,7 +3158,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3144,7 +3195,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3182,7 +3232,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3366,7 +3415,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3458,7 +3506,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3553,7 +3600,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3649,12 +3695,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column to change",
+            "description" : "column to change",
             "codegenstyle" : "ignore"
           },
           "cond" : {
             "$ref" : "#/definitions/column",
-            "title" : "indicator column",
+            "title" : "condition column",
             "codegenstyle" : "seriesColumn",
             "description" : "Boolean column condaining True/False indicators."
           },
@@ -3720,7 +3766,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new_categories" : {
@@ -3771,7 +3816,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "sort" : {
@@ -3781,7 +3825,6 @@
               "False"
             ],
             "default" : "False",
-            "title" : "",
             "description" : "Sort the categories (ascending). ",
             "codegenstyle" : "variable"
           },
@@ -3831,13 +3874,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "to_strip" : {
-            "title" : "characters",
+            "title" : "to strip",
             "type" : "string",
-            "description" : "Leave blank to remove spaces."
+            "description" : "Characters to strip. Leave blank to remove spaces."
           },
           "new column name" : {
             "type" : "string"
@@ -3873,13 +3915,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "to_strip" : {
-            "title" : "characters",
+            "title" : "to strip",
             "type" : "string",
-            "description" : "Leave blank to remove spaces."
+            "description" : "Characters to strip. Leave blank to remove spaces."
           },
           "new column name" : {
             "type" : "string"
@@ -3919,13 +3960,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "to_strip" : {
-            "title" : "characters",
+            "title" : "to strip",
             "type" : "string",
-            "description" : "Leave blank to remove spaces."
+            "description" : "Characters to strip. Leave blank to remove spaces."
           },
           "new column name" : {
             "type" : "string"
@@ -4036,12 +4076,34 @@
           "facet_col" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a column."
+            "description" : "Create one plot for each of the values in this variable as a column.",
+            "title" : "facet column"
           },
           "facet_row" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a row."
+            "description" : "Create one plot for each of the values in this variable as a row.",
+            "title" : "facet row"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
+          "labels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column"
+                },
+                "label" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "title" : "labels",
+            "description" : "Rename the labels of the chart to make it more readable."
           }
         },
         "required" : [
@@ -4092,12 +4154,34 @@
           "facet_col" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a column."
+            "description" : "Create one plot for each of the values in this variable as a column.",
+            "title" : "facet column"
           },
           "facet_row" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a row."
+            "description" : "Create one plot for each of the values in this variable as a row.",
+            "title" : "facet row"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
+          "labels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column"
+                },
+                "label" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "title" : "labels",
+            "description" : "Rename the labels of the chart to make it more readable."
           }
         },
         "required" : [
@@ -4152,12 +4236,40 @@
           "facet_col" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a column."
+            "description" : "Create one plot for each of the values in this variable as a column.",
+            "title" : "facet column"
           },
           "facet_row" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a row."
+            "description" : "Create one plot for each of the values in this variable as a row.",
+            "title" : "facet row"
+          },
+          "hover_data" : {
+            "type" : "string",
+            "$ref" : "#/definitions/columns",
+            "description" : "Information to display on hover",
+            "title" : "hover data"
+          },
+          "labels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column"
+                },
+                "label" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "title" : "labels",
+            "description" : "Rename the labels of the chart to make it more readable."
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
           }
         },
         "required" : [
@@ -4175,6 +4287,14 @@
           "column" : {
             "type" : "string",
             "enum" : []
+          },
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
           }
         }
       },
@@ -4198,6 +4318,10 @@
           "bins" : {
             "type" : "number",
             "description" : "Number of bins."
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
           }
         },
         "required" : [
@@ -4238,6 +4362,10 @@
             "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Labels for sectors."
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
           }
         },
         "required" : [
@@ -4311,7 +4439,8 @@
           "column_indices" : {
             "type" : "string",
             "codegenstyle" : "variable",
-            "description" : "Enter column numbers as [start, finish], e.g. [6,7]. First column is 0."
+            "description" : "Enter column numbers as [start, finish], e.g. [6,7]. First column is 0.",
+            "title" : "column indices"
           },
           "keyword" : {
             "type" : "string"
@@ -4344,11 +4473,54 @@
         }
       }
     },
+    "read_csv_folder" : {
+      "form" : {
+        "properties" : {
+          "folder_path" : {
+            "description" : "Path of the folder with csv files.",
+            "type" : "string",
+            "title" : "folder path"
+          },
+          "file_prefix" : {
+            "type" : "string",
+            "title" : "file prefix",
+            "description" : "The prefix is the part of the filenames that is always the same. If indicated, it will use this info to generate a column that identifies the files. E.g. if the files are called “data_01”, “data_02”, etc.; then setting prefix as “data_” will create a column with values 01, 02, etc.  \n\n"
+          },
+          "file_col_name" : {
+            "type" : "string",
+            "description" : "If you set a file prefix, this parameter sets the name of the column that identifies the different files. If not specified, it will be called \"file\".",
+            "title" : "file column name"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "folder_path"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Read csv folder",
+        "function" : "read_csv_folder",
+        "description" : "Read several csv files form a folder and stack them together.",
+        "returnType" : "DataFrame",
+        "transformationType" : "dataLoading"
+      },
+      "snippet" : {
+        "code" : "import pandas as pd\nimport glob\ndef read_csv_folder(folder_path, file_prefix=None, file_col_name=None):\n    all_files = glob.glob(folder_path + \"/*.csv\")\n\n    li = []\n    for filename in all_files:\n        \n        df = pd.read_csv(filename, index_col=None, header=0)\n        if file_prefix != None:\n            \n            if file_col_name == None: file_col_name = 'file'\n            \n            col_value = filename.strip(folder_path + '/' + 'players_').strip('.csv')\n            df.insert(\n                loc=0, \n                column=file_col_name, \n                value=col_value)\n        \n        li.append(df)\n\n    return pd.concat(li, axis=0, ignore_index=True)",
+        "name" : "read_csv_folder"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
     "get_ftp_csv" : {
       "form" : {
         "properties" : {
           "server_url" : {
-            "type" : "string"
+            "type" : "string",
+            "title" : "server url"
           },
           "user" : {
             "type" : "string"
@@ -4385,7 +4557,7 @@
         "transformationType" : "dataLoading"
       },
       "snippet" : {
-        "code" : "def get_ftp_csv(\n    server_url: str,\n    user: str,\n    password: str,\n    folder: str,\n    filename: str,\n    **kwargs):\n    from ftplib import FTP\n    import io\n    import pandas as pd\n    session = FTP(server_url, user, password)\n    session.cwd(folder)\n    download_file = io.BytesIO()\n    session.retrbinary(\"RETR {}\".format(filename), download_file.write)\n    download_file.seek(0)\n    return pd.read_csv(download_file, **kwargs)    ",
+        "code" : "from ftplib import FTP\nimport io\nimport pandas as pd\ndef get_ftp_csv(\n    server_url: str,\n    user: str,\n    password: str,\n    folder: str,\n    filename: str,\n    **kwargs):\n    session = FTP(server_url, user, password)\n    session.cwd(folder)\n    download_file = io.BytesIO()\n    session.retrbinary(\"RETR {}\".format(filename), download_file.write)\n    download_file.seek(0)\n    return pd.read_csv(download_file, **kwargs)    ",
         "name" : "get_ftp_csv"
       },
       "uischema" : {
