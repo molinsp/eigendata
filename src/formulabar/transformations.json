@@ -821,7 +821,7 @@
             "type" : "string",
             "codegenstyle" : "variable",
             "$ref" : "#/definitions/dataframes",
-            "description" : "Table to be used to join on the right."
+            "description" : "DataFrame to be used to join on the right."
           },
           "how" : {
             "type" : "string",
@@ -842,11 +842,13 @@
           },
           "left_on" : {
             "$ref" : "#/definitions/columns",
-            "title" : "left column"
+            "title" : "left column",
+            "description" : "Column(s) to match on the left DataFrame."
           },
           "right_on" : {
             "$ref" : "#/definitions/right_columns",
-            "title" : "right column"
+            "title" : "right column",
+            "description" : "Column(s) to match on the right DataFrame."
           },
           "suffixes" : {
             "type" : "string",
@@ -2350,6 +2352,42 @@
         "function" : "sum",
         "type" : "object",
         "description" : "Returns a variable with the sum of all values from a column."
+      },
+      "uischema" : {
+        "new variable name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      }
+    },
+    "count" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "codegenstyle" : "ignore"
+          },
+          "new variable name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Count ",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "count",
+        "type" : "object",
+        "description" : "Count non-NA cells."
       },
       "uischema" : {
         "new variable name" : {
@@ -4315,9 +4353,29 @@
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the x axis."
           },
-          "bins" : {
+          "nbins" : {
             "type" : "number",
-            "description" : "Number of bins."
+            "description" : "Number of bins.",
+            "title" : "number of bins"
+          },
+          "histnorm" : {
+            "description" : "Normalizes the frequency (count in y-axis). \"probability\" = count of bin / total count. \"percent\" is the same as before but multiplied by 100. \"density\" is count of bin / size of bin. \"probability density\" is \"density\" / total count.\n",
+            "type" : "string",
+            "enum" : [
+              "percent",
+              "probability",
+              "density",
+              "probability density"
+            ]
+          },
+          "cumulative" : {
+            "description" : "Display a cummulative distribution. The values in the y-axis display the frequency above the given value in the x-axis.",
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "True",
+              "False"
+            ]
           },
           "title" : {
             "type" : "string",
@@ -4508,6 +4566,67 @@
       "snippet" : {
         "code" : "import pandas as pd\nimport glob\ndef read_csv_folder(folder_path, file_prefix=None, file_col_name=None):\n    all_files = glob.glob(folder_path + \"/*.csv\")\n\n    li = []\n    for filename in all_files:\n        \n        df = pd.read_csv(filename, index_col=None, header=0)\n        if file_prefix != None:\n            \n            if file_col_name == None: file_col_name = 'file'\n            \n            col_value = filename.strip(folder_path + '/' + 'players_').strip('.csv')\n            df.insert(\n                loc=0, \n                column=file_col_name, \n                value=col_value)\n        \n        li.append(df)\n\n    return pd.concat(li, axis=0, ignore_index=True)",
         "name" : "read_csv_folder"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "fuzzy_merge" : {
+      "form" : {
+        "properties" : {
+          "right" : {
+            "type" : "string",
+            "description" : "DataFrame to be used to join on the right.",
+            "$ref" : "#/definitions/dataframes",
+            "codegenstyle" : "variable"
+          },
+          "left_on" : {
+            "type" : "string",
+            "description" : "Column name to match on the left DataFrame.",
+            "title" : "left on"
+          },
+          "right_on" : {
+            "type" : "string",
+            "description" : "Column name to match on the right DataFrame.",
+            "title" : "right on"
+          },
+          "threshold" : {
+            "type" : "number",
+            "default" : 90,
+            "description" : "How close the matches should be to return a match, based on Levenshtein distance."
+          },
+          "limit" : {
+            "type" : "number",
+            "default" : 1,
+            "description" : "The amount of matches that will get returned, these are sorted high to low."
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "right",
+          "left_on",
+          "right_on"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Fuzzy merge",
+        "function" : "fuzzy_merge",
+        "description" : "Perform join/merge using columns that are similar but not the same",
+        "returnType" : "DataFrame",
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "selectionAsParameter" : true
+      },
+      "snippet" : {
+        "code" : "from fuzzywuzzy import fuzz, process\ndef fuzzy_merge(left, right, left_on, right_on, threshold=90, limit=1):\n    left = left.copy()\n    s = right[right_on].tolist()\n    \n    m = left[left_on].apply(lambda x: process.extract(x, s, limit=limit))    \n    left['matches'] = m\n    \n    m2 = left['matches'].apply(lambda x: ', '.join([i[0] for i in x if i[1] >= threshold]))\n    left['matches'] = m2\n    \n    return left",
+        "name" : "fuzzy_merge"
       },
       "uischema" : {
         "new table name" : {
