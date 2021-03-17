@@ -1,4 +1,17 @@
 export const pythonInitializationScript = `
+# Convert the numpy data types to something that can be serialized in JSON
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NpEncoder, self).default(obj)
+
+
 # ---------------- Multi-backend caller ----------------
 def call_backend_functions(functions):
     results = {}
@@ -6,12 +19,15 @@ def call_backend_functions(functions):
         func_name = func['name']
         results[func_name] = globals()[func_name](**func['parameters']) 
         
-    return json.dumps(results)
+    return json.dumps(results, cls=NpEncoder)
 # ---------------- VARIABLE INSPECTOR ----------------
 import json
 import sys
 from IPython import get_ipython
 from IPython.core.magics.namespace import NamespaceMagics
+from numpy import isscalar
+import numpy as np
+
 
 _jupyterlab_variableinspector_nms = NamespaceMagics()
 _jupyterlab_variableinspector_Jupyter = get_ipython()
@@ -40,6 +56,8 @@ def ed_keep_nondf_variables(v):
         elif isinstance(obj, float):
             return True
         elif isinstance(obj, list):
+            return True
+        elif isscalar(obj):
             return True
         else:
             return False

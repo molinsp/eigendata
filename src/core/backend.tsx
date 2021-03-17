@@ -751,7 +751,7 @@ export class Backend {
         break;
       case 'status':
         this.kernelStatus = msg.content['execution_state'];
-        console.log('Kernel Status', this.kernelStatus);
+        //console.log('Kernel Status', this.kernelStatus);
       default:
         break;
     }
