@@ -737,6 +737,8 @@ export class Backend {
     const msgType: string = msg.header.msg_type;
     //console.log('[DEBUG]', msg);
     switch (msgType) {
+      case 'error':
+        console.warn('Kernel error', msg.content);
       case 'execute_input':
         const code = msg.content.code;
         // Check this is not my code running

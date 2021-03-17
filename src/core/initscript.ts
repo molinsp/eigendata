@@ -1,4 +1,17 @@
 export const pythonInitializationScript = `
+# ---------------- VARIABLE INSPECTOR ----------------
+import json
+import sys
+from IPython import get_ipython
+from IPython.core.magics.namespace import NamespaceMagics
+from numpy import isscalar
+import numpy as np
+
+
+_jupyterlab_variableinspector_nms = NamespaceMagics()
+_jupyterlab_variableinspector_Jupyter = get_ipython()
+_jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
+
 # Convert the numpy data types to something that can be serialized in JSON
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -20,18 +33,6 @@ def call_backend_functions(functions):
         results[func_name] = globals()[func_name](**func['parameters']) 
         
     return json.dumps(results, cls=NpEncoder)
-# ---------------- VARIABLE INSPECTOR ----------------
-import json
-import sys
-from IPython import get_ipython
-from IPython.core.magics.namespace import NamespaceMagics
-from numpy import isscalar
-import numpy as np
-
-
-_jupyterlab_variableinspector_nms = NamespaceMagics()
-_jupyterlab_variableinspector_Jupyter = get_ipython()
-_jupyterlab_variableinspector_nms.shell = _jupyterlab_variableinspector_Jupyter.kernel.shell
 
 def ed_keep_dataframes(v):
     try:
