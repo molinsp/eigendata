@@ -192,17 +192,17 @@ export const generatePythonCode = (
   --------------------------------------------------------------------*/
   // Process every input
   let parameterCounter = 0;
-  for (const key in formData) {
-    const parameterPrefix = '\n    ';
-    const fieldInput = formData[key];
+  for (const parameterName in formData) {
+    const startNewLine = '\n    ';
+    const fieldInput = formData[parameterName];
     let fieldSchema = null;
-    console.log('CG: Parameter', key);
+    console.log('CG: Parameter', parameterName);
 
     /*----------------------------------------------------------------------------------------------------------
     3.1: Find schema for the field
     ----------------------------------------------------------------------------------------------------------*/
-    if (typeof formResponse.schema.properties[key] !== 'undefined') {
-      fieldSchema = formResponse.schema.properties[key];
+    if (typeof formResponse.schema.properties[parameterName] !== 'undefined') {
+      fieldSchema = formResponse.schema.properties[parameterName];
     }
     // Check if we can't find it because it is part of a schema dependency
     else if (typeof formResponse.schema.dependencies !== 'undefined') {
@@ -224,7 +224,7 @@ export const generatePythonCode = (
       // Get the schema from the dependencies
       fieldSchema =
         formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
-          .properties[key];
+          .properties[parameterName];
     }
     console.log('CG: Field schema', fieldSchema);
 
@@ -234,32 +234,32 @@ export const generatePythonCode = (
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
     if (
-      key.localeCompare('new table name') === 0 &&
+      parameterName.localeCompare('new table name') === 0 &&
       returnType.localeCompare('print') !== 0
     ) {
       console.log('CG: 3.2 New table name detected');
-      if (typeof formData[key] !== 'undefined') {
+      if (typeof formData[parameterName] !== 'undefined') {
         console.log('CG: 3.2 User entered table name');
-        resultVariable = formData[key].replace(/ /g, '_');
+        resultVariable = formData[parameterName].replace(/ /g, '_');
       }
     } else if (
-      key.localeCompare('new column name') === 0 &&
+      parameterName.localeCompare('new column name') === 0 &&
       returnType.localeCompare('print') !== 0
     ) {
       console.log('CG: 3.2 New column name detected');
-      if (typeof formData[key] !== 'undefined') {
+      if (typeof formData[parameterName] !== 'undefined') {
         console.log('CG: User entered series name');
         resultVariable =
-          dataframeSelection + '["' + formData[key].replace(/ /g, '_') + '"]';
+          dataframeSelection + '["' + formData[parameterName].replace(/ /g, '_') + '"]';
       }
     } else if (
-      key.localeCompare('new variable name') === 0 &&
+      parameterName.localeCompare('new variable name') === 0 &&
       returnType.localeCompare('print') !== 0
     ) {
       console.log('CG: 3.2 New variable name detected');
-      if (typeof formData[key] !== 'undefined') {
+      if (typeof formData[parameterName] !== 'undefined') {
         console.log('CG: User entered variable name');
-        resultVariable = formData[key].replace(/ /g, '_');
+        resultVariable = formData[parameterName].replace(/ /g, '_');
       }
     }
     // IGNORE the fields marked as ignore
@@ -273,7 +273,7 @@ export const generatePythonCode = (
     /*----------------------------------------------------------------------------------------------------------
     3.3: Handle complex arrays
     ----------------------------------------------------------------------------------------------------------*/
-    // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
+    // Build an object of type {parameterName: value, parameterName:value, ..} with an array consisting of two inputs
     else if (
       typeof fieldSchema['type'] !== 'undefined' &&
       fieldSchema['type'].localeCompare('array') === 0 &&
@@ -283,17 +283,17 @@ export const generatePythonCode = (
       console.log('CG: 3.3 Complex object');
       let parameterDict = '{';
       const mapperProperties = fieldSchema.items.properties;
-      // Firs element is the key
+      // Firs element is the parameterName
       const mapperKey = Object.keys(mapperProperties)[0];
       // Second element is the value
       const mapperValue = Object.keys(mapperProperties)[1];
 
       console.log(
-        'Sub-field schema for key',
+        'Sub-field schema for parameterName',
         fieldSchema.items.properties[mapperKey]
       );
-      for (const dict of formData[key]) {
-        const key = mapFormResponseToPythonCode(
+      for (const dict of formData[parameterName]) {
+        const parameterName = mapFormResponseToPythonCode(
           dict[mapperKey],
           fieldSchema.items.properties[mapperKey],
           dataframeSelection
@@ -303,27 +303,27 @@ export const generatePythonCode = (
           fieldSchema.items.properties[mapperValue],
           dataframeSelection
         );
-        parameterDict = parameterDict + key + ' : ' + value + ', ';
+        parameterDict = parameterDict + parameterName + ' : ' + value + ', ';
       }
 
       parameterDict = parameterDict.substring(0, parameterDict.length - 2);
       parameterDict = parameterDict + '}';
       console.log('Aggregation Dict', parameterDict);
-      parameterDict = parameterPrefix + key + '=' + parameterDict;
+      parameterDict = startNewLine + parameterName + '=' + parameterDict;
       formula = formula + parameterDict + ', ';
       parameterCounter += 1;
     } else {
       /*----------------------------------------------------------------------------------------------------------
     3.4: Handle standard fields according to type
     ----------------------------------------------------------------------------------------------------------*/
-      console.log('------- MAP FORM RESPONSE:', key);
+      console.log('------- MAP FORM RESPONSE:', parameterName);
       const mappedFieldResponse = mapFormResponseToPythonCode(
         fieldInput,
         fieldSchema,
         dataframeSelection
       );
       formula =
-        formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';
+        formula + startNewLine + parameterName + '=' + mappedFieldResponse + ', ';
       console.log('Mapped field', formula);
       parameterCounter += 1;
     }
@@ -380,13 +380,13 @@ export const generatePythonCode = (
     // If not defined, change the column that has been selected
     if (resultVariable === '') {
       // Find the column that has a column definition to use
-      for (const key in formResponse.schema.properties) {
-        const colSchema = formResponse.schema.properties[key];
+      for (const parameterName in formResponse.schema.properties) {
+        const colSchema = formResponse.schema.properties[parameterName];
         if (typeof colSchema['$ref'] !== 'undefined') {
           console.log('Ref found', colSchema['$ref']);
           if (colSchema['$ref'].localeCompare('#/definitions/column') === 0) {
             console.log('CG: 4.2.1 Result defaults: Using default column');
-            resultColumnName = formData[key];
+            resultColumnName = formData[parameterName];
             break;
           }
         }
