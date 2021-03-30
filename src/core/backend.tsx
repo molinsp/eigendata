@@ -692,7 +692,6 @@ export class Backend {
           this.resetStateFormulabarFlag = true;
           this.resetStateDatavisualizerFlag = true;
           // Reset dataframes
-          this.dataframesLoaded = [];
           this.packagesImported = [];
           this.variablesLoaded = [];
 
@@ -804,6 +803,7 @@ export class Backend {
 
       if (dataframes.length === 0) {
         // If there is no data loaded, reset frontend component
+        this.dataframesLoaded = [];
         this.resetStateFormulabarFlag = true;
         this.resetStateDatavisualizerFlag = true;
         this.packagesImported = kernelData['ed_get_imported_modules'];
