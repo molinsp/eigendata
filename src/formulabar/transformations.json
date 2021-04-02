@@ -257,11 +257,6 @@
       ]
     },
     "gsheet_to_df" : {
-      "uischema" : {
-        "new table name" : {
-          "ui:placeholder" : "Leave blank to modify selected table"
-        }
-      },
       "form" : {
         "properties" : {
           "url" : {
@@ -274,13 +269,21 @@
             "default" : 1,
             "title" : "start row"
           },
-          "sheet" : {
-            "type" : "number",
-            "default" : 0,
-            "description" : "Number of the sheet. First sheet on the left is 0."
-          },
           "new table name" : {
             "type" : "string"
+          },
+          "mode" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "enum" : [
+              "number",
+              "name"
+            ],
+            "enumNames" : [
+              "Load using sheet number",
+              "Load using sheet name"
+            ],
+            "default" : "number"
           }
         },
         "required" : [
@@ -290,11 +293,58 @@
         "type" : "object",
         "function" : "gsheet_to_df",
         "transformationType" : "dataLoading",
-        "description" : "Load airtable base"
+        "description" : "Load google sheet. Need to share it with eigendata-sheets@eigendata-sheets.iam.gserviceaccount.com to work.",
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "number"
+                    ]
+                  },
+                  "sheet" : {
+                    "type" : "number",
+                    "title" : "sheet number",
+                    "description" : "Number of the sheet (first sheet is 0).",
+                    "default" : 0
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "name"
+                    ]
+                  },
+                  "sheet" : {
+                    "type" : "string",
+                    "title" : "sheet name",
+                    "description" : "Name of the sheet to load."
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
+        },
+        "ui:order" : [
+          "*",
+          "new table name"
+        ]
       },
       "library" : {
         "name" : "fastdata.integrations",
-        "importStatement" : "from fastdata.integrations import *"
+        "importStatement" : "import pandas as pd\nfrom fastdata.integrations import *"
       },
       "keywords" : [
         "sheet",
@@ -335,6 +385,56 @@
         "function" : "to_csv",
         "description" : "Save selected table to csv file.",
         "returnType" : "none"
+      },
+      "keywords" : [
+        "write",
+        "save",
+        "store"
+      ],
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      }
+    },
+    "to_json" : {
+      "form" : {
+        "properties" : {
+          "path_or_buf" : {
+            "type" : "string",
+            "title" : "file path",
+            "description" : "Location of the file. You can also indicate a path to save it in a specific folder."
+          },
+          "orient" : {
+            "type" : "string",
+            "default" : "records",
+            "enum" : [
+              "split",
+              "records",
+              "index",
+              "columns",
+              "values",
+              "table"
+            ]
+          },
+          "date_format" : {
+            "type" : "string",
+            "enum" : [
+              "\"epoch\"",
+              "\"iso\"",
+              "None"
+            ],
+            "codegenstyle" : "variable"
+          },
+          "new variable name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [],
+        "type" : "object",
+        "title" : "Save to JSON",
+        "callerObject" : "DataFrame",
+        "function" : "to_json",
+        "description" : "Save selected table to json format / file."
       },
       "keywords" : [
         "write",
@@ -2314,11 +2414,6 @@
         "type" : "object",
         "description" : "Returns a variable with the mean of all values from a column."
       },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      },
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
@@ -2353,11 +2448,6 @@
         "type" : "object",
         "description" : "Returns a variable with the sum of all values from a column."
       },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      },
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
@@ -2388,11 +2478,6 @@
         "function" : "count",
         "type" : "object",
         "description" : "Count non-NA cells."
-      },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
       },
       "library" : {
         "name" : "pandas",
@@ -2425,11 +2510,6 @@
         "type" : "object",
         "description" : "Returns a variable with the variance of all values from a column."
       },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      },
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
@@ -2461,11 +2541,6 @@
         "function" : "std",
         "type" : "object",
         "description" : "Returns a variable with the standard deviation of all values from a column."
-      },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
       },
       "library" : {
         "name" : "pandas",
@@ -2683,8 +2758,8 @@
           "value",
           "column"
         ],
-        "title" : "[Column] Calculate time difference",
-        "description" : "Calculate time difference",
+        "title" : "[Column] Add time delta",
+        "description" : "Add or subtract to a datetime column",
         "type" : "object",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "add_timedelta",
@@ -4106,6 +4181,10 @@
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the y axis."
           },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
           "color" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
@@ -4123,10 +4202,6 @@
             "description" : "Create one plot for each of the values in this variable as a row.",
             "title" : "facet row"
           },
-          "title" : {
-            "type" : "string",
-            "description" : "The figure title."
-          },
           "labels" : {
             "type" : "array",
             "items" : {
@@ -4142,6 +4217,11 @@
             },
             "title" : "labels",
             "description" : "Rename the labels of the chart to make it more readable."
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
           }
         },
         "required" : [
@@ -4169,6 +4249,19 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      },
+      "uischema" : {
+        "labels" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "label" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
       }
     },
     "bar" : {
@@ -4184,10 +4277,22 @@
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the y axis."
           },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
           "color" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "color_discrete_sequence" : {
+            "type" : "array",
+            "description" : "Color sequence to be used. You can enter color names like \"green\" or RGB colors as \"rgb(140,140,140)\"",
+            "items" : {
+              "type" : "string"
+            },
+            "title" : "color sequence"
           },
           "facet_col" : {
             "type" : "string",
@@ -4200,10 +4305,6 @@
             "$ref" : "#/definitions/column",
             "description" : "Create one plot for each of the values in this variable as a row.",
             "title" : "facet row"
-          },
-          "title" : {
-            "type" : "string",
-            "description" : "The figure title."
           },
           "labels" : {
             "type" : "array",
@@ -4220,6 +4321,26 @@
             },
             "title" : "labels",
             "description" : "Rename the labels of the chart to make it more readable."
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
+          },
+          "error" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "default" : "no",
+            "enumNames" : [
+              "No error bars",
+              "Symetric  error bars",
+              "Non-symetric  error bars"
+            ],
+            "enum" : [
+              "no",
+              "symetric_error_bars",
+              "asymetric_error_bars"
+            ]
           }
         },
         "required" : [
@@ -4238,6 +4359,75 @@
             "type" : "string",
             "enum" : []
           }
+        },
+        "dependencies" : {
+          "error" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "no"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "symetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the y-axis.",
+                    "title" : "error y"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "asymetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_x_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the x-axis.",
+                    "title" : "error x minus"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the y-axis.",
+                    "title" : "error y"
+                  },
+                  "error_y_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the y-axis.",
+                    "title" : "error y minus"
+                  }
+                }
+              }
+            ]
+          }
         }
       },
       "keywords" : [
@@ -4246,6 +4436,22 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      },
+      "uischema" : {
+        "labels" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "label" : {
+              "classNames" : "right-field"
+            }
+          }
+        },
+        "error" : {
+          "ui:widget" : "radio"
+        }
       }
     },
     "scatter" : {
@@ -4260,6 +4466,10 @@
             "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the y axis."
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
           },
           "color" : {
             "type" : "string",
@@ -4305,9 +4515,25 @@
             "title" : "labels",
             "description" : "Rename the labels of the chart to make it more readable."
           },
-          "title" : {
+          "template" : {
             "type" : "string",
-            "description" : "The figure title."
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
+          },
+          "error" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "default" : "no",
+            "enumNames" : [
+              "No error bars",
+              "Symetric  error bars",
+              "Non-symetric  error bars"
+            ],
+            "enum" : [
+              "no",
+              "symetric_error_bars",
+              "asymetric_error_bars"
+            ]
           }
         },
         "required" : [
@@ -4334,6 +4560,75 @@
               "enum" : []
             }
           }
+        },
+        "dependencies" : {
+          "error" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "no"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "symetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the y-axis.",
+                    "title" : "error y"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "asymetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_x_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the x-axis.",
+                    "title" : "error x minus"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the y-axis.",
+                    "title" : "error y"
+                  },
+                  "error_y_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the y-axis.",
+                    "title" : "error y minus"
+                  }
+                }
+              }
+            ]
+          }
         }
       },
       "keywords" : [
@@ -4343,6 +4638,22 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      },
+      "uischema" : {
+        "labels" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "label" : {
+              "classNames" : "right-field"
+            }
+          }
+        },
+        "error" : {
+          "ui:widget" : "radio"
+        }
       }
     },
     "histogram" : {
@@ -4352,6 +4663,10 @@
             "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the x axis."
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
           },
           "nbins" : {
             "type" : "number",
@@ -4377,9 +4692,10 @@
               "False"
             ]
           },
-          "title" : {
+          "template" : {
             "type" : "string",
-            "description" : "The figure title."
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
           }
         },
         "required" : [
@@ -4424,6 +4740,11 @@
           "title" : {
             "type" : "string",
             "description" : "The figure title."
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
           }
         },
         "required" : [
@@ -4450,6 +4771,60 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      }
+    },
+    "post" : {
+      "form" : {
+        "properties" : {
+          "url" : {
+            "type" : "string"
+          },
+          "data" : {
+            "type" : "string",
+            "codegenstyle" : "variable"
+          },
+          "headers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "key" : {
+                  "type" : "string"
+                },
+                "value" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        },
+        "required" : [
+          "url",
+          "data"
+        ],
+        "callerObject" : "requests",
+        "type" : "object",
+        "title" : "Post",
+        "function" : "post",
+        "description" : "HTTP Post request of data to a url.",
+        "returnType" : "none"
+      },
+      "library" : {
+        "name" : "requests",
+        "importStatement" : "import requests"
+      },
+      "uischema" : {
+        "headers" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "key" : {
+              "classNames" : "left-field"
+            },
+            "value" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
       }
     },
     "euclidean_distance" : {
@@ -4481,7 +4856,7 @@
         },
         "selectionAsParameter" : true
       },
-      "snippet" : {
+      "function_snippet" : {
         "code" : "def euclidean_distance(df1, df2):\n    import numpy as np\n    eucl_d = np.linalg.norm(df1.values - df2.values, axis=1)\n    return pd.DataFrame({'eucl_d':eucl_d}, index=df1.index).reset_index()",
         "name" : "euclidean_distance"
       },
@@ -4521,7 +4896,7 @@
         },
         "selectionAsParameter" : true
       },
-      "snippet" : {
+      "function_snippet" : {
         "code" : "def analyze_multi_column_selection(df, column_indices, keyword):\n    res = {'category':[],'count': []}\n    for name, val in data.iloc[:,column_indices[0]:column_indices[1]].iteritems():\n        res['count'].append((val == keyword).sum())\n        res['category'].append(name)\n    return pd.DataFrame(res)",
         "name" : "analyze_multi_column_selection"
       },
@@ -4560,10 +4935,10 @@
         "title" : "[Snippet] Read csv folder",
         "function" : "read_csv_folder",
         "description" : "Read several csv files form a folder and stack them together.",
-        "returnType" : "DataFrame",
+        "returnType" : "dataframe",
         "transformationType" : "dataLoading"
       },
-      "snippet" : {
+      "function_snippet" : {
         "code" : "import pandas as pd\nimport glob\ndef read_csv_folder(folder_path, file_prefix=None, file_col_name=None):\n    all_files = glob.glob(folder_path + \"/*.csv\")\n\n    li = []\n    for filename in all_files:\n        \n        df = pd.read_csv(filename, index_col=None, header=0)\n        if file_prefix != None:\n            \n            if file_col_name == None: file_col_name = 'file'\n            \n            col_value = filename.strip(folder_path + '/' + 'players_').strip('.csv')\n            df.insert(\n                loc=0, \n                column=file_col_name, \n                value=col_value)\n        \n        li.append(df)\n\n    return pd.concat(li, axis=0, ignore_index=True)",
         "name" : "read_csv_folder"
       },
@@ -4624,7 +4999,7 @@
         },
         "selectionAsParameter" : true
       },
-      "snippet" : {
+      "function_snippet" : {
         "code" : "from fuzzywuzzy import fuzz, process\ndef fuzzy_merge(left, right, left_on, right_on, threshold=90, limit=1):\n    left = left.copy()\n    s = right[right_on].tolist()\n    \n    m = left[left_on].apply(lambda x: process.extract(x, s, limit=limit))    \n    left['matches'] = m\n    \n    m2 = left['matches'].apply(lambda x: ', '.join([i[0] for i in x if i[1] >= threshold]))\n    left['matches'] = m2\n    \n    return left",
         "name" : "fuzzy_merge"
       },
@@ -4675,9 +5050,26 @@
         "returnType" : "DataFrame",
         "transformationType" : "dataLoading"
       },
-      "snippet" : {
+      "function_snippet" : {
         "code" : "from ftplib import FTP\nimport io\nimport pandas as pd\ndef get_ftp_csv(\n    server_url: str,\n    user: str,\n    password: str,\n    folder: str,\n    filename: str,\n    **kwargs):\n    session = FTP(server_url, user, password)\n    session.cwd(folder)\n    download_file = io.BytesIO()\n    session.retrbinary(\"RETR {}\".format(filename), download_file.write)\n    download_file.seek(0)\n    return pd.read_csv(download_file, **kwargs)    ",
         "name" : "get_ftp_csv"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "generate_chart_styles" : {
+      "form" : {
+        "properties" : {},
+        "type" : "object",
+        "title" : "[Snippet] Chart styles",
+        "function" : "generate_chart_styles",
+        "description" : "Generate chart styles for plotting into a variable called theme."
+      },
+      "code_snippet" : {
+        "code" : "# Font\nfont = 'Calibri'\nss = 15 #standard size of the annotations\ntextpos = 'outside' #textposition for text in bars.\nww = 1100\nhh = 600\nround_decimals = 2\n\n# Color of legends\ncolor_leg = 'rgb(140,140,140)'\ncolor_xaxis = 'rgb(140,140,140)'\ncolor_yaxis = 'rgb(140,140,140)'\n\n# Legend position\nlegendpos = dict(x=1, xanchor= 'right', y=1,\n                     font=dict(family=font,\n                               size=ss,\n                               color=color_leg),\n                   traceorder = 'normal',\n                   orientation = 'v')\nlegendor = 'v'\n\n\ncolor_leg = 'rgb(140,140,140)'\ncolor_xaxis = 'rgb(140,140,140)'\ncolor_yaxis = 'rgb(140,140,140)'\n\n\n# Overall figure layout\n\nlayout_std = dict( xaxis = dict(automargin= False, showline = True,\n                                zeroline = True, showgrid = False,\n                                #anchor = 'free', positon =0.5,\n                                gridcolor = \"rgb(113, 113, 113)\",\n                                gridwidth = 0.4,\n                                tickangle= -55,  \n                                ticks = 'inside',\n                                tickfont_size = ss-2,\n                                tickfont_color=color_leg,\n                                titlefont_size = ss,\n                                titlefont_color = color_xaxis),\n                      yaxis = dict(gridcolor = \"rgb(113, 113, 113)\",\n                                   gridwidth = 0.4,\n                                   tickfont_color=color_leg,\n                                   tickfont_size=ss,\n                                   titlefont = dict(size = ss),\n                                   spikedash = 'dash',\n                                   title = '<b> </b>',\n                                   titlefont_size = ss,\n                                   titlefont_color = color_yaxis),\n                      legend = legendpos,\n                      barmode='overlay',\n                      legend_orientation= legendor,\n                      margin = dict(l=120, r=10, b=130, t=100, pad=6),\n                      paper_bgcolor='rgba(255,255,255,1)', #color of paper where the graph is drawn.\n                      plot_bgcolor='rgba(255,255,255,1)')#plotting area in-between x and y axes.)\n\ntheme =  dict(\n    layout=layout_std\n)"
       },
       "uischema" : {
         "new table name" : {
