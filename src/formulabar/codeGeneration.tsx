@@ -187,6 +187,38 @@ export const generatePythonCode = (
       formula = formula + dataframeSelection + ',';
   }
 
+  /*-------------------------------
+     MERGE ALL DEPENDENCIES
+  --------------------------------*/
+  let effectivePropertiesSchema = formResponse.schema.properties;
+  console.log('CG: effectivePropertiesSchema', effectivePropertiesSchema);
+  if(typeof formResponse.schema.dependencies !== 'undefined'){
+    for (const dependencyParameter in formResponse.schema.dependencies){
+      console.log('CG: Merging dependency for ', dependencyParameter);
+      // Get mode selected by the user
+      const selectedDependency = formData[dependencyParameter];
+
+      console.log('CG: Dependency input value ', selectedDependency);
+
+      const selectedDependencyEnumIndex = formResponse.schema.properties[dependencyParameter][
+        'enum'
+      ].findIndex(element => element.localeCompare(selectedDependency) === 0);
+      
+      console.log('CG: Selected dependency item ', selectedDependencyEnumIndex);
+
+      const schemaFromDependency = formResponse.schema.dependencies[dependencyParameter]['oneOf'][selectedDependencyEnumIndex].properties;
+
+      // Delete the dummy property of the dependency given it already exists in the original object
+      delete schemaFromDependency[dependencyParameter];
+      console.log('CG: Dependency object to append', schemaFromDependency);
+
+      effectivePropertiesSchema = Object.assign(
+        schemaFromDependency
+        , effectivePropertiesSchema);
+    }
+  }
+  console.log('CG: Effective Property Schema', effectivePropertiesSchema);
+
   /*-------------------------------------------------------------------
     3. Process every parameter input
   --------------------------------------------------------------------*/
@@ -195,39 +227,8 @@ export const generatePythonCode = (
   for (const parameterName in formData) {
     const startNewLine = '\n    ';
     const fieldInput = formData[parameterName];
-    let fieldSchema = null;
+    let fieldSchema = effectivePropertiesSchema[parameterName];
     console.log('CG: Parameter', parameterName);
-
-    /*----------------------------------------------------------------------------------------------------------
-    3.1: Find schema for the field
-    ----------------------------------------------------------------------------------------------------------*/
-    if (typeof formResponse.schema.properties[parameterName] !== 'undefined') {
-      fieldSchema = formResponse.schema.properties[parameterName];
-    }
-    // Check if we can't find it because it is part of a schema dependency
-    else if (typeof formResponse.schema.dependencies !== 'undefined') {
-      // Name of the field that holds the dependencies. WE ONLY SUPPORT ONE FIELD
-      const modeFieldName = Object.keys(formResponse.schema.dependencies)[0];
-      console.log('CG: Mode field name', modeFieldName);
-
-      // Get mode selected by the user
-      const selectedMode = formData[modeFieldName];
-      // Get index of that mode
-      const selectedModeIndex = formResponse.schema.properties[modeFieldName][
-        'enum'
-      ].findIndex(element => element.localeCompare(selectedMode) === 0);
-      console.log('CG: Selected mode index', selectedModeIndex);
-      console.log(
-        'CG: Found schema from dependencies using index',
-        formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
-      );
-
-      // Get the schema from the dependencies
-      fieldSchema =
-        formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
-          .properties[parameterName];
-    }
-    console.log('CG: Field schema', fieldSchema);
 
     /*----------------------------------------------------------------------------------------------------------
     3.2: Process the result parameters
