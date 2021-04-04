@@ -4267,44 +4267,31 @@
     "bar" : {
       "form" : {
         "properties" : {
-          "x" : {
+          "mode" : {
             "type" : "string",
-            "$ref" : "#/definitions/column",
-            "description" : "Column to use for the x axis."
-          },
-          "y" : {
-            "type" : "string",
-            "$ref" : "#/definitions/column",
-            "description" : "Column to use for the y axis."
+            "codegenstyle" : "ignore",
+            "enum" : [
+              "vertical",
+              "horizontal"
+            ],
+            "default" : "vertical"
           },
           "title" : {
             "type" : "string",
             "description" : "The figure title."
           },
           "color" : {
-            "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Plot one line for each distinct value in the selected column (Group by)."
           },
-          "color_discrete_sequence" : {
-            "type" : "array",
-            "description" : "Color sequence to be used. You can enter color names like \"green\" or RGB colors as \"rgb(140,140,140)\"",
-            "items" : {
-              "type" : "string"
-            },
-            "title" : "color sequence"
-          },
-          "facet_col" : {
+          "barmode" : {
+            "description" : "In 'relative' mode, bars are stacked above zero for positive values and below zero for negative values. In 'overlay' mode, bars are drawn on top of one another. In 'group' mode, bars are placed beside each other.",
             "type" : "string",
-            "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a column.",
-            "title" : "facet column"
-          },
-          "facet_row" : {
-            "type" : "string",
-            "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a row.",
-            "title" : "facet row"
+            "enum" : [
+              "group",
+              "overlay",
+              "relative"
+            ]
           },
           "labels" : {
             "type" : "array",
@@ -4321,6 +4308,26 @@
             },
             "title" : "labels",
             "description" : "Rename the labels of the chart to make it more readable."
+          },
+          "facet_col" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a column.",
+            "title" : "facet column"
+          },
+          "facet_row" : {
+            "type" : "string",
+            "$ref" : "#/definitions/column",
+            "description" : "Create one plot for each of the values in this variable as a row.",
+            "title" : "facet row"
+          },
+          "color_discrete_sequence" : {
+            "type" : "array",
+            "description" : "Color sequence to be used. You can enter color names like \"green\" or RGB colors as \"rgb(140,140,140)\"",
+            "items" : {
+              "type" : "string"
+            },
+            "title" : "color sequence"
           },
           "template" : {
             "type" : "string",
@@ -4358,6 +4365,14 @@
           "column" : {
             "type" : "string",
             "enum" : []
+          },
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
           }
         },
         "dependencies" : {
@@ -4427,6 +4442,44 @@
                 }
               }
             ]
+          },
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "vertical"
+                    ]
+                  },
+                  "x" : {
+                    "$ref" : "#/definitions/column",
+                    "description" : "Column to use for the x axis."
+                  },
+                  "y" : {
+                    "$ref" : "#/definitions/columns",
+                    "description" : "Column to use for the y axis."
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "horizontal"
+                    ]
+                  },
+                  "x" : {
+                    "$ref" : "#/definitions/columns",
+                    "description" : "Column to use for the x axis."
+                  },
+                  "y" : {
+                    "$ref" : "#/definitions/column",
+                    "description" : "Column to use for the y axis."
+                  }
+                }
+              }
+            ]
           }
         }
       },
@@ -4438,6 +4491,9 @@
         "importStatement" : "import plotly.express as px"
       },
       "uischema" : {
+        "mode" : {
+          "ui:widget" : "radio"
+        },
         "labels" : {
           "items" : {
             "classNames" : "side-by-side-fields",
@@ -4449,9 +4505,12 @@
             }
           }
         },
-        "error" : {
-          "ui:widget" : "radio"
-        }
+        "ui:order" : [
+          "mode",
+          "x",
+          "y",
+          "*"
+        ]
       }
     },
     "scatter" : {
