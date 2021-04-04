@@ -12,6 +12,7 @@ const CustomSelect = (props): JSX.Element => {
     return value;
   };
 
+  // Return the value corresponding to the lable that the user has selected
   const processMultiSelect = (selection: OptionType[]): string[] => {
     // Handle the case when the user removes selections
     if (selection === null) {
@@ -29,9 +30,14 @@ const CustomSelect = (props): JSX.Element => {
           props.onChange(processMultiSelect(selection))
         }
         isMulti={true}
-        value={props.options.enumOptions.filter((option: OptionType) =>
-          props.value.includes(option.value)
-        )}
+
+        /* Note:This code is causing bugs in the multi-select, displaying items in 
+           order no matter the order of user selection.
+        */
+
+        //value={props.options.enumOptions.filter((option: OptionType) =>
+        //  props.value.includes(option.value)
+        //)}
       />
     );
   } else {

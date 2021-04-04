@@ -46,7 +46,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Access backend class through logic object
   const logic = props.logic;
   const url = window.location.href;
-  const binderUrl = url.includes('cloud.eigendata.co') || url.includes('molinsp-eigendata-trial') || url.includes('localhost');
+  const binderUrl = url.includes('cloud.eigendata.co') || url.includes('molinsp-eigendata-trial');
 
   // Defaults for form and UI schema
   const transformationForm: JSONSchema7 = logic.transformationsConfig[
@@ -359,19 +359,32 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     }
 
     /*-----------------------------------------------
-    Generate formula
+    Generate formula (Either snippet of function)
     -----------------------------------------------*/
-
-    let dataframeSelection: string;
-    if (state.dataframeSelection) {
-      dataframeSelection = state.dataframeSelection.value;
-    } else {
-      dataframeSelection = null;
+    let formula, resultVariable, returnType;
+    if(
+      typeof logic.transformationsConfig[formResponse.schema.function][
+        'code_snippet'
+      ] === 'undefined'
+    ){
+      let dataframeSelection: string;
+      if (state.dataframeSelection) {
+        dataframeSelection = state.dataframeSelection.value;
+      } else {
+        dataframeSelection = null;
+      }
+      
+      // Get the code generated
+      ({formula, resultVariable, returnType} = generatePythonCode(
+        formResponse,
+        dataframeSelection
+      ));
+    }else{
+      // For code snippets there is no need to generate a formula
+      formula = logic.transformationsConfig[formResponse.schema.function]['code_snippet']['code'];
+      resultVariable = 'na';
     }
-    const { formula, resultVariable, returnType } = generatePythonCode(
-      formResponse,
-      dataframeSelection
-    );
+
     /*-----------------------------------------------
     Tracking in amplitude
     -----------------------------------------------*/
@@ -390,7 +403,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         'library'
       ] === 'undefined' &&
       typeof logic.transformationsConfig[formResponse.schema.function][
-        'snippet'
+        'function_snippet'
       ] !== 'undefined'
     ) {
       console.log('CG: Code-gen for snippet');
@@ -398,7 +411,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         FUNC SNIPPETS
       -----------------*/
       const snippetFunction =
-        logic.transformationsConfig[formResponse.schema.function]['snippet'];
+        logic.transformationsConfig[formResponse.schema.function]['function_snippet'];
 
       console.log('CG: Imported functions', logic.importedFunctions);
       if (logic.importedFunctions.includes(snippetFunction['name'])) {
@@ -415,7 +428,11 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           console.log(error);
         }
       }
-    } else {
+    } else if(
+      typeof logic.transformationsConfig[formResponse.schema.function][
+        'library'
+      ] !== 'undefined'
+    ) {
       /*----------------
         MODULES
       -----------------*/

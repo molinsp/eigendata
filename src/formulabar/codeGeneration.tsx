@@ -8,15 +8,23 @@ const mapFormResponseToPythonCode = (
   console.log('field schema type', typeof fieldSchema['$ref']);
 
   /*----------------------------------------------------------------------------------------------------------
-    CASE 1: Custom code generation style
+    CASE A: Custom code generation style
   ----------------------------------------------------------------------------------------------------------*/
   if (typeof fieldSchema['codegenstyle'] !== 'undefined') {
     console.log('1. CodeGenStyle detected');
     const codeGenStyle = fieldSchema['codegenstyle'];
+
+    /*----------------------------------------------------------------------------------------------------------
+      VARIABLES
+    ----------------------------------------------------------------------------------------------------------*/
     if (codeGenStyle.localeCompare('variable') === 0) {
       console.log('1.1 Variable codegenstyle');
       return fieldInput;
     }
+
+    /*----------------------------------------------------------------------------------------------------------
+      SERIES COLUMN
+    ----------------------------------------------------------------------------------------------------------*/
     // CASE where a series is passed as df[Series_Name]
     else if (codeGenStyle.localeCompare('seriesColumn') === 0) {
       console.log('1.2 Column as series');
@@ -24,8 +32,8 @@ const mapFormResponseToPythonCode = (
     }
     console.log('WARNING: No codeGenStyle');
   } else if (typeof fieldSchema['$ref'] !== 'undefined') {
-    /*----------------------------------------------------------------------------------------------------------
-    CASE 2: Reference to a column definition
+  /*----------------------------------------------------------------------------------------------------------
+    CASE B: Reference to a column definition
   ----------------------------------------------------------------------------------------------------------*/
     // Specific hardcoded cases
     console.log('2. REF detected');
@@ -40,8 +48,8 @@ const mapFormResponseToPythonCode = (
     }
     console.log('WARNING: No ref found');
   } else if (fieldSchema['type'].localeCompare('array') === 0) {
-    /*----------------------------------------------------------------------------------------------------------
-    CASE 3: Array
+  /*----------------------------------------------------------------------------------------------------------
+    CASE C: Array
   ----------------------------------------------------------------------------------------------------------*/
     console.log('3. Array detected');
     // Array of variables, i.e. no quotation marks
@@ -63,8 +71,8 @@ const mapFormResponseToPythonCode = (
       return JSON.stringify(fieldInput);
     }
   } else if (fieldSchema['type'].localeCompare('string') === 0) {
-    /*----------------------------------------------------------------------------------------------------------
-    CASE 4: Standard jsonschema form types
+  /*----------------------------------------------------------------------------------------------------------
+    CASE E: Standard jsonschema form types STRING/NUMBER
   ----------------------------------------------------------------------------------------------------------*/
     console.log('4. String detected');
     console.log('String detected');
@@ -179,46 +187,48 @@ export const generatePythonCode = (
       formula = formula + dataframeSelection + ',';
   }
 
+  /*-------------------------------
+     MERGE ALL DEPENDENCIES
+  --------------------------------*/
+  let effectivePropertiesSchema = formResponse.schema.properties;
+  console.log('CG: effectivePropertiesSchema', effectivePropertiesSchema);
+  if(typeof formResponse.schema.dependencies !== 'undefined'){
+    for (const dependencyParameter in formResponse.schema.dependencies){
+      console.log('CG: Merging dependency for ', dependencyParameter);
+      // Get mode selected by the user
+      const selectedDependency = formData[dependencyParameter];
+
+      console.log('CG: Dependency input value ', selectedDependency);
+
+      const selectedDependencyEnumIndex = formResponse.schema.properties[dependencyParameter][
+        'enum'
+      ].findIndex(element => element.localeCompare(selectedDependency) === 0);
+      
+      console.log('CG: Selected dependency item ', selectedDependencyEnumIndex);
+
+      const schemaFromDependency = formResponse.schema.dependencies[dependencyParameter]['oneOf'][selectedDependencyEnumIndex].properties;
+
+      // Delete the dummy property of the dependency given it already exists in the original object
+      delete schemaFromDependency[dependencyParameter];
+      console.log('CG: Dependency object to append', schemaFromDependency);
+
+      effectivePropertiesSchema = Object.assign(
+        schemaFromDependency
+        , effectivePropertiesSchema);
+    }
+  }
+  console.log('CG: Effective Property Schema', effectivePropertiesSchema);
+
   /*-------------------------------------------------------------------
     3. Process every parameter input
   --------------------------------------------------------------------*/
   // Process every input
   let parameterCounter = 0;
-  for (const key in formData) {
-    const parameterPrefix = '\n    ';
-    const fieldInput = formData[key];
-    let fieldSchema = null;
-    console.log('CG: Parameter', key);
-
-    /*----------------------------------------------------------------------------------------------------------
-    3.1: Find schema for the field
-    ----------------------------------------------------------------------------------------------------------*/
-    if (typeof formResponse.schema.properties[key] !== 'undefined') {
-      fieldSchema = formResponse.schema.properties[key];
-    }
-    // Check if we can't find it because it is part of a schema dependency
-    else if (typeof formResponse.schema.dependencies !== 'undefined') {
-      // Name of the field that holds the dependencies. WE ONLY SUPPORT ONE FIELD
-      const modeFieldName = Object.keys(formResponse.schema.dependencies)[0];
-
-      // Get mode selected by the user
-      const selectedMode = formData[modeFieldName];
-      // Get index of that mode
-      const selectedModeIndex = formResponse.schema.properties[modeFieldName][
-        'enum'
-      ].findIndex(element => element.localeCompare(selectedMode) === 0);
-      console.log('SELECTED MODE INDEX', selectedModeIndex);
-      console.log(
-        '--->',
-        formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
-      );
-
-      // Get the schema from the dependencies
-      fieldSchema =
-        formResponse.schema.dependencies[modeFieldName]['oneOf'][selectedModeIndex]
-          .properties[key];
-    }
-    console.log('CG: Field schema', fieldSchema);
+  for (const parameterName in formData) {
+    const startNewLine = '\n    ';
+    const fieldInput = formData[parameterName];
+    let fieldSchema = effectivePropertiesSchema[parameterName];
+    console.log('CG: Parameter', parameterName);
 
     /*----------------------------------------------------------------------------------------------------------
     3.2: Process the result parameters
@@ -226,32 +236,32 @@ export const generatePythonCode = (
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
     if (
-      key.localeCompare('new table name') === 0 &&
+      parameterName.localeCompare('new table name') === 0 &&
       returnType.localeCompare('print') !== 0
     ) {
       console.log('CG: 3.2 New table name detected');
-      if (typeof formData[key] !== 'undefined') {
+      if (typeof formData[parameterName] !== 'undefined') {
         console.log('CG: 3.2 User entered table name');
-        resultVariable = formData[key].replace(/ /g, '_');
+        resultVariable = formData[parameterName].replace(/ /g, '_');
       }
     } else if (
-      key.localeCompare('new column name') === 0 &&
+      parameterName.localeCompare('new column name') === 0 &&
       returnType.localeCompare('print') !== 0
     ) {
       console.log('CG: 3.2 New column name detected');
-      if (typeof formData[key] !== 'undefined') {
+      if (typeof formData[parameterName] !== 'undefined') {
         console.log('CG: User entered series name');
         resultVariable =
-          dataframeSelection + '["' + formData[key].replace(/ /g, '_') + '"]';
+          dataframeSelection + '["' + formData[parameterName].replace(/ /g, '_') + '"]';
       }
     } else if (
-      key.localeCompare('new variable name') === 0 &&
+      parameterName.localeCompare('new variable name') === 0 &&
       returnType.localeCompare('print') !== 0
     ) {
       console.log('CG: 3.2 New variable name detected');
-      if (typeof formData[key] !== 'undefined') {
+      if (typeof formData[parameterName] !== 'undefined') {
         console.log('CG: User entered variable name');
-        resultVariable = formData[key].replace(/ /g, '_');
+        resultVariable = formData[parameterName].replace(/ /g, '_');
       }
     }
     // IGNORE the fields marked as ignore
@@ -265,7 +275,7 @@ export const generatePythonCode = (
     /*----------------------------------------------------------------------------------------------------------
     3.3: Handle complex arrays
     ----------------------------------------------------------------------------------------------------------*/
-    // Build an object of type {key: value, key:value, ..} with an array consisting of two inputs
+    // Build an object of type {parameterName: value, parameterName:value, ..} with an array consisting of two inputs
     else if (
       typeof fieldSchema['type'] !== 'undefined' &&
       fieldSchema['type'].localeCompare('array') === 0 &&
@@ -275,17 +285,17 @@ export const generatePythonCode = (
       console.log('CG: 3.3 Complex object');
       let parameterDict = '{';
       const mapperProperties = fieldSchema.items.properties;
-      // Firs element is the key
+      // Firs element is the parameterName
       const mapperKey = Object.keys(mapperProperties)[0];
       // Second element is the value
       const mapperValue = Object.keys(mapperProperties)[1];
 
       console.log(
-        'Sub-field schema for key',
+        'Sub-field schema for parameterName',
         fieldSchema.items.properties[mapperKey]
       );
-      for (const dict of formData[key]) {
-        const key = mapFormResponseToPythonCode(
+      for (const dict of formData[parameterName]) {
+        const parameterName = mapFormResponseToPythonCode(
           dict[mapperKey],
           fieldSchema.items.properties[mapperKey],
           dataframeSelection
@@ -295,27 +305,27 @@ export const generatePythonCode = (
           fieldSchema.items.properties[mapperValue],
           dataframeSelection
         );
-        parameterDict = parameterDict + key + ' : ' + value + ', ';
+        parameterDict = parameterDict + parameterName + ' : ' + value + ', ';
       }
 
       parameterDict = parameterDict.substring(0, parameterDict.length - 2);
       parameterDict = parameterDict + '}';
       console.log('Aggregation Dict', parameterDict);
-      parameterDict = parameterPrefix + key + '=' + parameterDict;
+      parameterDict = startNewLine + parameterName + '=' + parameterDict;
       formula = formula + parameterDict + ', ';
       parameterCounter += 1;
     } else {
       /*----------------------------------------------------------------------------------------------------------
     3.4: Handle standard fields according to type
     ----------------------------------------------------------------------------------------------------------*/
-      console.log('------- MAP FORM RESPONSE:', key);
+      console.log('------- MAP FORM RESPONSE:', parameterName);
       const mappedFieldResponse = mapFormResponseToPythonCode(
         fieldInput,
         fieldSchema,
         dataframeSelection
       );
       formula =
-        formula + parameterPrefix + key + '=' + mappedFieldResponse + ', ';
+        formula + startNewLine + parameterName + '=' + mappedFieldResponse + ', ';
       console.log('Mapped field', formula);
       parameterCounter += 1;
     }
@@ -372,13 +382,13 @@ export const generatePythonCode = (
     // If not defined, change the column that has been selected
     if (resultVariable === '') {
       // Find the column that has a column definition to use
-      for (const key in formResponse.schema.properties) {
-        const colSchema = formResponse.schema.properties[key];
+      for (const parameterName in formResponse.schema.properties) {
+        const colSchema = formResponse.schema.properties[parameterName];
         if (typeof colSchema['$ref'] !== 'undefined') {
           console.log('Ref found', colSchema['$ref']);
           if (colSchema['$ref'].localeCompare('#/definitions/column') === 0) {
             console.log('CG: 4.2.1 Result defaults: Using default column');
-            resultColumnName = formData[key];
+            resultColumnName = formData[parameterName];
             break;
           }
         }

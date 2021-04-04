@@ -33,7 +33,7 @@ import amplitude from 'amplitude-js';
 import { Column } from 'react-table';
 import { Config } from 'react-awesome-query-builder';
 // Before deploying to production, we change this flag
-const packageVersion = '0.2.4';
+const packageVersion = '0.2.5';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -692,7 +692,6 @@ export class Backend {
           this.resetStateFormulabarFlag = true;
           this.resetStateDatavisualizerFlag = true;
           // Reset dataframes
-          this.dataframesLoaded = [];
           this.packagesImported = [];
           this.variablesLoaded = [];
 
@@ -737,6 +736,8 @@ export class Backend {
     const msgType: string = msg.header.msg_type;
     //console.log('[DEBUG]', msg);
     switch (msgType) {
+      case 'error':
+        console.warn('Kernel error', msg.content);
       case 'execute_input':
         const code = msg.content.code;
         // Check this is not my code running
@@ -751,7 +752,7 @@ export class Backend {
         break;
       case 'status':
         this.kernelStatus = msg.content['execution_state'];
-        console.log('Kernel Status', this.kernelStatus);
+        //console.log('Kernel Status', this.kernelStatus);
       default:
         break;
     }
@@ -802,6 +803,7 @@ export class Backend {
 
       if (dataframes.length === 0) {
         // If there is no data loaded, reset frontend component
+        this.dataframesLoaded = [];
         this.resetStateFormulabarFlag = true;
         this.resetStateDatavisualizerFlag = true;
         this.packagesImported = kernelData['ed_get_imported_modules'];

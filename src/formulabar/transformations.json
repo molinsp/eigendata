@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.32",
+  "version" : "0.0.40",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -18,7 +18,6 @@
           "decimal" : {
             "type" : "string",
             "default" : ".",
-            "title" : "decimal",
             "description" : "Character used to indicate decimals."
           },
           "header" : {
@@ -32,7 +31,7 @@
         "required" : [
           "filepath_or_buffer"
         ],
-        "title" : "Read CSV",
+        "title" : "Read CSV file",
         "type" : "object",
         "callerObject" : "pd",
         "function" : "read_csv",
@@ -60,7 +59,6 @@
         "properties" : {
           "io" : {
             "type" : "string",
-            "title" : "file path",
             "description" : "Location of the file relative to the notebook. E.g. /Documents/Data/testdata.csv."
           },
           "header" : {
@@ -124,7 +122,7 @@
             ]
           }
         },
-        "title" : "Read Excel Sheet",
+        "title" : "Read Excel file",
         "type" : "object",
         "callerObject" : "pd",
         "function" : "read_excel",
@@ -164,19 +162,16 @@
       "form" : {
         "properties" : {
           "base" : {
-            "description" : "You can get the id from airtable.com/api.",
-            "type" : "string",
-            "title" : "id of the base"
+            "description" : "ID of the base. You can get the id from airtable.com/api.",
+            "type" : "string"
           },
           "table" : {
             "type" : "string",
-            "title" : "name of the table",
             "description" : "Name of the table as shown in Airtable UI."
           },
           "key" : {
             "type" : "string",
-            "title" : "api key",
-            "description" : "You can get the id from airtable.com/api (selecting show API key on the top right)."
+            "description" : "API key. You can get the id from airtable.com/api (selecting show API key on the top right)."
           },
           "new table name" : {
             "type" : "string"
@@ -187,7 +182,7 @@
           "table",
           "key"
         ],
-        "title" : "Read Airtable",
+        "title" : "Read Airtable Base",
         "type" : "object",
         "function" : "airtable_base_to_df",
         "transformationType" : "dataLoading",
@@ -219,19 +214,16 @@
             "$ref" : "#/definitions/dataframes"
           },
           "base" : {
-            "description" : "You can get the id from airtable.com/api.",
-            "type" : "string",
-            "title" : "id of the base"
+            "description" : "ID of the base. You can get the id from airtable.com/api.",
+            "type" : "string"
           },
           "table" : {
             "type" : "string",
-            "title" : "name of the table",
             "description" : "Name of the table as shown in Airtable UI."
           },
           "key" : {
             "type" : "string",
-            "title" : "api key",
-            "description" : "You can get the id from airtable.com/api (selecting show API key on the top right)."
+            "description" : "API key. You can get the id from airtable.com/api (selecting show API key on the top right)."
           }
         },
         "required" : [
@@ -240,7 +232,7 @@
           "table",
           "key"
         ],
-        "title" : "Save to Airtable",
+        "title" : "Save DataFrame to Airtable Base",
         "type" : "object",
         "function" : "df_to_airtable_base",
         "description" : "Save table to airtable.",
@@ -265,45 +257,94 @@
       ]
     },
     "gsheet_to_df" : {
-      "uischema" : {
-        "new table name" : {
-          "ui:placeholder" : "Leave blank to modify selected table"
-        }
-      },
       "form" : {
         "properties" : {
           "url" : {
-            "title" : "URL of the sheet",
+            "description" : "URL of the google sheet",
             "type" : "string"
           },
           "start_row" : {
-            "title" : "start row number",
             "description" : "Row number for first row of headers or data.",
             "type" : "number",
-            "default" : 1
-          },
-          "sheet" : {
-            "type" : "number",
-            "default" : 0,
-            "title" : "sheet number",
-            "description" : "Sheet number that will be pulled as a table."
+            "default" : 1,
+            "title" : "start row"
           },
           "new table name" : {
             "type" : "string"
+          },
+          "mode" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "enum" : [
+              "number",
+              "name"
+            ],
+            "enumNames" : [
+              "Load using sheet number",
+              "Load using sheet name"
+            ],
+            "default" : "number"
           }
         },
         "required" : [
           "url"
         ],
-        "title" : "Read Google Sheets",
+        "title" : "Read Google Sheet",
         "type" : "object",
         "function" : "gsheet_to_df",
         "transformationType" : "dataLoading",
-        "description" : "Load airtable base"
+        "description" : "Load google sheet. Need to share it with eigendata-sheets@eigendata-sheets.iam.gserviceaccount.com to work.",
+        "dependencies" : {
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "number"
+                    ]
+                  },
+                  "sheet" : {
+                    "type" : "number",
+                    "title" : "sheet number",
+                    "description" : "Number of the sheet (first sheet is 0).",
+                    "default" : 0
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "name"
+                    ]
+                  },
+                  "sheet" : {
+                    "type" : "string",
+                    "title" : "sheet name",
+                    "description" : "Name of the sheet to load."
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "mode" : {
+          "ui:widget" : "radio"
+        },
+        "ui:order" : [
+          "*",
+          "new table name"
+        ]
       },
       "library" : {
         "name" : "fastdata.integrations",
-        "importStatement" : "from fastdata.integrations import *"
+        "importStatement" : "import pandas as pd\nfrom fastdata.integrations import *"
       },
       "keywords" : [
         "sheet",
@@ -317,7 +358,7 @@
         "properties" : {
           "path_or_buf" : {
             "type" : "string",
-            "title" : "filename or path",
+            "title" : "file path",
             "description" : "Location of the file. You can also indicate a path to save it in a specific folder."
           },
           "index" : {
@@ -346,7 +387,59 @@
         "returnType" : "none"
       },
       "keywords" : [
-        "write"
+        "write",
+        "save",
+        "store"
+      ],
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      }
+    },
+    "to_json" : {
+      "form" : {
+        "properties" : {
+          "path_or_buf" : {
+            "type" : "string",
+            "title" : "file path",
+            "description" : "Location of the file. You can also indicate a path to save it in a specific folder."
+          },
+          "orient" : {
+            "type" : "string",
+            "default" : "records",
+            "enum" : [
+              "split",
+              "records",
+              "index",
+              "columns",
+              "values",
+              "table"
+            ]
+          },
+          "date_format" : {
+            "type" : "string",
+            "enum" : [
+              "\"epoch\"",
+              "\"iso\"",
+              "None"
+            ],
+            "codegenstyle" : "variable"
+          },
+          "new variable name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [],
+        "type" : "object",
+        "title" : "Save to JSON",
+        "callerObject" : "DataFrame",
+        "function" : "to_json",
+        "description" : "Save selected table to json format / file."
+      },
+      "keywords" : [
+        "write",
+        "save",
+        "store"
       ],
       "library" : {
         "name" : "pandas",
@@ -355,7 +448,7 @@
     },
     "describe" : {
       "form" : {
-        "title" : "Overview: Column statistics",
+        "title" : "Describe column statistics",
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "describe",
@@ -370,7 +463,12 @@
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
-      }
+      },
+      "keywords" : [
+        "overview",
+        "statistics",
+        "mean"
+      ]
     },
     "count_nulls" : {
       "form" : {
@@ -380,7 +478,7 @@
             "default" : "nulls"
           }
         },
-        "title" : "Overview of null values in each column",
+        "title" : "Count nulls",
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "count_nulls",
@@ -395,7 +493,12 @@
       "library" : {
         "name" : "fastdata.core",
         "importStatement" : "from fastdata.core import *"
-      }
+      },
+      "keywords" : [
+        "null",
+        "na",
+        "empty"
+      ]
     },
     "pivot_table" : {
       "form" : {
@@ -478,12 +581,10 @@
                       "type" : "object",
                       "properties" : {
                         "column" : {
-                          "$ref" : "#/definitions/column",
-                          "title" : "column"
+                          "$ref" : "#/definitions/column"
                         },
                         "function" : {
                           "uniqueItems" : true,
-                          "title" : "aggregations",
                           "type" : "array",
                           "items" : {
                             "codegenstyle" : "variable",
@@ -521,7 +622,7 @@
                         }
                       }
                     },
-                    "title" : "aggregations",
+                    "title" : "aggregation",
                     "description" : "Aggregations to perform in the pivot table (e.g. calculating the average)."
                   }
                 }
@@ -535,7 +636,7 @@
                   },
                   "aggfunc" : {
                     "uniqueItems" : true,
-                    "title" : "aggregations",
+                    "title" : "aggregation",
                     "type" : "array",
                     "items" : {
                       "codegenstyle" : "variable",
@@ -635,7 +736,7 @@
           }
         },
         "required" : [],
-        "title" : "Transpose table",
+        "title" : "Transpose dataframe",
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "transpose",
@@ -685,8 +786,7 @@
         "properties" : {
           "columns" : {
             "$ref" : "#/definitions/columns",
-            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators.",
-            "title" : "expand columns"
+            "description" : "Column(s) expanded into several columns for each distinct value with 0/1 indicators."
           },
           "dummy_na" : {
             "title" : "NaN column",
@@ -703,7 +803,7 @@
             "type" : "string"
           }
         },
-        "title" : "Create 0/1 indicators for a column",
+        "title" : "Create dummies for a column (0/1 indicators)",
         "description" : "Create new columns with 0/1 for each unique value in a column. Returns table with additional columns.",
         "type" : "object",
         "callerObject" : "pd",
@@ -821,7 +921,7 @@
             "type" : "string",
             "codegenstyle" : "variable",
             "$ref" : "#/definitions/dataframes",
-            "description" : "Table to be used to join on the right."
+            "description" : "DataFrame to be used to join on the right."
           },
           "how" : {
             "type" : "string",
@@ -842,11 +942,13 @@
           },
           "left_on" : {
             "$ref" : "#/definitions/columns",
-            "title" : "left column"
+            "title" : "left column",
+            "description" : "Column(s) to match on the left DataFrame."
           },
           "right_on" : {
             "$ref" : "#/definitions/right_columns",
-            "title" : "right column"
+            "title" : "right column",
+            "description" : "Column(s) to match on the right DataFrame."
           },
           "suffixes" : {
             "type" : "string",
@@ -888,7 +990,7 @@
         "function" : "merge",
         "callerObject" : "DataFrame",
         "type" : "object",
-        "title" : "Join tables",
+        "title" : "Merge dataframes",
         "description" : "Join the selected table with another table."
       },
       "uischema" : {
@@ -919,7 +1021,11 @@
         "vlookup",
         "index",
         "match",
-        "lookup"
+        "lookup",
+        "join",
+        "inner",
+        "left",
+        "right"
       ]
     },
     "append" : {
@@ -978,12 +1084,8 @@
               "True",
               "False"
             ],
-            "enumNames" : [
-              "Ascending",
-              "Descending"
-            ],
             "codegenstyle" : "variable",
-            "title" : "sorting type"
+            "description" : "Sort the data ascending (ascending=True) or descending (ascending=False)."
           },
           "new table name" : {
             "type" : "string"
@@ -999,11 +1101,11 @@
           "by",
           "ascending"
         ],
-        "title" : "Sort data",
+        "title" : "Sort values ",
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "sort_values",
-        "description" : "Sort the table based on one column. "
+        "description" : "Sort the dataframe based on one column. "
       },
       "uischema" : {
         "new table name" : {
@@ -1086,7 +1188,7 @@
             "type" : "string"
           }
         },
-        "title" : "Keep columns",
+        "title" : "Filter columns",
         "description" : "Keep only specific columns from the table.",
         "type" : "object",
         "callerObject" : "DataFrame",
@@ -1315,7 +1417,8 @@
                   },
                   "regex" : {
                     "type" : "string",
-                    "description" : "Regular expression to clean data."
+                    "description" : "Regular expression to clean data.",
+                    "title" : "regular expression"
                   }
                 }
               },
@@ -1430,8 +1533,7 @@
               "type" : "object",
               "properties" : {
                 "column" : {
-                  "$ref" : "#/definitions/column",
-                  "title" : "Column to rename"
+                  "$ref" : "#/definitions/column"
                 },
                 "newname" : {
                   "type" : "string",
@@ -1494,8 +1596,7 @@
               "type" : "object",
               "properties" : {
                 "column" : {
-                  "$ref" : "#/definitions/column",
-                  "title" : "Column to rename"
+                  "$ref" : "#/definitions/column"
                 },
                 "type" : {
                   "type" : "string",
@@ -1711,7 +1812,7 @@
         "required" : [
           "func"
         ],
-        "title" : "Apply function to all dataframe",
+        "title" : "Apply function to all items in dataframe",
         "type" : "object",
         "callerObject" : "DataFrame",
         "function" : "apply",
@@ -1847,7 +1948,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "pat" : {
@@ -1872,7 +1972,7 @@
               "False"
             ],
             "default" : "False",
-            "title" : "",
+            "title" : "regular expression",
             "description" : "[Advanced] extraction using a regular expression.",
             "codegenstyle" : "variable"
           },
@@ -1916,7 +2016,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -2095,12 +2194,11 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "sub" : {
             "type" : "string",
-            "title" : "pattern",
+            "title" : "substring",
             "description" : "Find this pattern in the column (includes partial matches)"
           },
           "start" : {
@@ -2150,12 +2248,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "pat" : {
             "type" : "string",
-            "title" : "text to replace"
+            "title" : "pattern",
+            "description" : "Text to replace"
           },
           "repl" : {
             "type" : "string",
@@ -2184,7 +2282,7 @@
               "False"
             ],
             "default" : "False",
-            "title" : "",
+            "title" : "regular expression",
             "description" : "[Advanced] extraction using a regular expression.",
             "codegenstyle" : "variable"
           },
@@ -2198,7 +2296,7 @@
           "repl"
         ],
         "type" : "object",
-        "title" : "[Column] Replace text",
+        "title" : "[Column] Replace text pattern",
         "callerObject" : "DataFrame[Series].str",
         "function" : "replace",
         "definitions" : {
@@ -2222,12 +2320,79 @@
         "change"
       ]
     },
+    "map" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "codegenstyle" : "ignore"
+          },
+          "arg" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "value_from" : {
+                  "type" : "string",
+                  "title" : "value from"
+                },
+                "value_to" : {
+                  "type" : "string",
+                  "title" : "value to"
+                }
+              }
+            },
+            "title" : "Values to map"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "type" : "object",
+        "title" : "[Column] Map text",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "map",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "description" : "Map (i.e. replace) text form A->B."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        },
+        "arg" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "value_from" : {
+              "classNames" : "left-field"
+            },
+            "value_to" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "change",
+        "replace"
+      ]
+    },
     "mean" : {
       "form" : {
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new variable name" : {
@@ -2249,11 +2414,6 @@
         "type" : "object",
         "description" : "Returns a variable with the mean of all values from a column."
       },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
-      },
       "library" : {
         "name" : "pandas",
         "importStatement" : "import pandas as pd"
@@ -2267,7 +2427,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new variable name" : {
@@ -2289,10 +2448,36 @@
         "type" : "object",
         "description" : "Returns a variable with the sum of all values from a column."
       },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      }
+    },
+    "count" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "codegenstyle" : "ignore"
+          },
+          "new variable name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "column"
+        ],
+        "title" : "[Column] Count ",
+        "callerObject" : "DataFrame[Series]",
+        "function" : "count",
+        "type" : "object",
+        "description" : "Count non-NA cells."
       },
       "library" : {
         "name" : "pandas",
@@ -2304,7 +2489,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new variable name" : {
@@ -2325,11 +2509,6 @@
         "function" : "var",
         "type" : "object",
         "description" : "Returns a variable with the variance of all values from a column."
-      },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
       },
       "library" : {
         "name" : "pandas",
@@ -2362,11 +2541,6 @@
         "function" : "std",
         "type" : "object",
         "description" : "Returns a variable with the standard deviation of all values from a column."
-      },
-      "uischema" : {
-        "new variable name" : {
-          "ui:placeholder" : "Leave blank to modify selected column"
-        }
       },
       "library" : {
         "name" : "pandas",
@@ -2491,7 +2665,7 @@
             ]
           }
         },
-        "title" : "[Column] Bin columns",
+        "title" : "[Column] Bin column",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "bin_column",
         "type" : "object",
@@ -2525,7 +2699,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "path" : {
@@ -2571,7 +2744,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "value" : {
@@ -2586,8 +2758,8 @@
           "value",
           "column"
         ],
-        "title" : "[Column] Calculate time difference",
-        "description" : "Calculate time difference",
+        "title" : "[Column] Add time delta",
+        "description" : "Add or subtract to a datetime column",
         "type" : "object",
         "callerObject" : "DataFrame[Series].fdt",
         "function" : "add_timedelta",
@@ -2732,7 +2904,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -2806,7 +2977,6 @@
         "properties" : {
           "arg" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "seriesColumn"
           },
           "mode" : {
@@ -2917,7 +3087,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -2955,7 +3124,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -2993,7 +3161,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3031,7 +3198,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3069,7 +3235,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3106,7 +3271,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3144,7 +3308,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new column name" : {
@@ -3182,7 +3345,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3366,7 +3528,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3458,7 +3619,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3553,7 +3713,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "mode" : {
@@ -3649,12 +3808,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column to change",
+            "description" : "column to change",
             "codegenstyle" : "ignore"
           },
           "cond" : {
             "$ref" : "#/definitions/column",
-            "title" : "indicator column",
+            "title" : "condition column",
             "codegenstyle" : "seriesColumn",
             "description" : "Boolean column condaining True/False indicators."
           },
@@ -3720,7 +3879,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "new_categories" : {
@@ -3771,7 +3929,6 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "sort" : {
@@ -3781,7 +3938,6 @@
               "False"
             ],
             "default" : "False",
-            "title" : "",
             "description" : "Sort the categories (ascending). ",
             "codegenstyle" : "variable"
           },
@@ -3831,13 +3987,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "to_strip" : {
-            "title" : "characters",
+            "title" : "to strip",
             "type" : "string",
-            "description" : "Leave blank to remove spaces."
+            "description" : "Characters to strip. Leave blank to remove spaces."
           },
           "new column name" : {
             "type" : "string"
@@ -3873,13 +4028,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "to_strip" : {
-            "title" : "characters",
+            "title" : "to strip",
             "type" : "string",
-            "description" : "Leave blank to remove spaces."
+            "description" : "Characters to strip. Leave blank to remove spaces."
           },
           "new column name" : {
             "type" : "string"
@@ -3919,13 +4073,12 @@
         "properties" : {
           "column" : {
             "$ref" : "#/definitions/column",
-            "title" : "column",
             "codegenstyle" : "ignore"
           },
           "to_strip" : {
-            "title" : "characters",
+            "title" : "to strip",
             "type" : "string",
-            "description" : "Leave blank to remove spaces."
+            "description" : "Characters to strip. Leave blank to remove spaces."
           },
           "new column name" : {
             "type" : "string"
@@ -4028,6 +4181,10 @@
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the y axis."
           },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
           "color" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
@@ -4036,12 +4193,35 @@
           "facet_col" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a column."
+            "description" : "Create one plot for each of the values in this variable as a column.",
+            "title" : "facet column"
           },
           "facet_row" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a row."
+            "description" : "Create one plot for each of the values in this variable as a row.",
+            "title" : "facet row"
+          },
+          "labels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column"
+                },
+                "label" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "title" : "labels",
+            "description" : "Rename the labels of the chart to make it more readable."
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
           }
         },
         "required" : [
@@ -4069,35 +4249,105 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      },
+      "uischema" : {
+        "labels" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "label" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
       }
     },
     "bar" : {
       "form" : {
         "properties" : {
-          "x" : {
+          "mode" : {
             "type" : "string",
-            "$ref" : "#/definitions/column",
-            "description" : "Column to use for the x axis."
+            "codegenstyle" : "ignore",
+            "enum" : [
+              "vertical",
+              "horizontal"
+            ],
+            "default" : "vertical"
           },
-          "y" : {
+          "title" : {
             "type" : "string",
-            "$ref" : "#/definitions/column",
-            "description" : "Column to use for the y axis."
+            "description" : "The figure title."
           },
           "color" : {
-            "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Plot one line for each distinct value in the selected column (Group by)."
+          },
+          "barmode" : {
+            "description" : "In 'relative' mode, bars are stacked above zero for positive values and below zero for negative values. In 'overlay' mode, bars are drawn on top of one another. In 'group' mode, bars are placed beside each other.",
+            "type" : "string",
+            "enum" : [
+              "group",
+              "overlay",
+              "relative"
+            ]
+          },
+          "labels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column"
+                },
+                "label" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "title" : "labels",
+            "description" : "Rename the labels of the chart to make it more readable."
           },
           "facet_col" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a column."
+            "description" : "Create one plot for each of the values in this variable as a column.",
+            "title" : "facet column"
           },
           "facet_row" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a row."
+            "description" : "Create one plot for each of the values in this variable as a row.",
+            "title" : "facet row"
+          },
+          "color_discrete_sequence" : {
+            "type" : "array",
+            "description" : "Color sequence to be used. You can enter color names like \"green\" or RGB colors as \"rgb(140,140,140)\"",
+            "items" : {
+              "type" : "string"
+            },
+            "title" : "color sequence"
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
+          },
+          "error" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "default" : "no",
+            "enumNames" : [
+              "No error bars",
+              "Symetric  error bars",
+              "Non-symetric  error bars"
+            ],
+            "enum" : [
+              "no",
+              "symetric_error_bars",
+              "asymetric_error_bars"
+            ]
           }
         },
         "required" : [
@@ -4115,6 +4365,121 @@
           "column" : {
             "type" : "string",
             "enum" : []
+          },
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "dependencies" : {
+          "error" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "no"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "symetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the y-axis.",
+                    "title" : "error y"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "asymetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_x_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the x-axis.",
+                    "title" : "error x minus"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the y-axis.",
+                    "title" : "error y"
+                  },
+                  "error_y_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the y-axis.",
+                    "title" : "error y minus"
+                  }
+                }
+              }
+            ]
+          },
+          "mode" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "vertical"
+                    ]
+                  },
+                  "x" : {
+                    "$ref" : "#/definitions/column",
+                    "description" : "Column to use for the x axis."
+                  },
+                  "y" : {
+                    "$ref" : "#/definitions/columns",
+                    "description" : "Column to use for the y axis."
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "horizontal"
+                    ]
+                  },
+                  "x" : {
+                    "$ref" : "#/definitions/columns",
+                    "description" : "Column to use for the x axis."
+                  },
+                  "y" : {
+                    "$ref" : "#/definitions/column",
+                    "description" : "Column to use for the y axis."
+                  }
+                }
+              }
+            ]
           }
         }
       },
@@ -4124,6 +4489,28 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      },
+      "uischema" : {
+        "mode" : {
+          "ui:widget" : "radio"
+        },
+        "labels" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "label" : {
+              "classNames" : "right-field"
+            }
+          }
+        },
+        "ui:order" : [
+          "mode",
+          "x",
+          "y",
+          "*"
+        ]
       }
     },
     "scatter" : {
@@ -4139,6 +4526,10 @@
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the y axis."
           },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
           "color" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
@@ -4152,12 +4543,56 @@
           "facet_col" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a column."
+            "description" : "Create one plot for each of the values in this variable as a column.",
+            "title" : "facet column"
           },
           "facet_row" : {
             "type" : "string",
             "$ref" : "#/definitions/column",
-            "description" : "Create one plot for each of the values in this variable as a row."
+            "description" : "Create one plot for each of the values in this variable as a row.",
+            "title" : "facet row"
+          },
+          "hover_data" : {
+            "type" : "string",
+            "$ref" : "#/definitions/columns",
+            "description" : "Information to display on hover",
+            "title" : "hover data"
+          },
+          "labels" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "column" : {
+                  "$ref" : "#/definitions/column"
+                },
+                "label" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "title" : "labels",
+            "description" : "Rename the labels of the chart to make it more readable."
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
+          },
+          "error" : {
+            "type" : "string",
+            "codegenstyle" : "ignore",
+            "default" : "no",
+            "enumNames" : [
+              "No error bars",
+              "Symetric  error bars",
+              "Non-symetric  error bars"
+            ],
+            "enum" : [
+              "no",
+              "symetric_error_bars",
+              "asymetric_error_bars"
+            ]
           }
         },
         "required" : [
@@ -4175,6 +4610,83 @@
           "column" : {
             "type" : "string",
             "enum" : []
+          },
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "dependencies" : {
+          "error" : {
+            "oneOf" : [
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "no"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "symetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Error line in the y-axis.",
+                    "title" : "error y"
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "error" : {
+                    "enum" : [
+                      "asymetric_error_bars"
+                    ]
+                  },
+                  "error_x" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the x-axis.",
+                    "title" : "error x"
+                  },
+                  "error_x_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the x-axis.",
+                    "title" : "error x minus"
+                  },
+                  "error_y" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Positive error in the y-axis.",
+                    "title" : "error y"
+                  },
+                  "error_y_minus" : {
+                    "type" : "string",
+                    "$ref" : "#/definitions/column",
+                    "description" : "Negative error in the y-axis.",
+                    "title" : "error y minus"
+                  }
+                }
+              }
+            ]
           }
         }
       },
@@ -4185,6 +4697,22 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      },
+      "uischema" : {
+        "labels" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "label" : {
+              "classNames" : "right-field"
+            }
+          }
+        },
+        "error" : {
+          "ui:widget" : "radio"
+        }
       }
     },
     "histogram" : {
@@ -4195,9 +4723,38 @@
             "$ref" : "#/definitions/column",
             "description" : "Column to use for the x axis."
           },
-          "bins" : {
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
+          "nbins" : {
             "type" : "number",
-            "description" : "Number of bins."
+            "description" : "Number of bins.",
+            "title" : "number of bins"
+          },
+          "histnorm" : {
+            "description" : "Normalizes the frequency (count in y-axis). \"probability\" = count of bin / total count. \"percent\" is the same as before but multiplied by 100. \"density\" is count of bin / size of bin. \"probability density\" is \"density\" / total count.\n",
+            "type" : "string",
+            "enum" : [
+              "percent",
+              "probability",
+              "density",
+              "probability density"
+            ]
+          },
+          "cumulative" : {
+            "description" : "Display a cummulative distribution. The values in the y-axis display the frequency above the given value in the x-axis.",
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "True",
+              "False"
+            ]
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
           }
         },
         "required" : [
@@ -4238,6 +4795,15 @@
             "type" : "string",
             "$ref" : "#/definitions/column",
             "description" : "Labels for sectors."
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "The figure title."
+          },
+          "template" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "description" : "Styling template to use."
           }
         },
         "required" : [
@@ -4264,6 +4830,60 @@
       "library" : {
         "name" : "plotly.express",
         "importStatement" : "import plotly.express as px"
+      }
+    },
+    "post" : {
+      "form" : {
+        "properties" : {
+          "url" : {
+            "type" : "string"
+          },
+          "data" : {
+            "type" : "string",
+            "codegenstyle" : "variable"
+          },
+          "headers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "object",
+              "properties" : {
+                "key" : {
+                  "type" : "string"
+                },
+                "value" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        },
+        "required" : [
+          "url",
+          "data"
+        ],
+        "callerObject" : "requests",
+        "type" : "object",
+        "title" : "Post",
+        "function" : "post",
+        "description" : "HTTP Post request of data to a url.",
+        "returnType" : "none"
+      },
+      "library" : {
+        "name" : "requests",
+        "importStatement" : "import requests"
+      },
+      "uischema" : {
+        "headers" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "key" : {
+              "classNames" : "left-field"
+            },
+            "value" : {
+              "classNames" : "right-field"
+            }
+          }
+        }
       }
     },
     "euclidean_distance" : {
@@ -4295,7 +4915,7 @@
         },
         "selectionAsParameter" : true
       },
-      "snippet" : {
+      "function_snippet" : {
         "code" : "def euclidean_distance(df1, df2):\n    import numpy as np\n    eucl_d = np.linalg.norm(df1.values - df2.values, axis=1)\n    return pd.DataFrame({'eucl_d':eucl_d}, index=df1.index).reset_index()",
         "name" : "euclidean_distance"
       },
@@ -4311,7 +4931,8 @@
           "column_indices" : {
             "type" : "string",
             "codegenstyle" : "variable",
-            "description" : "Enter column numbers as [start, finish], e.g. [6,7]. First column is 0."
+            "description" : "Enter column numbers as [start, finish], e.g. [6,7]. First column is 0.",
+            "title" : "column indices"
           },
           "keyword" : {
             "type" : "string"
@@ -4334,9 +4955,112 @@
         },
         "selectionAsParameter" : true
       },
-      "snippet" : {
+      "function_snippet" : {
         "code" : "def analyze_multi_column_selection(df, column_indices, keyword):\n    res = {'category':[],'count': []}\n    for name, val in data.iloc[:,column_indices[0]:column_indices[1]].iteritems():\n        res['count'].append((val == keyword).sum())\n        res['category'].append(name)\n    return pd.DataFrame(res)",
         "name" : "analyze_multi_column_selection"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "read_csv_folder" : {
+      "form" : {
+        "properties" : {
+          "folder_path" : {
+            "description" : "Path of the folder with csv files.",
+            "type" : "string",
+            "title" : "folder path"
+          },
+          "file_prefix" : {
+            "type" : "string",
+            "title" : "file prefix",
+            "description" : "The prefix is the part of the filenames that is always the same. If indicated, it will use this info to generate a column that identifies the files. E.g. if the files are called “data_01”, “data_02”, etc.; then setting prefix as “data_” will create a column with values 01, 02, etc.  \n\n"
+          },
+          "file_col_name" : {
+            "type" : "string",
+            "description" : "If you set a file prefix, this parameter sets the name of the column that identifies the different files. If not specified, it will be called \"file\".",
+            "title" : "file column name"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "folder_path"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Read csv folder",
+        "function" : "read_csv_folder",
+        "description" : "Read several csv files form a folder and stack them together.",
+        "returnType" : "dataframe",
+        "transformationType" : "dataLoading"
+      },
+      "function_snippet" : {
+        "code" : "import pandas as pd\nimport glob\ndef read_csv_folder(folder_path, file_prefix=None, file_col_name=None):\n    all_files = glob.glob(folder_path + \"/*.csv\")\n\n    li = []\n    for filename in all_files:\n        \n        df = pd.read_csv(filename, index_col=None, header=0)\n        if file_prefix != None:\n            \n            if file_col_name == None: file_col_name = 'file'\n            \n            col_value = filename.strip(folder_path + '/' + 'players_').strip('.csv')\n            df.insert(\n                loc=0, \n                column=file_col_name, \n                value=col_value)\n        \n        li.append(df)\n\n    return pd.concat(li, axis=0, ignore_index=True)",
+        "name" : "read_csv_folder"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "fuzzy_merge" : {
+      "form" : {
+        "properties" : {
+          "right" : {
+            "type" : "string",
+            "description" : "DataFrame to be used to join on the right.",
+            "$ref" : "#/definitions/dataframes",
+            "codegenstyle" : "variable"
+          },
+          "left_on" : {
+            "type" : "string",
+            "description" : "Column name to match on the left DataFrame.",
+            "title" : "left on"
+          },
+          "right_on" : {
+            "type" : "string",
+            "description" : "Column name to match on the right DataFrame.",
+            "title" : "right on"
+          },
+          "threshold" : {
+            "type" : "number",
+            "default" : 90,
+            "description" : "How close the matches should be to return a match, based on Levenshtein distance."
+          },
+          "limit" : {
+            "type" : "number",
+            "default" : 1,
+            "description" : "The amount of matches that will get returned, these are sorted high to low."
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "right",
+          "left_on",
+          "right_on"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Fuzzy merge",
+        "function" : "fuzzy_merge",
+        "description" : "Perform join/merge using columns that are similar but not the same",
+        "returnType" : "DataFrame",
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "selectionAsParameter" : true
+      },
+      "function_snippet" : {
+        "code" : "from fuzzywuzzy import fuzz, process\ndef fuzzy_merge(left, right, left_on, right_on, threshold=90, limit=1):\n    left = left.copy()\n    s = right[right_on].tolist()\n    \n    m = left[left_on].apply(lambda x: process.extract(x, s, limit=limit))    \n    left['matches'] = m\n    \n    m2 = left['matches'].apply(lambda x: ', '.join([i[0] for i in x if i[1] >= threshold]))\n    left['matches'] = m2\n    \n    return left",
+        "name" : "fuzzy_merge"
       },
       "uischema" : {
         "new table name" : {
@@ -4348,7 +5072,8 @@
       "form" : {
         "properties" : {
           "server_url" : {
-            "type" : "string"
+            "type" : "string",
+            "title" : "server url"
           },
           "user" : {
             "type" : "string"
@@ -4384,9 +5109,26 @@
         "returnType" : "DataFrame",
         "transformationType" : "dataLoading"
       },
-      "snippet" : {
-        "code" : "def get_ftp_csv(\n    server_url: str,\n    user: str,\n    password: str,\n    folder: str,\n    filename: str,\n    **kwargs):\n    from ftplib import FTP\n    import io\n    import pandas as pd\n    session = FTP(server_url, user, password)\n    session.cwd(folder)\n    download_file = io.BytesIO()\n    session.retrbinary(\"RETR {}\".format(filename), download_file.write)\n    download_file.seek(0)\n    return pd.read_csv(download_file, **kwargs)    ",
+      "function_snippet" : {
+        "code" : "from ftplib import FTP\nimport io\nimport pandas as pd\ndef get_ftp_csv(\n    server_url: str,\n    user: str,\n    password: str,\n    folder: str,\n    filename: str,\n    **kwargs):\n    session = FTP(server_url, user, password)\n    session.cwd(folder)\n    download_file = io.BytesIO()\n    session.retrbinary(\"RETR {}\".format(filename), download_file.write)\n    download_file.seek(0)\n    return pd.read_csv(download_file, **kwargs)    ",
         "name" : "get_ftp_csv"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "generate_chart_styles" : {
+      "form" : {
+        "properties" : {},
+        "type" : "object",
+        "title" : "[Snippet] Chart styles",
+        "function" : "generate_chart_styles",
+        "description" : "Generate chart styles for plotting into a variable called theme."
+      },
+      "code_snippet" : {
+        "code" : "# Font\nfont = 'Calibri'\nss = 15 #standard size of the annotations\ntextpos = 'outside' #textposition for text in bars.\nww = 1100\nhh = 600\nround_decimals = 2\n\n# Color of legends\ncolor_leg = 'rgb(140,140,140)'\ncolor_xaxis = 'rgb(140,140,140)'\ncolor_yaxis = 'rgb(140,140,140)'\n\n# Legend position\nlegendpos = dict(x=1, xanchor= 'right', y=1,\n                     font=dict(family=font,\n                               size=ss,\n                               color=color_leg),\n                   traceorder = 'normal',\n                   orientation = 'v')\nlegendor = 'v'\n\n\ncolor_leg = 'rgb(140,140,140)'\ncolor_xaxis = 'rgb(140,140,140)'\ncolor_yaxis = 'rgb(140,140,140)'\n\n\n# Overall figure layout\n\nlayout_std = dict( xaxis = dict(automargin= False, showline = True,\n                                zeroline = True, showgrid = False,\n                                #anchor = 'free', positon =0.5,\n                                gridcolor = \"rgb(113, 113, 113)\",\n                                gridwidth = 0.4,\n                                tickangle= -55,  \n                                ticks = 'inside',\n                                tickfont_size = ss-2,\n                                tickfont_color=color_leg,\n                                titlefont_size = ss,\n                                titlefont_color = color_xaxis),\n                      yaxis = dict(gridcolor = \"rgb(113, 113, 113)\",\n                                   gridwidth = 0.4,\n                                   tickfont_color=color_leg,\n                                   tickfont_size=ss,\n                                   titlefont = dict(size = ss),\n                                   spikedash = 'dash',\n                                   title = '<b> </b>',\n                                   titlefont_size = ss,\n                                   titlefont_color = color_yaxis),\n                      legend = legendpos,\n                      barmode='overlay',\n                      legend_orientation= legendor,\n                      margin = dict(l=120, r=10, b=130, t=100, pad=6),\n                      paper_bgcolor='rgba(255,255,255,1)', #color of paper where the graph is drawn.\n                      plot_bgcolor='rgba(255,255,255,1)')#plotting area in-between x and y axes.)\n\ntheme =  dict(\n    layout=layout_std\n)"
       },
       "uischema" : {
         "new table name" : {
