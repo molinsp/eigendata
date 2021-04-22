@@ -336,9 +336,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Generate python code and write in the notebook
   const callGeneratePythonCode = async (formResponse: any): Promise<void> => {
     console.log('SUBMIT WAS PRESSED');
-    /*-----------------------------------------------
-    Handle not found case
-    -----------------------------------------------*/
+    /*-------------------------------------------------------
+    Handle product feedback case (not found transformation)
+    --------------------------------------------------------*/
     if (state.transformationSelection.value === 'notfound') {
       // Remove transformation selection and hide form
       setState(state => ({
@@ -358,12 +358,21 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       return;
     }
 
+    /*-------------------------------------------------------
+    Get transformation schema
+    --------------------------------------------------------*/
+    let transformationSchema = logic.transformationsConfig[formResponse.schema.function];
+    if (typeof transformationSchema === 'undefined'){
+      console.warn('Transformation not found');
+    }
+    
+
     /*-----------------------------------------------
     Generate formula (Either snippet of function)
     -----------------------------------------------*/
     let formula, resultVariable, returnType;
     if(
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'code_snippet'
       ] === 'undefined'
     ){
@@ -381,7 +390,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       ));
     }else{
       // For code snippets there is no need to generate a formula
-      formula = logic.transformationsConfig[formResponse.schema.function]['code_snippet']['code'];
+      formula = transformationSchema['code_snippet']['code'];
       resultVariable = 'na';
     }
 
@@ -399,10 +408,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     Import libraries/functions if needed
     -----------------------------------------------*/
     if (
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'library'
       ] === 'undefined' &&
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'function_snippet'
       ] !== 'undefined'
     ) {
@@ -411,7 +420,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         FUNC SNIPPETS
       -----------------*/
       const snippetFunction =
-        logic.transformationsConfig[formResponse.schema.function]['function_snippet'];
+        transformationSchema['function_snippet'];
 
       console.log('CG: Imported functions', logic.importedFunctions);
       if (logic.importedFunctions.includes(snippetFunction['name'])) {
@@ -429,7 +438,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         }
       }
     } else if(
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'library'
       ] !== 'undefined'
     ) {
@@ -439,7 +448,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       console.log('CG: Code-gen for module');
 
       const library =
-        logic.transformationsConfig[formResponse.schema.function]['library'];
+        transformationSchema['library'];
 
       // Check if there is a need for a namespace
       let hasNamespace = false;
