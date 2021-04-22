@@ -175,6 +175,7 @@ export const generatePythonCode = (
       returnType = 'dataframe';
     }
   }
+  console.log('CG: Return type', returnType);
 
   /*-------------------------------------------------------------------
    Use the object selectino dropdown as a parameter input
@@ -236,8 +237,7 @@ export const generatePythonCode = (
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
     if (
-      parameterName.localeCompare('new table name') === 0 &&
-      returnType.localeCompare('print') !== 0
+      parameterName.localeCompare('new table name') === 0
     ) {
       console.log('CG: 3.2 New table name detected');
       if (typeof formData[parameterName] !== 'undefined') {
