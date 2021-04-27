@@ -30,6 +30,17 @@ const mapFormResponseToPythonCode = (
       console.log('1.2 Column as series');
       return dataframeSelection + '["' + fieldInput + '"]';
     }
+    /*----------------------------------------------------------------------------------------------------------
+      SERIES COLUMN LIST 
+    ----------------------------------------------------------------------------------------------------------*/
+    // CASE where a series is passed as [df[Series_Name_1], df[Series_Name_2]]
+    else if (codeGenStyle.localeCompare('seriesColumnList') === 0) {
+      let seriesColumnList = fieldInput.map((listElement) => {
+          return dataframeSelection + '["' + listElement + '"]'
+      });
+      console.log('1.2 Column as series list');
+      return '[' + seriesColumnList.join(',') + ']';
+    }
     console.log('WARNING: No codeGenStyle');
   } else if (typeof fieldSchema['$ref'] !== 'undefined') {
   /*----------------------------------------------------------------------------------------------------------
