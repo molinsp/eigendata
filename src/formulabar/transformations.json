@@ -1,5 +1,5 @@
 {
-  "version" : "0.0.40",
+  "version" : "0.0.43",
   "transformations" : {
     "read_csv" : {
       "form" : {
@@ -173,6 +173,16 @@
             "type" : "string",
             "description" : "API key. You can get the id from airtable.com/api (selecting show API key on the top right)."
           },
+          "include_id" : {
+            "description" : "Include a column with the airtable row ID. Required if you want to re-upload data.",
+            "default" : "False",
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "enum" : [
+              "True",
+              "False"
+            ]
+          },
           "new table name" : {
             "type" : "string"
           }
@@ -190,7 +200,7 @@
       },
       "library" : {
         "name" : "fastdata.integrations",
-        "importStatement" : "from fastdata.integrations import *"
+        "importStatement" : "import pandas as pd\nfrom fastdata.integrations import *"
       },
       "keywords" : [
         "base",
@@ -236,6 +246,68 @@
         "type" : "object",
         "function" : "df_to_airtable_base",
         "description" : "Save table to airtable.",
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        }
+      },
+      "library" : {
+        "name" : "fastdata.integrations",
+        "importStatement" : "from fastdata.integrations import *"
+      },
+      "keywords" : [
+        "airtable",
+        "base",
+        "save",
+        "write",
+        "upload",
+        "connect"
+      ]
+    },
+    "update_aritable_records" : {
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "form" : {
+        "returnType" : "none",
+        "properties" : {
+          "df" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes"
+          },
+          "base" : {
+            "description" : "ID of the base. You can get the id from airtable.com/api.",
+            "type" : "string"
+          },
+          "table" : {
+            "type" : "string",
+            "description" : "Name of the table as shown in Airtable UI."
+          },
+          "key" : {
+            "type" : "string",
+            "description" : "API key. You can get the id from airtable.com/api (selecting show API key on the top right)."
+          },
+          "record_id_col" : {
+            "type" : "string",
+            "default" : "id",
+            "description" : "Column of the dataframe that holds the airtable record id."
+          }
+        },
+        "required" : [
+          "df",
+          "base",
+          "table",
+          "key"
+        ],
+        "title" : "Update Airtable records.",
+        "type" : "object",
+        "function" : "update_airtable_records",
+        "description" : "Update Airtable records",
         "definitions" : {
           "dataframes" : {
             "type" : "string",
@@ -482,7 +554,7 @@
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "count_nulls",
-        "returnType" : "DataFrame",
+        "returnType" : "dataframe",
         "description" : "Get the number of non-null values in each column."
       },
       "uischema" : {
@@ -1364,19 +1436,23 @@
             "type" : "string",
             "enum" : [
               "custom",
-              "before_character",
-              "after_character",
+              "keep_before_character",
+              "keep_after_character",
               "email",
               "n_digits",
-              "between"
+              "between",
+              "range_start",
+              "range_end"
             ],
             "enumNames" : [
               "custom",
-              "before character",
-              "after character",
+              "keep before character",
+              "keep after character",
               "email",
               "N digits",
-              "between"
+              "between 2 characters",
+              "range start (\"1 - 5\" -> 1)",
+              "range end (\"1 - 5\" -> 5)"
             ],
             "description" : "Use a preset to clean the text column or enter a custom regular expression."
           },
@@ -1426,7 +1502,7 @@
                 "properties" : {
                   "mode" : {
                     "enum" : [
-                      "before_character"
+                      "keep_before_character"
                     ]
                   },
                   "character" : {
@@ -1439,7 +1515,7 @@
                 "properties" : {
                   "mode" : {
                     "enum" : [
-                      "after_character"
+                      "keep_after_character"
                     ]
                   },
                   "character" : {
@@ -1486,6 +1562,24 @@
                     "description" : "Extract text before end input. E.g. if text is \"tel:1234#\", entering end as \"#\", will start extracting extract \"1234\"."
                   }
                 }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "range_start"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "range_end"
+                    ]
+                  }
+                }
               }
             ]
           }
@@ -1498,15 +1592,12 @@
         "type" : "object",
         "callerObject" : "DataFrame.fdt",
         "function" : "clean_text_columns",
-        "description" : "Clean text from column using regex or function.",
+        "description" : "Clean text from multiple columns using regex or function.",
         "returnType" : "dataframe"
       },
       "uischema" : {
         "new table name" : {
           "ui:placeholder" : "Leave blank to modify selected table"
-        },
-        "mode" : {
-          "ui:widget" : "radio"
         },
         "ui:order" : [
           "*",
@@ -2011,6 +2102,66 @@
         "check"
       ]
     },
+    "cat" : {
+      "form" : {
+        "properties" : {
+          "column" : {
+            "$ref" : "#/definitions/column",
+            "codegenstyle" : "ignore"
+          },
+          "others" : {
+            "description" : "Columns to concatenate (to the right).",
+            "$ref" : "#/definitions/columns",
+            "codegenstyle" : "seriesColumnList"
+          },
+          "sep" : {
+            "type" : "string",
+            "title" : "separator",
+            "description" : "Character used to separate concatenate text."
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          },
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "required" : [
+          "column",
+          "others"
+        ],
+        "title" : "[Column] Concatenate text",
+        "type" : "object",
+        "callerObject" : "DataFrame[Series].str",
+        "function" : "cat",
+        "description" : "Concatenate text columns."
+      },
+      "uischema" : {
+        "new column name" : {
+          "ui:placeholder" : "Leave blank to modify selected column"
+        }
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : [
+        "find",
+        "locate",
+        "check"
+      ]
+    },
     "clean_text_column" : {
       "form" : {
         "properties" : {
@@ -2020,23 +2171,27 @@
           },
           "mode" : {
             "type" : "string",
+            "description" : "Use a preset to clean the text column or enter a custom regular expression.",
             "enum" : [
               "custom",
-              "before_character",
-              "after_character",
+              "keep_before_character",
+              "keep_after_character",
               "email",
               "n_digits",
-              "between"
+              "between",
+              "range_start",
+              "range_end"
             ],
             "enumNames" : [
               "custom",
-              "before character",
-              "after character",
+              "keep before character",
+              "keep after character",
               "email",
               "N digits",
-              "between"
-            ],
-            "description" : "Use a preset to clean the text column or enter a custom regular expression."
+              "between 2 characters",
+              "range start (\"1 - 5\" -> 1)",
+              "range end (\"1 - 5\" -> 5)"
+            ]
           },
           "keep_unmatched" : {
             "type" : "string",
@@ -2078,7 +2233,7 @@
                 "properties" : {
                   "mode" : {
                     "enum" : [
-                      "before_character"
+                      "keep_before_character"
                     ]
                   },
                   "character" : {
@@ -2091,7 +2246,7 @@
                 "properties" : {
                   "mode" : {
                     "enum" : [
-                      "after_character"
+                      "keep_after_character"
                     ]
                   },
                   "character" : {
@@ -2151,6 +2306,24 @@
                     "description" : "Extract text before end input. E.g. if text is \"tel:1234#\", entering end as \"#\", will start extracting extract \"1234\"."
                   }
                 }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "range_start"
+                    ]
+                  }
+                }
+              },
+              {
+                "properties" : {
+                  "mode" : {
+                    "enum" : [
+                      "range_end"
+                    ]
+                  }
+                }
               }
             ]
           }
@@ -2169,9 +2342,6 @@
       "uischema" : {
         "new column name" : {
           "ui:placeholder" : "Leave blank to modify selected column"
-        },
-        "mode" : {
-          "ui:widget" : "radio"
         },
         "ui:order" : [
           "*",
@@ -2899,7 +3069,7 @@
         "importStatement" : "from fastdata.core import *"
       }
     },
-    "uppercase" : {
+    "upper" : {
       "form" : {
         "properties" : {
           "column" : {
@@ -2935,7 +3105,7 @@
         "importStatement" : "import pandas as pd"
       }
     },
-    "lowercase" : {
+    "lower" : {
       "form" : {
         "properties" : {
           "column" : {
@@ -4484,7 +4654,8 @@
         }
       },
       "keywords" : [
-        "write"
+        "write",
+        "plot"
       ],
       "library" : {
         "name" : "plotly.express",
@@ -4906,7 +5077,7 @@
         "title" : "[Snippet] Euclidean distance",
         "function" : "euclidean_distance",
         "description" : "Calculate the row-wise euclidean distance between two dataframes with the same columns. Returns a dataframe with the index of the first dataframe and the corresponding euclidean distances.",
-        "returnType" : "DataFrame",
+        "returnType" : "dataframe",
         "definitions" : {
           "dataframes" : {
             "type" : "string",
@@ -4935,7 +5106,9 @@
             "title" : "column indices"
           },
           "keyword" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Keyword used in the column to indicate selection. E.g., \"selected\", 1, etc.",
+            "codegenstyle" : "variable"
           },
           "new table name" : {
             "type" : "string"
@@ -4946,7 +5119,7 @@
         "title" : "[Snippet] Analyze multi-column selections",
         "function" : "analyze_multi_column_selection",
         "description" : "Analyze multi-select as dummy columns",
-        "returnType" : "DataFrame",
+        "returnType" : "dataframe",
         "definitions" : {
           "column" : {
             "type" : "string",
@@ -5029,7 +5202,7 @@
           "threshold" : {
             "type" : "number",
             "default" : 90,
-            "description" : "How close the matches should be to return a match, based on Levenshtein distance."
+            "description" : "Minimum percentage of closeness (based on  levenshtein distance) from 0 to 100. Higher values mean more \"strict\" matching."
           },
           "limit" : {
             "type" : "number",
@@ -5049,7 +5222,7 @@
         "title" : "[Snippet] Fuzzy merge",
         "function" : "fuzzy_merge",
         "description" : "Perform join/merge using columns that are similar but not the same",
-        "returnType" : "DataFrame",
+        "returnType" : "dataframe",
         "definitions" : {
           "dataframes" : {
             "type" : "string",
@@ -5106,7 +5279,7 @@
         "title" : "[Snippet] Get csv from FTP server",
         "function" : "get_ftp_csv",
         "description" : "Get a csv file from an FTP server",
-        "returnType" : "DataFrame",
+        "returnType" : "dataframe",
         "transformationType" : "dataLoading"
       },
       "function_snippet" : {
@@ -5128,7 +5301,85 @@
         "description" : "Generate chart styles for plotting into a variable called theme."
       },
       "code_snippet" : {
-        "code" : "# Font\nfont = 'Calibri'\nss = 15 #standard size of the annotations\ntextpos = 'outside' #textposition for text in bars.\nww = 1100\nhh = 600\nround_decimals = 2\n\n# Color of legends\ncolor_leg = 'rgb(140,140,140)'\ncolor_xaxis = 'rgb(140,140,140)'\ncolor_yaxis = 'rgb(140,140,140)'\n\n# Legend position\nlegendpos = dict(x=1, xanchor= 'right', y=1,\n                     font=dict(family=font,\n                               size=ss,\n                               color=color_leg),\n                   traceorder = 'normal',\n                   orientation = 'v')\nlegendor = 'v'\n\n\ncolor_leg = 'rgb(140,140,140)'\ncolor_xaxis = 'rgb(140,140,140)'\ncolor_yaxis = 'rgb(140,140,140)'\n\n\n# Overall figure layout\n\nlayout_std = dict( xaxis = dict(automargin= False, showline = True,\n                                zeroline = True, showgrid = False,\n                                #anchor = 'free', positon =0.5,\n                                gridcolor = \"rgb(113, 113, 113)\",\n                                gridwidth = 0.4,\n                                tickangle= -55,  \n                                ticks = 'inside',\n                                tickfont_size = ss-2,\n                                tickfont_color=color_leg,\n                                titlefont_size = ss,\n                                titlefont_color = color_xaxis),\n                      yaxis = dict(gridcolor = \"rgb(113, 113, 113)\",\n                                   gridwidth = 0.4,\n                                   tickfont_color=color_leg,\n                                   tickfont_size=ss,\n                                   titlefont = dict(size = ss),\n                                   spikedash = 'dash',\n                                   title = '<b> </b>',\n                                   titlefont_size = ss,\n                                   titlefont_color = color_yaxis),\n                      legend = legendpos,\n                      barmode='overlay',\n                      legend_orientation= legendor,\n                      margin = dict(l=120, r=10, b=130, t=100, pad=6),\n                      paper_bgcolor='rgba(255,255,255,1)', #color of paper where the graph is drawn.\n                      plot_bgcolor='rgba(255,255,255,1)')#plotting area in-between x and y axes.)\n\ntheme =  dict(\n    layout=layout_std\n)"
+        "code" : "# General\nfont = 'Helvetica'\nss = 15 \nround_decimals = 2\n\n# Colors\ncolor_legend = 'rgb(140,140,140)'\ncolor_xaxis = 'rgb(140,140,140)'\ncolor_yaxis = 'rgb(140,140,140)'\n\n# Create layout\nlayout_std = dict( xaxis = dict(automargin= False, \n                                showline = True,\n                                zeroline = True, \n                                tickangle= -55,  \n                                tickfont_size = ss-2,\n                                tickfont_color=color_legend,\n                                titlefont_size = ss,\n                                titlefont_color = color_xaxis),\n                      yaxis = dict(gridcolor = \"rgb(113, 113, 113)\",\n                                   tickfont_color=color_legend,\n                                   tickfont_size=ss,\n                                   titlefont = dict(size = ss),\n                                   titlefont_size = ss,\n                                   titlefont_color = color_yaxis),\n                      barmode='overlay',\n                      legend_orientation= 'v')\n\n# Save it in theme variable\ntheme =  dict(\n    layout=layout_std\n)"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "get_iso_subregion" : {
+      "form" : {
+        "properties" : {
+          "col_name" : {
+            "$ref" : "#/definitions/column"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "col_name"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Get ISO subregion",
+        "function" : "get_iso_subregion",
+        "description" : "Get the ISO subregion from an address string.",
+        "returnType" : "series",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          },
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "selectionAsParameter" : true
+      },
+      "function_snippet" : {
+        "code" : "import geocoder\nfrom countryinfo import CountryInfo\ndef text_to_iso_subregion(location):\n    try: \n        country_code = geocoder.osm(location, method='geocode').json['country_code']\n        return CountryInfo(country_code).subregion()\n    except:\n        return ''\ndef get_iso_subregion(data, col_name):\n    original_col = data[col_name]\n    locations = pd.DataFrame({'location' : original_col.unique()})\n    locations['subregion'] = locations['location'].apply(text_to_iso_subregion)\n    new_col = original_col.map(locations.set_index('location')['subregion'])\n    return new_col",
+        "name" : "get_iso_subregion"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "drop_blank_rows" : {
+      "form" : {
+        "properties" : {
+          "col_name" : {
+            "description" : "Column to check for blanks.",
+            "title" : "column name",
+            "$ref" : "#/definitions/column"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "col_name"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Drop blank",
+        "function" : "drop_blank_rows",
+        "description" : "Drop rows where selected column is blank text.",
+        "returnType" : "dataframe",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "selectionAsParameter" : true
+      },
+      "function_snippet" : {
+        "code" : "def drop_blank_rows(data, col_name):\n    return data[data[col_name].astype(bool)] ",
+        "name" : "drop_blank_rows"
       },
       "uischema" : {
         "new table name" : {
