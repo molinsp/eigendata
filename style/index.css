@@ -796,3 +796,10 @@ button.pagination-segment:active {
   text-decoration: underline;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
+
+
+.lm-Widget .p-Widget .jp-Toolbar{
+  border: 0px;
+  box-shadow: 0px;
+  z-index: -100;
+}

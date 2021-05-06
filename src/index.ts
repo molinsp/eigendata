@@ -17,6 +17,8 @@ import { IMainMenu } from '@jupyterlab/mainmenu';
 
 import { Menu } from '@lumino/widgets';
 
+import { each } from '@lumino/algorithm';
+
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
 /**
@@ -92,7 +94,8 @@ const extension: JupyterFrontEndPlugin<void> = {
           const content = new DataVisualizerWidget(backend);
           // Create datavizwidget
           datavizwidget = new MainAreaWidget<DataVisualizerWidget>({ content });
-          datavizwidget.title.label = 'Data Visualizer';
+          //datavizwidget.title.label = 'Data Visualizer';
+          datavizwidget.title.iconClass = "jp-SpreadsheetIcon jp-SideBar-tabIcon";
           datavizwidget.title.closable = true;
           //app.shell.add(datavizwidget, 'main');
         }
@@ -102,7 +105,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
         if (!datavizwidget.isAttached) {
           // Attach the datavizwidget to the main work area if it's not there
-          app.shell.add(datavizwidget, 'main');
+          app.shell.add(datavizwidget, 'right');
         }
         datavizwidget.content.update();
 
@@ -129,13 +132,41 @@ const extension: JupyterFrontEndPlugin<void> = {
       name: () => 'dv'
     });
 
+
+    // Hide side-bar items
+    each(app.shell.widgets('left'), widget => {
+        console.log('id', widget.id);
+        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager'){
+          widget.close();
+        }
+      });
+
+
+    // Open by default
+    app.restored.then(() => {
+      app.shell.activateById(datavizwidget.id);
+    });
+
     // Create a menu
     const tutorialMenu: Menu = new Menu({ commands });
     tutorialMenu.title.label = 'Eigendata';
-    mainMenu.addMenu(tutorialMenu, { rank: 2000 });
+    mainMenu.addMenu(tutorialMenu, { rank: 1 });
+
+    // Get rid of menus
+    mainMenu.editMenu.dispose();
+    mainMenu.viewMenu.dispose();
+    mainMenu.runMenu.dispose();
+    mainMenu.fileMenu.dispose();
+    mainMenu.kernelMenu.dispose();
+    mainMenu.kernelMenu.dispose();
+    mainMenu.tabsMenu.dispose();
+    //mainMenu.settingsMenu.dispose();
+    mainMenu.helpMenu.dispose();
 
     // Add the command to the menu
-    tutorialMenu.addItem({ command, args: { origin: 'from the menu' } });
+    tutorialMenu.addItem({ 
+      command, 
+      args: { origin: 'from the menu' } });
     tutorialMenu.addItem({
       command: datavizcommand,
       args: { origin: 'from the menu' }
