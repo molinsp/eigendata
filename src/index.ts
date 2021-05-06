@@ -133,10 +133,30 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
 
+    // Kill kernel when closing notebooks
+    settingRegistry.load('@jupyterlab/notebook-extension:tracker').then(
+      (settings: ISettingRegistry.ISettings) => {
+        settings.set('kernelShutdown', true);
+      },
+      (err: Error) => {
+        console.error(
+          `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+        );
+      }
+    );
+
     // Hide side-bar items
+    // We hide the running sessions because now they are closed automatically
     each(app.shell.widgets('left'), widget => {
+        //console.log('id', widget.id);
+        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager' || widget.id == 'jp-running-sessions'){
+          widget.close();
+        }
+      });
+
+     each(app.shell.widgets('bottom'), widget => {
         console.log('id', widget.id);
-        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager'){
+        if(widget.id == 'jp-main-statusbar'){
           widget.close();
         }
       });
