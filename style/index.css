@@ -803,3 +803,11 @@ button.pagination-segment:active {
   box-shadow: 0px;
   z-index: -100;
 }
+
+#jp-MainLogo {
+    background-image: url(logo.png)
+}
+
+#jp-MainLogo > svg {
+    visibility: hidden;
+}
