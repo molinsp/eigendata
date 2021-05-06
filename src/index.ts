@@ -49,13 +49,13 @@ const extension: JupyterFrontEndPlugin<void> = {
     let datavizwidget: MainAreaWidget<DataVisualizerWidget>;
 
     const { commands } = app;
-    const command = CommandIDs.create;
-    const datavizcommand = CommandIDs.dataviz;
+    const formulaBarCommand = CommandIDs.create;
+    const dataVizCommand = CommandIDs.dataviz;
 
     // Create class that manages the backend behavior
     const backend = new Backend(notebook_tracker, settingRegistry);
 
-    commands.addCommand(command, {
+    commands.addCommand(formulaBarCommand, {
       caption: 'Create a new React Widget',
       label: 'Magic Formula Bar',
       icon: args => (args['isPalette'] ? null : searchIcon),
@@ -84,7 +84,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    commands.addCommand(datavizcommand, {
+    commands.addCommand(dataVizCommand, {
       caption: 'Create a new Data Data Visualizer',
       label: 'Data Visualizer',
       icon: args => (args['isPalette'] ? null : inspectorIcon),
@@ -119,7 +119,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       namespace: 'ed'
     });
     restorer.restore(tracker, {
-      command,
+      command: formulaBarCommand,
       name: () => 'ed'
     });
 
@@ -128,7 +128,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       namespace: 'dv'
     });
     restorer.restore(viztracker, {
-      command: datavizcommand,
+      command: dataVizCommand,
       name: () => 'dv'
     });
 
@@ -172,7 +172,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     tutorialMenu.title.label = 'Eigendata';
     mainMenu.addMenu(tutorialMenu, { rank: 1 });
 
-    // Get rid of menus
+    // Get rid of top bar menus
     mainMenu.editMenu.dispose();
     mainMenu.viewMenu.dispose();
     mainMenu.runMenu.dispose();
@@ -185,10 +185,10 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Add the command to the menu
     tutorialMenu.addItem({ 
-      command, 
+      command: formulaBarCommand, 
       args: { origin: 'from the menu' } });
     tutorialMenu.addItem({
-      command: datavizcommand,
+      command: dataVizCommand,
       args: { origin: 'from the menu' }
     });
   }
