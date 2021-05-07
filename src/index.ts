@@ -53,7 +53,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     const dataVizCommand = CommandIDs.dataviz;
 
     // Create class that manages the backend behavior
-    const backend = new Backend(notebook_tracker, settingRegistry);
+    const backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager);
 
     commands.addCommand(formulaBarCommand, {
       caption: 'Create a new React Widget',
@@ -155,7 +155,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
 
      each(app.shell.widgets('bottom'), widget => {
-        console.log('id', widget.id);
+        //console.log('id', widget.id);
         if(widget.id == 'jp-main-statusbar'){
           widget.close();
         }

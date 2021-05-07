@@ -20,9 +20,9 @@ import { Signal } from '@lumino/signaling';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Initialization scripts. See file for more details.
 import { pythonInitializationScript } from './initscript';
-import { Dialog, ISessionContext, showDialog } from '@jupyterlab/apputils';
+import { Dialog, ISessionContext,SessionContext, showDialog } from '@jupyterlab/apputils';
 import ReactGA from 'react-ga';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
 import _ from 'lodash';
 import { JSONSchema7 } from 'json-schema';
 // Utilities from another project. See file for more details.
@@ -45,6 +45,10 @@ export class Backend {
 
   // Object that holds the currently selected notebook
   private currentNotebook: NotebookPanel;
+
+  // Notebook mode
+  private notebookMode: string;
+  public adHocSessionContext: ISessionContext;
 
   // Enables to connect to the kernel
   private connector: KernelConnector;
@@ -109,11 +113,18 @@ export class Backend {
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
-  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry) {
+  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager.IManager) {
     console.log('------> Backend Constructor');
 
     // Add a notebook tracker
     this.notebookTracker = notebooks;
+
+    // Initialize as ad-hoc (if a notebook is detected it will change)
+    this.notebookMode = 'ad-hoc';
+
+
+    // Create ad-hoc session context
+    this.startAdHocKernel(manager);
 
     // Subscribe to signal when notebooks change
     this.notebookTracker.currentChanged.connect(
@@ -121,6 +132,7 @@ export class Backend {
       this
     );
 
+    // Read transformations config
     const readTransformationConfig = (): void => {
       this.transformationsConfig = transformationsConfig['transformations'];
       console.log('TRANSFORMATIONS VERSION:', transformationsConfig['version']);
@@ -141,6 +153,7 @@ export class Backend {
       this.transformationsList = transformationList;
     };
 
+    // Get transformations from server
     if (this.production) {
       console.log('--- In Production environment ---');
       const myHeaders = new Headers();
@@ -424,23 +437,34 @@ export class Backend {
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute(code: string): Promise<string> {
-    // Calculate index of last cell
-    const lastCellIndex = this.currentNotebook.content.widgets.length - 1;
-    /*
-    if (lastCellIndex == 0){
-      lastCellIndex += 1;
-    }
-    */
-    console.log('Last cell index', lastCellIndex);
+    if(this.notebookMode === 'notebook'){
+      // Calculate index of last cell
+      const lastCellIndex = this.currentNotebook.content.widgets.length - 1;
+      /*
+      if (lastCellIndex == 0){
+        lastCellIndex += 1;
+      }
+      */
+      console.log('Last cell index', lastCellIndex);
 
-    // Run and insert using cell utilities
-    await CellUtilities.insertRunShow(
-      this.currentNotebook,
-      lastCellIndex,
+      // Run and insert using cell utilities
+      await CellUtilities.insertRunShow(
+        this.currentNotebook,
+        lastCellIndex,
+        code,
+        true
+      );
+      return 'success';
+
+    }else if (this.notebookMode === 'ad-hoc'){
+      await Backend.sendKernelRequest(
+      this.adHocSessionContext.session.kernel,
       code,
-      true
-    );
-    return 'success';
+      {}
+      );
+
+    }
+
   }
 
   /*----------------------------------------------------------------------------------------------------
@@ -457,9 +481,16 @@ export class Backend {
     this.codeToIgnore = codeToRun;
     //console.log('Request expression', codeToRun);
 
+    let sessionContext: ISessionContext;
+    if(this.notebookMode === 'notebook'){
+      sessionContext = this.currentNotebook.sessionContext;
+    }else if (this.notebookMode === 'ad-hoc'){
+      sessionContext = this.adHocSessionContext;
+    }
+
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
     const result = await Backend.sendKernelRequest(
-      this.currentNotebook.sessionContext.session.kernel,
+      sessionContext.session.kernel,
       codeToRun,
       { form: 'ed_form' }
     );
@@ -493,9 +524,16 @@ export class Backend {
     this.codeToIgnore = codeToRun;
     console.log('Request expression', codeToRun);
 
+    let sessionContext: ISessionContext;
+    if(this.notebookMode === 'notebook'){
+      sessionContext = this.currentNotebook.sessionContext;
+    }else if (this.notebookMode === 'ad-hoc'){
+      sessionContext = this.adHocSessionContext;
+    }
+
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
     const result = await Backend.sendKernelRequest(
-      this.currentNotebook.sessionContext.session.kernel,
+      sessionContext.session.kernel,
       codeToRun,
       { queryconfig: 'ed_queryconfig' }
     );
@@ -550,12 +588,19 @@ export class Backend {
     console.log('DataViz: Request expression', codeToRun);
     let resultObject = {};
 
+    let sessionContext: ISessionContext;
+    if(this.notebookMode === 'notebook'){
+      sessionContext = this.currentNotebook.sessionContext;
+    }else if (this.notebookMode === 'ad-hoc'){
+      sessionContext = this.adHocSessionContext;
+    }
+
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
     const result = await Backend.sendKernelRequest(
-      this.currentNotebook.sessionContext.session.kernel,
-      codeToRun,
-      { data: 'ed_visualizer_data' }
-    );
+        sessionContext.session.kernel,
+        codeToRun,
+        { data: 'ed_visualizer_data' }
+      );
 
     let content = result.data.data['text/plain'];
     //console.log('DataViz content', content.slice(0,100));
@@ -591,9 +636,16 @@ export class Backend {
     const codeToRun = 'del ' + data;
     console.log('Request expression', codeToRun);
 
+    let sessionContext: ISessionContext;
+    if(this.notebookMode === 'notebook'){
+      sessionContext = this.currentNotebook.sessionContext;
+    }else if (this.notebookMode === 'ad-hoc'){
+      sessionContext = this.adHocSessionContext;
+    }
+
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
     const result = await Backend.sendKernelRequest(
-      this.currentNotebook.sessionContext.session.kernel,
+      sessionContext.session.kernel,
       codeToRun,
       {}
     );
@@ -607,38 +659,47 @@ export class Backend {
   -> Writes: na
   -----------------------------------------------------------------------------------------------------*/
   public async pythonImportLibraries(importStatement: string): Promise<void> {
-    // Execute the import in the kernel
-    await Backend.sendKernelRequest(
-      this.currentNotebook.sessionContext.session.kernel,
+    if(this.notebookMode === 'notebook'){
+      // Execute the import in the kernel
+      await Backend.sendKernelRequest(
+        this.currentNotebook.sessionContext.session.kernel,
+        importStatement,
+        {}
+      );
+
+      // Get content of first cell, which by convention is for the imports
+      const importsCell = CellUtilities.getCell(this.currentNotebook.content, 0);
+      const importsCellContent = importsCell.value.text;
+      let importsCellNewContent = '';
+      console.log('imports cell', importsCellContent);
+
+      // If the cell is empty, write the imports
+      if (importsCellContent === '') {
+        importsCellNewContent = importStatement;
+        await CellUtilities.insertRunShow(
+          this.currentNotebook,
+          0,
+          importsCellNewContent,
+          true
+        );
+      }
+      // If it has text, add the import in a new line
+      else {
+        importsCellNewContent = importsCellContent + '\n' + importStatement;
+        importsCell.value.text = importsCellNewContent;
+      }
+
+      // Write in the first cell
+      //this.currentNotebook.content.model.cells.get(0).value.text = importsCellNewContent;
+      //await CellUtilities.injectCodeAtIndex(this.currentNotebook.content, 0, importsCellNewContent);
+    }else if (this.notebookMode === 'ad-hoc'){
+      await Backend.sendKernelRequest(
+      this.adHocSessionContext.session.kernel,
       importStatement,
       {}
-    );
-
-    // Get content of first cell, which by convention is for the imports
-    const importsCell = CellUtilities.getCell(this.currentNotebook.content, 0);
-    const importsCellContent = importsCell.value.text;
-    let importsCellNewContent = '';
-    console.log('imports cell', importsCellContent);
-
-    // If the cell is empty, write the imports
-    if (importsCellContent === '') {
-      importsCellNewContent = importStatement;
-      await CellUtilities.insertRunShow(
-        this.currentNotebook,
-        0,
-        importsCellNewContent,
-        true
       );
-    }
-    // If it has text, add the import in a new line
-    else {
-      importsCellNewContent = importsCellContent + '\n' + importStatement;
-      importsCell.value.text = importsCellNewContent;
-    }
 
-    // Write in the first cell
-    //this.currentNotebook.content.model.cells.get(0).value.text = importsCellNewContent;
-    //await CellUtilities.injectCodeAtIndex(this.currentNotebook.content, 0, importsCellNewContent);
+    }
   }
 
   // -------------------------------------------------------------------------------------------------------------
@@ -648,6 +709,47 @@ export class Backend {
   // -------------------------------------------------------------------------------------------------------------
 
   /*----------------------------------------------------------------------------------------------------
+  [FUNCTION] Initialize ad-hoc kernel
+  -----------------------------------------------------------------------------------------------------*/
+  private startAdHocKernel(manager: ServiceManager.IManager){
+    this.adHocSessionContext = new SessionContext({
+      sessionManager: manager.sessions,
+      specsManager: manager.kernelspecs,
+      kernelPreference: {name: 'python3'},
+      name: 'Kernel Output'
+    });
+
+    this.adHocSessionContext.initialize();
+
+    console.log('Ad-hoc session',this.adHocSessionContext);
+
+    const session = this.adHocSessionContext;
+    // Note: When an IOptions object is passed, need to look at the sourc code to see which variables this option has. If ther eis one, we can pass it with brackets and the same name
+    // To-do: Not sure if at some point I need to drop all these connections
+    this.connector = new KernelConnector({ session });
+
+    // Basically if the connector is ready, should not have to worry about this
+    this.connector.ready.then(() => {
+      console.log('Connector ready');
+      const content: KernelMessage.IExecuteRequestMsg['content'] = {
+        code: this.initScripts,
+        stop_on_error: false,
+        store_history: false
+      };
+
+      this.connector
+        .fetch(content, () => {})
+        .then(() => {
+          console.log('Fetched content');
+          this.pythonRequestDataframes();
+        });
+    });
+
+    // Connect to changes running in the code
+    this.connector.iopubMessage.connect(this.codeRunningOnNotebook);
+  }
+
+  /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Update current notebook and create kernel connector
   -> Writes: currentNotebook, connector
   -----------------------------------------------------------------------------------------------------*/
@@ -655,65 +757,75 @@ export class Backend {
     sender: any,
     nbPanel: NotebookPanel
   ): Promise<void> {
-    console.log('------> Notebook changed', nbPanel.content.title.label);
-    // Update the current notebook
-    this.currentNotebook = nbPanel;
+    if(nbPanel){
+      this.notebookMode = 'notebook';
+      console.log('------> Notebook changed', nbPanel.content.title.label);
+      // Update the current notebook
+      this.currentNotebook = nbPanel;
 
-    // Creates a new way to connect to the Kernel in this notebook
-    const session = this.currentNotebook.sessionContext;
-    // Note: When an IOptions object is passed, need to look at the sourc code to see which variables this option has. If ther eis one, we can pass it with brackets and the same name
-    // To-do: Not sure if at some point I need to drop all these connections
-    this.connector = new KernelConnector({ session });
+      // Creates a new way to connect to the Kernel in this notebook
+      const session = this.currentNotebook.sessionContext;
+      // Note: When an IOptions object is passed, need to look at the sourc code to see which variables this option has. If ther eis one, we can pass it with brackets and the same name
+      // To-do: Not sure if at some point I need to drop all these connections
+      this.connector = new KernelConnector({ session });
 
-    // Basically if the connector is ready, should not have to worry about this
-    this.connector.ready.then(() => {
-      const content: KernelMessage.IExecuteRequestMsg['content'] = {
-        code: this.initScripts,
-        stop_on_error: false,
-        store_history: false
-      };
-      this.connector
-        .fetch(content, () => {})
-        .then(() => {
-          this.pythonRequestDataframes();
-        });
-    });
+      // Basically if the connector is ready, should not have to worry about this
+      this.connector.ready.then(() => {
+        const content: KernelMessage.IExecuteRequestMsg['content'] = {
+          code: this.initScripts,
+          stop_on_error: false,
+          store_history: false
+        };
+        this.connector
+          .fetch(content, () => {})
+          .then(() => {
+            this.pythonRequestDataframes();
+          });
+      });
 
-    // Connect to changes running in the code
-    this.connector.iopubMessage.connect(this.codeRunningOnNotebook);
+      // Connect to changes running in the code
+      this.connector.iopubMessage.connect(this.codeRunningOnNotebook);
 
-    /*----------------------------------------------
-    Handle the case where the Kernel is restarted
-    -----------------------------------------------*/
-    this.connector.kernelRestarted.connect(
-      (sender, kernelReady: Promise<void>) => {
-        this.connector.ready.then(() => {
-          // Flag to reset the frontend
-          this.resetStateFormulabarFlag = true;
-          this.resetStateDatavisualizerFlag = true;
-          // Reset dataframes
-          this.packagesImported = [];
-          this.variablesLoaded = [];
+      /*----------------------------------------------
+      Handle the case where the Kernel is restarted
+      -----------------------------------------------*/
+      this.connector.kernelRestarted.connect(
+        (sender, kernelReady: Promise<void>) => {
+          this.connector.ready.then(() => {
+            // Flag to reset the frontend
+            this.resetStateFormulabarFlag = true;
+            this.resetStateDatavisualizerFlag = true;
+            // Reset dataframes
+            this.packagesImported = [];
+            this.variablesLoaded = [];
 
-          // Restart init scripts
-          const content: KernelMessage.IExecuteRequestMsg['content'] = {
-            code: this.initScripts,
-            stop_on_error: false,
-            store_history: false
-          };
-          this.connector
-            .fetch(content, () => {})
-            .then(() => {
-              // Emit signal to re-render the component
-              this.signal.emit();
-            });
-        });
-      }
-    );
+            // Restart init scripts
+            const content: KernelMessage.IExecuteRequestMsg['content'] = {
+              code: this.initScripts,
+              stop_on_error: false,
+              store_history: false
+            };
+            this.connector
+              .fetch(content, () => {})
+              .then(() => {
+                // Emit signal to re-render the component
+                this.signal.emit();
+              });
+          });
+        }
+      );
 
-    // Need to re-render so that the output function in the button has the latest version of
-    // the current notebook. Probably there is a better way of doing this.
-    this.signal.emit();
+      // Need to re-render so that the output function in the button has the latest version of
+      // the current notebook. Probably there is a better way of doing this.
+      this.signal.emit();
+
+    }
+    else{
+      console.log('No notebook');
+      this.notebookMode = 'ad-hoc';
+    }
+
+
   }
 
   // -------------------------------------------------------------------------------------------------------------
