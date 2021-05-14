@@ -20,7 +20,7 @@ import { Signal } from '@lumino/signaling';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Initialization scripts. See file for more details.
 import { pythonInitializationScript } from './initscript';
-import { Dialog, ISessionContext,SessionContext, showDialog } from '@jupyterlab/apputils';
+import { Dialog, ISessionContext, showDialog } from '@jupyterlab/apputils';
 import ReactGA from 'react-ga';
 import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
 import _ from 'lodash';
@@ -32,6 +32,7 @@ import localTransformationsConfig from '../formulabar/transformations.json';
 import amplitude from 'amplitude-js';
 import { Column } from 'react-table';
 import { Config } from 'react-awesome-query-builder';
+import { each } from '@lumino/algorithm';
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.6';
 let transformationsConfig = localTransformationsConfig;
@@ -712,16 +713,20 @@ export class Backend {
   [FUNCTION] Initialize ad-hoc kernel
   -----------------------------------------------------------------------------------------------------*/
   private startAdHocKernel(manager: ServiceManager.IManager){
+    
+    each(manager.sessions.running(), session => {
+      //console.log('DEBUG: Session', session.name);
+    });
+
+    /*
     this.adHocSessionContext = new SessionContext({
       sessionManager: manager.sessions,
       specsManager: manager.kernelspecs,
       kernelPreference: {name: 'python3'},
-      name: 'Kernel Output'
+      name: 'Ad-hoc Kernel'
     });
 
     this.adHocSessionContext.initialize();
-
-    console.log('Ad-hoc session',this.adHocSessionContext);
 
     const session = this.adHocSessionContext;
     // Note: When an IOptions object is passed, need to look at the sourc code to see which variables this option has. If ther eis one, we can pass it with brackets and the same name
@@ -747,6 +752,8 @@ export class Backend {
 
     // Connect to changes running in the code
     this.connector.iopubMessage.connect(this.codeRunningOnNotebook);
+    */
+    
   }
 
   /*----------------------------------------------------------------------------------------------------
