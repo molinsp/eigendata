@@ -6,6 +6,7 @@ import {
 
 import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
 import { FormWidget } from './components/formWidget';
+import { CellBarExtension } from './formulabar/noCodeCell';
 import { Backend } from './core/backend';
 import { DataVisualizerWidget } from './datavisualizer/datavisualizer';
 import { inspectorIcon } from '@jupyterlab/ui-components';
@@ -54,6 +55,12 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Create class that manages the backend behavior
     const backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager);
+
+    app.docRegistry.addWidgetExtension(
+      'Notebook',
+      new CellBarExtension(app.commands, null, backend)
+    );
+
 
     commands.addCommand(formulaBarCommand, {
       caption: 'Create a new React Widget',

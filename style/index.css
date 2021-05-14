@@ -5,10 +5,16 @@
   background: var(--jp-layout-color1);
   align-items: center;
   padding-top: 20px;
-  padding-right: 20px;
   padding-bottom: 10px;
+  padding-right: 20px;
   padding-left: 20px;
   overflow: auto;
+  min-height: 250px;
+}
+
+.marginsNotebook {
+  padding-right: 5px;
+  padding-left: 70px;
 }
 
 /* Any element that fills its parent by width */
@@ -796,18 +802,29 @@ button.pagination-segment:active {
   text-decoration: underline;
 }
 /* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- RESTYLING OF APP -----------------------------------------------------------> */
 
-
+/* Lines on the top of the widget window removed for more stylized look*/
 .lm-Widget .p-Widget .jp-Toolbar{
   border: 0px;
   box-shadow: 0px;
   z-index: -100;
 }
 
+/* Top left logo */
 #jp-MainLogo {
     background-image: url(logo.png)
 }
 
 #jp-MainLogo > svg {
     visibility: hidden;
+}
+
+/* <---------------------------------------------------------------------------------------------------------------| */
+/* |------------------------------- CELL FORMULABAR -----------------------------------------------------------> */
+
+
+.jp-InputArea-editor{
+  background: #F7F7F7;
+  border: none;
 }
