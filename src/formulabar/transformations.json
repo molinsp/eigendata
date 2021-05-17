@@ -572,6 +572,111 @@
         "empty"
       ]
     },
+    "matrix" : {
+      "form" : {
+        "title" : "Visualize nulls",
+        "type" : "object",
+        "callerObject" : "msno",
+        "function" : "matrix",
+        "returnType" : "none",
+        "description" : "Visualize the nulls in the notebook.",
+        "selectionAsParameter" : true
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      },
+      "library" : {
+        "name" : "missingno",
+        "importStatement" : "import missingno as msno"
+      },
+      "keywords" : [
+        "null",
+        "na",
+        "empty"
+      ]
+    },
+    "pandas.crosstab" : {
+      "form" : {
+        "properties" : {
+          "index" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Rows used in the pivot table.",
+            "codegenstyle" : "seriesColumn"
+          },
+          "columns" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Columns used in the pivot table. Leave blank gor a simple aggregation without columns.",
+            "codegenstyle" : "seriesColumn"
+          },
+          "normalize" : {
+            "type" : "string",
+            "enum" : [
+              "all",
+              "index",
+              "columns"
+            ],
+            "enumNames" : [
+              "all",
+              "index (rows)",
+              "columns"
+            ]
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
+          }
+        },
+        "required" : [
+          "index",
+          "columns"
+        ],
+        "title" : "Crosstab",
+        "type" : "object",
+        "callerObject" : "pd",
+        "function" : "crosstab",
+        "description" : "Compute a simple cross tabulation of two (or more) factors."
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        },
+        "aggfunc" : {
+          "items" : {
+            "classNames" : "side-by-side-fields",
+            "column" : {
+              "classNames" : "left-field"
+            },
+            "function" : {
+              "classNames" : "right-field"
+            }
+          }
+        },
+        "mode" : {
+          "ui:widget" : "radio"
+        },
+        "ui:order" : [
+          "*",
+          "index_type",
+          "new table name"
+        ]
+      },
+      "library" : {
+        "name" : "pandas",
+        "importStatement" : "import pandas as pd"
+      },
+      "keywords" : []
+    },
     "pivot_table" : {
       "form" : {
         "properties" : {
@@ -1283,7 +1388,7 @@
         "select"
       ]
     },
-    "fillna" : {
+    "fastdata.core.DataFrame.fill_empty" : {
       "form" : {
         "properties" : {
           "mode" : {
@@ -1292,8 +1397,7 @@
               "function",
               "value"
             ],
-            "default" : "value",
-            "codegenstyle" : "ignore"
+            "default" : "function"
           },
           "new table name" : {
             "type" : "string"
@@ -1318,15 +1422,21 @@
                       "function"
                     ]
                   },
-                  "method" : {
+                  "function" : {
                     "type" : "string",
                     "enum" : [
                       "ffill",
-                      "bfill"
+                      "bfill",
+                      "most_frequent",
+                      "mean",
+                      "median"
                     ],
                     "enumNames" : [
                       "forward fill (take the one above)",
-                      "backward fill (take the one below)"
+                      "backward fill (take the one below)",
+                      "most frequent",
+                      "average/mean",
+                      "median"
                     ]
                   }
                 }
@@ -1348,9 +1458,9 @@
             ]
           }
         },
-        "title" : "Fill empty values in all columns",
-        "callerObject" : "DataFrame",
-        "function" : "fillna",
+        "title" : "Fill empty values",
+        "callerObject" : "DataFrame.fdt",
+        "function" : "fill_empty",
         "type" : "object",
         "returnType" : "dataframe",
         "description" : "Fill empty values in all columns."
@@ -1375,11 +1485,12 @@
         "na",
         "null",
         "empty",
-        "replace"
+        "replace",
+        "fillna"
       ],
       "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd"
+        "name" : "fastdata.core",
+        "importStatement" : "from fastdata.core import *"
       }
     },
     "remove_indexes" : {
@@ -3007,13 +3118,15 @@
                       "ffill",
                       "bfill",
                       "most_frequent",
-                      "mean"
+                      "mean",
+                      "median"
                     ],
                     "enumNames" : [
                       "forward fill (take the one above)",
                       "backward fill (take the one below)",
                       "most frequent",
-                      "average/mean"
+                      "average/mean",
+                      "median"
                     ]
                   }
                 }
@@ -3062,7 +3175,8 @@
         "na",
         "null",
         "empty",
-        "replace"
+        "replace",
+        "fillna"
       ],
       "library" : {
         "name" : "fastdata.core",
@@ -5386,6 +5500,89 @@
           "ui:placeholder" : "Leave blank to modify selected table"
         }
       }
+    },
+    "get_logit_prediction_table" : {
+      "form" : {
+        "properties" : {
+          "model" : {
+            "type" : "string",
+            "codegenstyle" : "variable"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "model"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Get logistic regression prediction table",
+        "function" : "get_logit_prediction_table",
+        "description" : "Drop rows where selected column is blank text.",
+        "returnType" : "dataframe"
+      },
+      "function_snippet" : {
+        "code" : "def get_logit_prediction_table(model):\n    return pd.DataFrame(model.pred_table())",
+        "name" : "get_logit_prediction_table"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "statsmodels.discrete.discrete_model.Logit" : {
+      "form" : {
+        "properties" : {
+          "exog" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes",
+            "title" : "exogenous variables",
+            "description" : "Dependent variable or X."
+          },
+          "endog" : {
+            "type" : "string",
+            "codegenstyle" : "variable",
+            "$ref" : "#/definitions/dataframes",
+            "title" : "endogenous variable",
+            "description" : "Dependent variable or y."
+          },
+          "new variable name" : {
+            "type" : "string"
+          }
+        },
+        "definitions" : {
+          "dataframes" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "required" : [
+          "endog",
+          "exog"
+        ],
+        "function" : "Logit",
+        "callerObject" : "sm",
+        "type" : "object",
+        "title" : "Logistic regression",
+        "description" : "Join the selected table with another table.",
+        "returnType" : "variable",
+        "append" : ".fit()"
+      },
+      "uischema" : {
+        "new variable name" : {
+          "ui:placeholder" : "Logistic regression model name"
+        }
+      },
+      "library" : {
+        "name" : "statsmodels",
+        "importStatement" : "import statsmodels.api as sm"
+      },
+      "keywords" : [
+        "regression",
+        "prediction"
+      ]
     },
     "notfound" : {
       "form" : {
