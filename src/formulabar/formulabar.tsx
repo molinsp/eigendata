@@ -265,15 +265,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
       ){
       // Set the input and load transformation form
-      setState(state => ({
-        ...state,
-        transformationForm: logic.transformationsConfig[input.value]['form'],
-        transformationUI: logic.transformationsConfig[input.value]['uischema'],
-        transformationSelection: input,
-        showForm: true,
-        formData: {},
-        error: null
-      }));
+      await getTransformationFormToState(state.dataframeSelection, input);
     }
     // REQUIRES DF SELECTION
     else{
@@ -315,7 +307,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     } else {
       // STANDARD behavior
       const newFormSchema = await logic.getTransformationFormSchema(
-        dataframeSelection.value,
+        dataframeSelection == null ? null : dataframeSelection.value ,
         transformationSelection.value
       );
       const newUISchema = logic.getTransformationUISchema(
