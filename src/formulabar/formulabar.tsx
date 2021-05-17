@@ -4,7 +4,6 @@ import Select from 'react-select';
 import { JSONSchema7 } from 'json-schema';
 import Joyride from 'react-joyride';
 import { generatePythonCode } from './codeGeneration';
-import ChatWidget from '@papercups-io/chat-widget';
 import 'bootstrap/dist/css/bootstrap.css';
 // Feedback buttons library
 import { BinaryFeedback } from 'react-simple-user-feedback';
@@ -256,15 +255,16 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         userSelection: input.value
       });
     }
-    if (state.dataframeSelection) {
-      console.log('all defined');
-      await getTransformationFormToState(state.dataframeSelection, input);
-    } else if (
-      logic.transformationsConfig[input.value]['form']['transformationType'] ===
-        'dataLoading' ||
-      input.value === 'notfound'
-    ) {
-      console.log('Data loading transformation');
+
+    // Two cases, requires a dataframe selection and not
+
+    // DO NOT REQUIRE DF SELECTION
+    if (typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
+        || logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false 
+        || input.value === 'notfound'
+
+      ){
+      // Set the input and load transformation form
       setState(state => ({
         ...state,
         transformationForm: logic.transformationsConfig[input.value]['form'],
@@ -274,14 +274,23 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         formData: {},
         error: null
       }));
-    } else {
-      setState(state => ({
-        ...state,
-        transformationSelection: input,
-        formData: {},
-        error: null
-      }));
     }
+    // REQUIRES DF SELECTION
+    else{
+      if (state.dataframeSelection) {
+        console.log('all defined');
+        await getTransformationFormToState(state.dataframeSelection, input);
+      }else{
+        setState(state => ({
+          ...state,
+          showForm: false,
+          transformationSelection: input,
+          formData: {},
+          error: null
+        }));
+      }
+ 
+    };
   };
 
   // Populates the transformation form into the state
@@ -361,7 +370,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     /*-------------------------------------------------------
     Get transformation schema
     --------------------------------------------------------*/
-    let transformationSchema = logic.transformationsConfig[formResponse.schema.function];
+    let transformationSchema = logic.transformationsConfig[state.transformationSelection.value];
     if (typeof transformationSchema === 'undefined'){
       console.warn('Transformation not found');
     }
@@ -738,16 +747,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
               </div>
             </form>
           )}
-        <div>
-          <ChatWidget
-            // Pass in your Papercups account token here after signing up
-            accountId="784f140c-6c85-4613-bfd0-9869026cd1cb"
-            title="Welcome to Eigendata"
-            subtitle="We are here to help you become a data superhero"
-            newMessagePlaceholder="Start typing..."
-            primaryColor="#13c2c2"
-          />
-        </div>
       </div>
     </div>
   );
