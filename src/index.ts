@@ -76,9 +76,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           formulawidget.title.closable = true;
           //app.shell.add(formulawidget, 'main');
         }
-        if (!formulaBarTracker.has(formulawidget)) {
+        if (!tracker.has(formulawidget)) {
           // Track the state of the formulawidget for later restoration
-          formulaBarTracker.add(formulawidget);
+          tracker.add(formulawidget);
         }
         if (!formulawidget.isAttached) {
           // Attach the formulawidget to the main work area if it's not there
@@ -106,7 +106,7 @@ const extension: JupyterFrontEndPlugin<void> = {
           datavizwidget.title.closable = true;
           //app.shell.add(datavizwidget, 'main');
         }
-        if (!viztracker.has(datavizwidget)) {
+        if (!tracker.has(datavizwidget)) {
           // Track the state of the datavizwidget for later restoration
           viztracker.add(datavizwidget);
         }
@@ -122,10 +122,10 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     // Track and restore the formulawidget state
-    const formulaBarTracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
+    const tracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
       namespace: 'ed'
     });
-    restorer.restore(formulaBarTracker, {
+    restorer.restore(tracker, {
       command: formulaBarCommand,
       name: () => 'ed'
     });
@@ -154,10 +154,9 @@ const extension: JupyterFrontEndPlugin<void> = {
 
     // Hide side-bar items
     // We hide the running sessions because now they are closed automatically
-    // || widget.id == 'jp-running-sessions'
     each(app.shell.widgets('left'), widget => {
         //console.log('id', widget.id);
-        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager' ){
+        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager' || widget.id == 'jp-running-sessions'){
           widget.close();
         }
       });
