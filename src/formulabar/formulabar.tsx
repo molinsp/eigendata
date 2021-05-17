@@ -72,7 +72,13 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     return result;
   };
 
+  // References for handling autofocus
+  const transformationSelectionRef = React.useRef();
   const dataframeSelectionRef = React.useRef();
+
+  const setFocusOnElement = (element: HTMLElement): void => {
+    element.focus();
+  };
 
   /* Main state of the component:
       - Transformation form
@@ -103,10 +109,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const [productTourState, setProductTourState] = useState({
     run: false
   });
-
-  const setFocusOnElement = (element: HTMLElement): void => {
-    element.focus();
-  };
 
   /*-----------------------------------
   RESET STATE LOGIC
@@ -257,11 +259,15 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     }
 
     // Two cases, requires a dataframe selection and not
-
     // DO NOT REQUIRE DF SELECTION
-    if ((typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
+    if(
+      input.value.localeCompare('query') != 0
+
+      && (typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
         || logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false) 
-        && typeof(logic.transformationsConfig[input.value]['form']['selectionAsParameter']) === 'undefined'
+        
+      && typeof(logic.transformationsConfig[input.value]['form']['selectionAsParameter']) === 'undefined'
+
       ){
       // Set the input and load transformation form
       await getTransformationFormToState(state.dataframeSelection, input);
@@ -272,6 +278,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         console.log('all defined');
         await getTransformationFormToState(state.dataframeSelection, input);
       }else{
+        setFocusOnElement(dataframeSelectionRef.current);
         setState(state => ({
           ...state,
           showForm: false,
@@ -517,7 +524,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           error: null
         }));
       }
-      setFocusOnElement(dataframeSelectionRef.current);
+      setFocusOnElement(transformationSelectionRef.current);
     } catch (error) {
       // Log transformation errors
       if (logic.production && logic.shareProductData) {
@@ -644,6 +651,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
               IndicatorSeparator: (): null => null
             }}
             styles={formulabarMainSelect}
+            ref={dataframeSelectionRef}
           />
           <Select
             name="Select transformation"
@@ -667,7 +675,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             maxMenuHeight={400}
             styles={formulabarMainSelect}
             autoFocus={true}
-            ref={dataframeSelectionRef}
+            ref={transformationSelectionRef}
           />
         </fieldset>
         {binderUrl &&
