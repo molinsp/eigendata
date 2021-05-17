@@ -259,10 +259,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     // Two cases, requires a dataframe selection and not
 
     // DO NOT REQUIRE DF SELECTION
-    if (typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
-        || logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false 
-        || input.value === 'notfound'
-
+    if ((typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
+        || logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false) 
+        && typeof(logic.transformationsConfig[input.value]['form']['selectionAsParameter']) === 'undefined'
       ){
       // Set the input and load transformation form
       await getTransformationFormToState(state.dataframeSelection, input);
