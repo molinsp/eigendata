@@ -540,7 +540,7 @@ export class DataVisualizerWidget extends ReactWidget {
 
   constructor(backend: Backend) {
     super();
-    this.addClass('jp-ReactWidget');
+    this.addClass('jp-dataviz');
     this.backend = backend;
   }
 
