@@ -1,7 +1,3 @@
-
-import { ReactWidget } from '@jupyterlab/apputils';
-import React from 'react';
-
 import { Cell, ICellModel } from '@jupyterlab/cells';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { NotebookPanel } from '@jupyterlab/notebook';
@@ -9,48 +5,13 @@ import { NotebookPanel } from '@jupyterlab/notebook';
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 import { CommandRegistry } from '@lumino/commands';
 import { IDisposable } from '@lumino/disposable';
-import { PanelLayout, Widget } from '@lumino/widgets';
+import { PanelLayout } from '@lumino/widgets';
 
 import { Backend } from '../core/backend';
 import { FormWidget } from '../components/formWidget';
 
-/**
- * Widget cell toolbar class
- */
-const CELL_BAR_CLASS = 'jp-enh-cell-bar';
 
-const CELL_FOOTER_CLASS = 'jp-CellFooter';
-const CELL_FOOTER_DIV_CLASS = 'ccb-cellFooterContainer';
-const CELL_FOOTER_BUTTON_CLASS = 'ccb-cellFooterBtn';
-
-/**
- * Extend default implementation of a cell footer.
- */
-export class CellFooterWithButton extends ReactWidget{
-  /**
-   * Construct a new cell footer.
-   */
-  constructor() {
-    super();
-    this.addClass(CELL_FOOTER_CLASS);
-  }
-
-  render() {
-    return (
-      <div className={CELL_FOOTER_DIV_CLASS}>
-        <button
-          className={CELL_FOOTER_BUTTON_CLASS}
-          onClick={event => {
-            console.log('click');
-          }}
-        >
-          run
-        </button>
-      </div>
-    );
-  }
-}
-
+// Renders the form Widget under a cell
 
 export class CellToolbarTracker implements IDisposable {
   constructor(
@@ -62,8 +23,12 @@ export class CellToolbarTracker implements IDisposable {
     //this._commands = commands;
     this._panel = panel;
     this._backend = backend;
-    const cells = this._panel.context.model.cells;
-	this._addToolbar(cells.get(0));
+
+    // Create widget
+    this.toolbarWidget = new FormWidget(this._backend);
+    this.toolbarWidget.addClass('marginsNotebook');
+
+    // On change of active cell move the toolbar
     this._panel.content.activeCellChanged.connect(this.updateActiveCells, this);
   }
 
@@ -86,30 +51,17 @@ export class CellToolbarTracker implements IDisposable {
 
   updateActiveCells(
   	sender: any ,
-    activeCell: Cell,
+    activeCell: Cell | undefined,
 	): void {
-		console.log('DEBUG: Active changed');
 
-		const cells = this._panel.context.model.cells;
-		for(let i = 0; i < cells.length; i++){
-			let cell = cells.get(i);
-			this._removeToolbar(cell);
-		}
-
-		if(typeof(activeCell.model) != 'undefined'){
-			this._addToolbar(activeCell.model);
-		}
-		
-    }
+	  this._addToolbar(activeCell?.model);
+  }
 
   private _addToolbar(model: ICellModel): void {
     const cell = this._getCell(model);
     if (cell) {
-    	const toolbar = new FormWidget(this._backend);
-    	toolbar.addClass(CELL_BAR_CLASS);
-    	toolbar.addClass('marginsNotebook');
       // 0 is above the cell
-    	(cell.layout as PanelLayout).insertWidget(3, toolbar);
+    	(cell.layout as PanelLayout).insertWidget(3, this.toolbarWidget);
    	}
   }
 
@@ -118,22 +70,7 @@ export class CellToolbarTracker implements IDisposable {
   }
   
   
-  private _findToolbarWidgets(cell: Cell): Widget[] {
-    const widgets = (cell.layout as PanelLayout).widgets;
-
-    // Search for header using the CSS class or use the first one if not found.
-    return widgets.filter(widget => widget.hasClass(CELL_BAR_CLASS)) || [];
-  }
-
-
-  private _removeToolbar(model: ICellModel): void {
-    const cell = this._getCell(model);
-    if (cell) {
-      this._findToolbarWidgets(cell).forEach(widget => widget.dispose());
-    }
-  }
-  
-
+  private toolbarWidget: any;
   private _backend: Backend;
   //private _commands: CommandRegistry;
   private _isDisposed = false;
