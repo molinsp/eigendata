@@ -22,6 +22,10 @@ import { each } from '@lumino/algorithm';
 
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+
+import { OutputPanel } from './datavisualizer/outputPanel';
+
 /**
  * The command IDs used by the react-formulawidget plugin.
  */
@@ -36,13 +40,14 @@ namespace CommandIDs {
 const extension: JupyterFrontEndPlugin<void> = {
   id: '@molinsp/eigendata:plugin',
   autoStart: true,
-  requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry],
+  requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry,IRenderMimeRegistry],
   activate: (
     app: JupyterFrontEnd,
     notebook_tracker: INotebookTracker,
     mainMenu: IMainMenu,
     restorer: ILayoutRestorer,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
+    rendermime: IRenderMimeRegistry
   ) => {
     console.log('JupyterLab Eigendata is activated!');
 
@@ -53,8 +58,12 @@ const extension: JupyterFrontEndPlugin<void> = {
     const formulaBarCommand = CommandIDs.create;
     const dataVizCommand = CommandIDs.dataviz;
 
+    // Create output panel
+    let outputsPanel = new OutputPanel(app.serviceManager, rendermime);
+    app.shell.add(outputsPanel, 'right');
+
     // Create class that manages the backend behavior
-    const backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager);
+    const backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager, outputsPanel);
 
     app.docRegistry.addWidgetExtension(
       'Notebook',

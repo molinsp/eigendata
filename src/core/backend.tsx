@@ -33,6 +33,8 @@ import amplitude from 'amplitude-js';
 import { Column } from 'react-table';
 import { Config } from 'react-awesome-query-builder';
 import { each } from '@lumino/algorithm';
+import { OutputPanel } from '../datavisualizer/outputPanel';
+import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.6';
 let transformationsConfig = localTransformationsConfig;
@@ -53,6 +55,9 @@ export class Backend {
 
   // Enables to connect to the kernel
   private connector: KernelConnector;
+
+  // Output panel for charts
+  private outputPanel: OutputPanel;
 
   /*---------------------------------
     Communicate with UI
@@ -114,7 +119,7 @@ export class Backend {
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
-  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager.IManager) {
+  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager.IManager, outputPanel: OutputPanel) {
     console.log('------> Backend Constructor');
 
     // Add a notebook tracker
@@ -123,9 +128,10 @@ export class Backend {
     // Initialize as ad-hoc (if a notebook is detected it will change)
     this.notebookMode = 'ad-hoc';
 
-
     // Create ad-hoc session context
     this.startAdHocKernel(manager);
+
+    this.outputPanel = outputPanel;
 
     // Subscribe to signal when notebooks change
     this.notebookTracker.currentChanged.connect(
@@ -437,7 +443,7 @@ export class Backend {
   [FUNCTION] Write to the last cell of the notebook and execute
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
-  public async writeToNotebookAndExecute(code: string): Promise<string> {
+  public async writeToNotebookAndExecute(code: string, returnType: string): Promise<string> {
     if(this.notebookMode === 'notebook'){
       // Calculate index of last cell
       const lastCellIndex = this.currentNotebook.content.widgets.length - 1;
@@ -449,21 +455,26 @@ export class Backend {
       console.log('Last cell index', lastCellIndex);
 
       // Run and insert using cell utilities
+      
       await CellUtilities.insertRunShow(
         this.currentNotebook,
         lastCellIndex,
         code,
         true
       );
+      
+      if(returnType.localeCompare('none') == 0){
+        //this.outputPanel.execute(code, this.currentNotebook.sessionContext);
+        this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
+      }
+      
       return 'success';
-
     }else if (this.notebookMode === 'ad-hoc'){
       await Backend.sendKernelRequest(
       this.adHocSessionContext.session.kernel,
       code,
       {}
       );
-
     }
 
   }

@@ -494,7 +494,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     -----------------------------------------------*/
 
     try {
-      await logic.writeToNotebookAndExecute(formula);
+      await logic.writeToNotebookAndExecute(formula, returnType);
 
       console.log('CG: Return type', returnType);
 
