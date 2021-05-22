@@ -167,7 +167,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     // || widget.id == 'jp-running-sessions'
     each(app.shell.widgets('left'), widget => {
         //console.log('id', widget.id);
-        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager' ){
+        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager' || widget.id == 'jp-running-sessions'){
           widget.close();
         }
       });
@@ -191,14 +191,13 @@ const extension: JupyterFrontEndPlugin<void> = {
     mainMenu.addMenu(tutorialMenu, { rank: 1 });
 
     // Get rid of top bar menus
-    mainMenu.editMenu.dispose();
+    // mainMenu.editMenu.dispose();
     mainMenu.viewMenu.dispose();
     mainMenu.runMenu.dispose();
     mainMenu.fileMenu.dispose();
     mainMenu.kernelMenu.dispose();
-    mainMenu.kernelMenu.dispose();
     mainMenu.tabsMenu.dispose();
-    //mainMenu.settingsMenu.dispose();
+    mainMenu.settingsMenu.dispose();
     mainMenu.helpMenu.dispose();
 
     // Add the command to the menu
