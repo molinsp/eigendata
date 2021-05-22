@@ -91,6 +91,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     transformationForm: transformationForm,
     transformationUI: defaultUISchema,
     showForm: false,
+    enableCallerSelection: false, //Enable selection of caller object (DF)
     dataframeSelection: null,
     transformationSelection: null,
     formData: {},
@@ -243,7 +244,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const handleDataframeSelectionChange = async (input): Promise<void> => {
     if (state.transformationSelection) {
       console.log('Formulabar: get transformation to state');
-      await getTransformationFormToState(input, state.transformationSelection);
+      await getTransformationFormToState(input, state.transformationSelection, state.enableCallerSelection);
     } else {
       setState(state => ({ ...state, dataframeSelection: input, error: null }));
     }
@@ -261,7 +262,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     // Two cases, requires a dataframe selection and not
     // DO NOT REQUIRE DF SELECTION
     if(
-      input.value.localeCompare('query') != 0
+      input.value.localeCompare('query') != 0 // Is not the query
 
       && (typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
         || logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false) 
@@ -270,18 +271,22 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
       ){
       // Set the input and load transformation form
-      await getTransformationFormToState(state.dataframeSelection, input);
+      await getTransformationFormToState(state.dataframeSelection, input, false);
     }
-    // REQUIRES DF SELECTION
+    // REQUIRES CALLER OBJECT SELECTION
     else{
+      // Caller object already selected
       if (state.dataframeSelection) {
         console.log('all defined');
-        await getTransformationFormToState(state.dataframeSelection, input);
-      }else{
+        await getTransformationFormToState(state.dataframeSelection, input, true);
+      }
+      // Caller object not selected
+      else{
         setFocusOnElement(dataframeSelectionRef.current);
         setState(state => ({
           ...state,
           showForm: false,
+          enableCallerSelection: true,
           transformationSelection: input,
           formData: {},
           error: null
@@ -294,7 +299,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Populates the transformation form into the state
   const getTransformationFormToState = async (
     dataframeSelection: Dataframe,
-    transformationSelection: any
+    transformationSelection: any,
+    enableCallerSelection: boolean
   ): Promise<void> => {
     if (transformationSelection.value.localeCompare('query') === 0) {
       console.log('Querybuilder');
@@ -305,6 +311,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         ...state,
         queryConfig: queryConfig,
         showForm: false,
+        enableCallerSelection: enableCallerSelection,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         formData: {},
@@ -324,6 +331,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         transformationForm: newFormSchema,
         transformationUI: newUISchema,
         showForm: true,
+        enableCallerSelection: enableCallerSelection,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         queryConfig: null,
@@ -634,26 +642,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         <div className="centered" />
         <fieldset className="data-transformation-form">
           <Select
-            name="Select dataframe"
-            placeholder={
-              logic.dataframesLoaded.length !== 0
-                ? 'Select data'
-                : 'No data'
-            }
-            options={logic.dataframesLoaded}
-            value={state.dataframeSelection}
-            label="Select data"
-            onChange={handleDataframeSelectionChange}
-            className="left-field"
-            id="dataselect"
-            components={{
-              DropdownIndicator: (): JSX.Element => tableIcon,
-              IndicatorSeparator: (): null => null
-            }}
-            styles={formulabarMainSelect}
-            ref={dataframeSelectionRef}
-          />
-          <Select
             name="Select transformation"
             placeholder="Search transformation"
             options={
@@ -676,6 +664,27 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             styles={formulabarMainSelect}
             autoFocus={true}
             ref={transformationSelectionRef}
+          />
+          <Select
+            name="Select dataframe"
+            placeholder={
+              logic.dataframesLoaded.length !== 0
+                ? 'Select data'
+                : 'No data'
+            }
+            options={logic.dataframesLoaded}
+            value={state.dataframeSelection}
+            label="Select data"
+            onChange={handleDataframeSelectionChange}
+            className="left-field"
+            isDisabled={!state.enableCallerSelection}
+            id="dataselect"
+            components={{
+              DropdownIndicator: (): JSX.Element => tableIcon,
+              IndicatorSeparator: (): null => null
+            }}
+            styles={formulabarMainSelect}
+            ref={dataframeSelectionRef}
           />
         </fieldset>
         {binderUrl &&
