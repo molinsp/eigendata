@@ -862,14 +862,12 @@ export class Backend {
     sess: ISessionContext,
     msg: KernelMessage.IExecuteInputMsg
   ): void => {
-    //console.log('------> Code running in the notebook');
     const msgType: string = msg.header.msg_type;
-    //console.log('[DEBUG]', msg);
+    const code = msg.content.code;
     switch (msgType) {
       case 'error':
         console.warn('Kernel error', msg.content);
       case 'execute_input':
-        const code = msg.content.code;
         // Check this is not my code running
         if (
           !(code === this.kernelInspectorRequest) &&
@@ -882,7 +880,9 @@ export class Backend {
         break;
       case 'status':
         this.kernelStatus = msg.content['execution_state'];
-        //console.log('Kernel Status', this.kernelStatus);
+        this.signal.emit();
+        console.log('[' + this.kernelStatus + ']');
+        break;
       default:
         break;
     }
