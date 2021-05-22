@@ -6,10 +6,11 @@ import {
 
 import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
 import { FormWidget } from './components/formWidget';
+import { CellBarExtension } from './formulabar/noCodeCell';
 import { Backend } from './core/backend';
 import { DataVisualizerWidget } from './datavisualizer/datavisualizer';
-import { inspectorIcon } from '@jupyterlab/ui-components';
 import { searchIcon } from '@jupyterlab/ui-components';
+import { tableIcon } from './labIcons';
 
 import { INotebookTracker } from '@jupyterlab/notebook';
 
@@ -17,7 +18,13 @@ import { IMainMenu } from '@jupyterlab/mainmenu';
 
 import { Menu } from '@lumino/widgets';
 
+import { each } from '@lumino/algorithm';
+
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
+
+import { IRenderMimeRegistry } from '@jupyterlab/rendermime';
+
+import { OutputPanel } from './datavisualizer/outputPanel';
 
 /**
  * The command IDs used by the react-formulawidget plugin.
@@ -33,13 +40,14 @@ namespace CommandIDs {
 const extension: JupyterFrontEndPlugin<void> = {
   id: '@molinsp/eigendata:plugin',
   autoStart: true,
-  requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry],
+  requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry,IRenderMimeRegistry],
   activate: (
     app: JupyterFrontEnd,
     notebook_tracker: INotebookTracker,
     mainMenu: IMainMenu,
     restorer: ILayoutRestorer,
-    settingRegistry: ISettingRegistry
+    settingRegistry: ISettingRegistry,
+    rendermime: IRenderMimeRegistry
   ) => {
     console.log('JupyterLab Eigendata is activated!');
 
@@ -47,13 +55,23 @@ const extension: JupyterFrontEndPlugin<void> = {
     let datavizwidget: MainAreaWidget<DataVisualizerWidget>;
 
     const { commands } = app;
-    const command = CommandIDs.create;
-    const datavizcommand = CommandIDs.dataviz;
+    const formulaBarCommand = CommandIDs.create;
+    const dataVizCommand = CommandIDs.dataviz;
+
+    // Create output panel
+    let outputsPanel = new OutputPanel(app.serviceManager, rendermime);
+    app.shell.add(outputsPanel, 'right');
 
     // Create class that manages the backend behavior
-    const backend = new Backend(notebook_tracker, settingRegistry);
+    const backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager, outputsPanel);
 
-    commands.addCommand(command, {
+    app.docRegistry.addWidgetExtension(
+      'Notebook',
+      new CellBarExtension(app.commands, null, backend)
+    );
+
+
+    commands.addCommand(formulaBarCommand, {
       caption: 'Create a new React Widget',
       label: 'Magic Formula Bar',
       icon: args => (args['isPalette'] ? null : searchIcon),
@@ -67,9 +85,9 @@ const extension: JupyterFrontEndPlugin<void> = {
           formulawidget.title.closable = true;
           //app.shell.add(formulawidget, 'main');
         }
-        if (!tracker.has(formulawidget)) {
+        if (!formulaBarTracker.has(formulawidget)) {
           // Track the state of the formulawidget for later restoration
-          tracker.add(formulawidget);
+          formulaBarTracker.add(formulawidget);
         }
         if (!formulawidget.isAttached) {
           // Attach the formulawidget to the main work area if it's not there
@@ -82,27 +100,29 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     });
 
-    commands.addCommand(datavizcommand, {
+    commands.addCommand(dataVizCommand, {
       caption: 'Create a new Data Data Visualizer',
       label: 'Data Visualizer',
-      icon: args => (args['isPalette'] ? null : inspectorIcon),
+      icon: args => (args['isPalette'] ? null : tableIcon),
       execute: () => {
         if (!datavizwidget || datavizwidget.isDisposed) {
           // Create form component and pass backend behavior
           const content = new DataVisualizerWidget(backend);
           // Create datavizwidget
           datavizwidget = new MainAreaWidget<DataVisualizerWidget>({ content });
-          datavizwidget.title.label = 'Data Visualizer';
+          //datavizwidget.title.label = 'Data Visualizer';
+          datavizwidget.title.icon = tableIcon;
+          //datavizwidget.title.iconClass = "jp-SpreadsheetIcon jp-SideBar-tabIcon";
           datavizwidget.title.closable = true;
           //app.shell.add(datavizwidget, 'main');
         }
-        if (!tracker.has(datavizwidget)) {
+        if (!viztracker.has(datavizwidget)) {
           // Track the state of the datavizwidget for later restoration
           viztracker.add(datavizwidget);
         }
         if (!datavizwidget.isAttached) {
           // Attach the datavizwidget to the main work area if it's not there
-          app.shell.add(datavizwidget, 'main');
+          app.shell.add(datavizwidget, 'right');
         }
         datavizwidget.content.update();
 
@@ -112,11 +132,11 @@ const extension: JupyterFrontEndPlugin<void> = {
     });
 
     // Track and restore the formulawidget state
-    const tracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
+    const formulaBarTracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
       namespace: 'ed'
     });
-    restorer.restore(tracker, {
-      command,
+    restorer.restore(formulaBarTracker, {
+      command: formulaBarCommand,
       name: () => 'ed'
     });
 
@@ -125,19 +145,68 @@ const extension: JupyterFrontEndPlugin<void> = {
       namespace: 'dv'
     });
     restorer.restore(viztracker, {
-      command: datavizcommand,
+      command: dataVizCommand,
       name: () => 'dv'
+    });
+
+
+    // Kill kernel when closing notebooks
+    settingRegistry.load('@jupyterlab/notebook-extension:tracker').then(
+      (settings: ISettingRegistry.ISettings) => {
+        settings.set('kernelShutdown', true);
+      },
+      (err: Error) => {
+        console.error(
+          `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+        );
+      }
+    );
+
+    // Hide side-bar items
+    // We hide the running sessions because now they are closed automatically
+    // || widget.id == 'jp-running-sessions'
+    each(app.shell.widgets('left'), widget => {
+        //console.log('id', widget.id);
+        if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager' ){
+          widget.close();
+        }
+      });
+
+     each(app.shell.widgets('bottom'), widget => {
+        //console.log('id', widget.id);
+        if(widget.id == 'jp-main-statusbar'){
+          widget.close();
+        }
+      });
+
+
+    // Open by default
+    app.restored.then(() => {
+      app.shell.activateById(datavizwidget.id);
     });
 
     // Create a menu
     const tutorialMenu: Menu = new Menu({ commands });
     tutorialMenu.title.label = 'Eigendata';
-    mainMenu.addMenu(tutorialMenu, { rank: 2000 });
+    mainMenu.addMenu(tutorialMenu, { rank: 1 });
+
+    // Get rid of top bar menus
+    mainMenu.editMenu.dispose();
+    mainMenu.viewMenu.dispose();
+    mainMenu.runMenu.dispose();
+    mainMenu.fileMenu.dispose();
+    mainMenu.kernelMenu.dispose();
+    mainMenu.kernelMenu.dispose();
+    mainMenu.tabsMenu.dispose();
+    //mainMenu.settingsMenu.dispose();
+    mainMenu.helpMenu.dispose();
 
     // Add the command to the menu
-    tutorialMenu.addItem({ command, args: { origin: 'from the menu' } });
+    tutorialMenu.addItem({ 
+      command: formulaBarCommand, 
+      args: { origin: 'from the menu' } });
     tutorialMenu.addItem({
-      command: datavizcommand,
+      command: dataVizCommand,
       args: { origin: 'from the menu' }
     });
   }
