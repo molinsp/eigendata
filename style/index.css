@@ -13,7 +13,7 @@
 }
 
 .jp-dataviz{
-  min-width: 600px !important;
+  min-width: 650px !important;
 }
 
 .marginsNotebook {
@@ -389,7 +389,7 @@
 }
 
 .disclaimer {
-  font-size: 11px;
+  font-size: 12px;
   color: #2d2d2d;
   padding: 8px;
   margin: 0
@@ -569,6 +569,7 @@
   display: flex;
   border-radius: 3px;
   flex-wrap: wrap;
+  font-size: 12px;
 }
 
 .pagination-segment {
@@ -582,8 +583,12 @@
   justify-content: center;
 }
 
-.pagination-select {
-  width: 200px;
+.pagination-page-select {
+  width: 160px;
+}
+
+.pagination-size-select {
+  width: 130px;
 }
 
 .pagination-segment:first-child {

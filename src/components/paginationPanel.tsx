@@ -50,7 +50,7 @@ export const PaginationPanel = (props: Props): JSX.Element => {
         options={props.currentPageConfig.options}
         value={modifiedSelectedOption}
         onChange={(value): void => props.currentPageConfig.onSelect(value)}
-        className="pagination-select"
+        className="pagination-page-select"
         placeholder="Go to the page..."
         menuPlacement="auto"
         isSearchable
@@ -61,7 +61,7 @@ export const PaginationPanel = (props: Props): JSX.Element => {
         onChange={(value): void =>
           props.pageSizeSelectionConfig.onSelect(value)
         }
-        className="pagination-select"
+        className="pagination-size-select"
         menuPlacement="auto"
       />
     </div>
