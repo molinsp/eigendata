@@ -16,6 +16,8 @@ import { StackedPanel } from '@lumino/widgets';
 
 import { CodeCell } from '@jupyterlab/cells';
 
+import { chartIcon } from '../labIcons';
+
 /**
  * The class name added to the example panel.
  */
@@ -32,8 +34,8 @@ export class OutputPanel extends StackedPanel {
     super();
     this.addClass(PANEL_CLASS);
     this.id = 'kernel-output-panel';
-    //this.title.iconClass = "jp-SpreadsheetIcon jp-SideBar-tabIcon";
-    this.title.label = 'Charts';
+    this.title.icon = chartIcon;
+    //this.title.label = ' Charts';
     this.title.closable = true;
 
     this._outputareamodel = new OutputAreaModel();

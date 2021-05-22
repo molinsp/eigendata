@@ -9,8 +9,8 @@ import { FormWidget } from './components/formWidget';
 import { CellBarExtension } from './formulabar/noCodeCell';
 import { Backend } from './core/backend';
 import { DataVisualizerWidget } from './datavisualizer/datavisualizer';
-import { inspectorIcon } from '@jupyterlab/ui-components';
 import { searchIcon } from '@jupyterlab/ui-components';
+import { tableIcon } from './labIcons';
 
 import { INotebookTracker } from '@jupyterlab/notebook';
 
@@ -103,7 +103,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     commands.addCommand(dataVizCommand, {
       caption: 'Create a new Data Data Visualizer',
       label: 'Data Visualizer',
-      icon: args => (args['isPalette'] ? null : inspectorIcon),
+      icon: args => (args['isPalette'] ? null : tableIcon),
       execute: () => {
         if (!datavizwidget || datavizwidget.isDisposed) {
           // Create form component and pass backend behavior
@@ -111,7 +111,8 @@ const extension: JupyterFrontEndPlugin<void> = {
           // Create datavizwidget
           datavizwidget = new MainAreaWidget<DataVisualizerWidget>({ content });
           //datavizwidget.title.label = 'Data Visualizer';
-          datavizwidget.title.iconClass = "jp-SpreadsheetIcon jp-SideBar-tabIcon";
+          datavizwidget.title.icon = tableIcon;
+          //datavizwidget.title.iconClass = "jp-SpreadsheetIcon jp-SideBar-tabIcon";
           datavizwidget.title.closable = true;
           //app.shell.add(datavizwidget, 'main');
         }
