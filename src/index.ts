@@ -179,6 +179,14 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
       });
 
+    // Shortcut for formula bar
+    app.commands.addKeyBinding({
+      command: formulaBarCommand,
+      args: {},
+      keys: ['Accel E'],
+      selector: '.jp-Notebook'
+    });
+
 
     // Open by default
     app.restored.then(() => {
