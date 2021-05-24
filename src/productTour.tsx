@@ -16,19 +16,24 @@ const productTourSteps = [
     placement: 'bottom-start' as 'bottom-start'
   },
   {
-    content: 'On the left you select which dataset you want to transform',
-    target: '#dataselect',
+    content: (
+      <div>
+        <p>Here you search for data transformations.</p>
+        <p>We will start by loading a csv file.</p>
+      </div>
+    ),
+    target: '#transformationselect',
     // Remove beacon with circle to enable autostart
     disableBeacon: true
   },
   {
     content: (
       <div>
-        <p>On the right you search for data transformations.</p>
-        <p>We will start by loading a csv file.</p>
+        <p> On the right you select which dataset you want to transform</p>
+        <p> Right now there is no data loaded</p>
       </div>
     ),
-    target: '#transformationselect',
+    target: '#dataselect',
     // Remove beacon with circle to enable autostart
     disableBeacon: true
   },
@@ -41,10 +46,7 @@ const productTourSteps = [
   {
     content: (
       <div>
-        <p>
-          To see your files, you can use the file browser on the
-          left.
-        </p>
+        <p>To see your files, you can use the file browser on the left.</p>
         <p>You can also hide it by clicking the browser icon on the top-left</p>
       </div>
     ),
