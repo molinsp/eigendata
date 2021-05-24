@@ -4551,14 +4551,17 @@
     "bar" : {
       "form" : {
         "properties" : {
-          "mode" : {
+          "orientation" : {
             "type" : "string",
-            "codegenstyle" : "ignore",
+            "default" : "v",
             "enum" : [
+              "v",
+              "h"
+            ],
+            "enumNames" : [
               "vertical",
               "horizontal"
-            ],
-            "default" : "vertical"
+            ]
           },
           "title" : {
             "type" : "string",
@@ -4727,13 +4730,13 @@
               }
             ]
           },
-          "mode" : {
+          "orientation" : {
             "oneOf" : [
               {
                 "properties" : {
-                  "mode" : {
+                  "orientation" : {
                     "enum" : [
-                      "vertical"
+                      "v"
                     ]
                   },
                   "x" : {
@@ -4742,24 +4745,24 @@
                   },
                   "y" : {
                     "$ref" : "#/definitions/columns",
-                    "description" : "Column to use for the y axis."
+                    "description" : "Column to use for the y axis (quantitiy to measure)."
                   }
                 }
               },
               {
                 "properties" : {
-                  "mode" : {
+                  "orientation" : {
                     "enum" : [
-                      "horizontal"
+                      "h"
                     ]
-                  },
-                  "x" : {
-                    "$ref" : "#/definitions/columns",
-                    "description" : "Column to use for the x axis."
                   },
                   "y" : {
                     "$ref" : "#/definitions/column",
                     "description" : "Column to use for the y axis."
+                  },
+                  "x" : {
+                    "$ref" : "#/definitions/columns",
+                    "description" : "Column to use for the x axis (quantity to measure)."
                   }
                 }
               }
@@ -4776,7 +4779,7 @@
         "importStatement" : "import plotly.express as px"
       },
       "uischema" : {
-        "mode" : {
+        "orientation" : {
           "ui:widget" : "radio"
         },
         "labels" : {
@@ -4791,7 +4794,7 @@
           }
         },
         "ui:order" : [
-          "mode",
+          "orientation",
           "x",
           "y",
           "*"
@@ -5346,7 +5349,7 @@
         "selectionAsParameter" : true
       },
       "function_snippet" : {
-        "code" : "from fuzzywuzzy import fuzz, process\ndef fuzzy_merge(left, right, left_on, right_on, threshold=90, limit=1):\n    left = left.copy()\n    s = right[right_on].tolist()\n    \n    m = left[left_on].apply(lambda x: process.extract(x, s, limit=limit))    \n    left['matches'] = m\n    \n    m2 = left['matches'].apply(lambda x: ', '.join([i[0] for i in x if i[1] >= threshold]))\n    left['matches'] = m2\n    \n    return left",
+        "code" : "from rapidfuzz import process\ndef fuzzy_merge(left, right, left_on, right_on, threshold=90, limit=1):\n    left = left.copy()\n    s = right[right_on].tolist()\n    \n    m = left[left_on].apply(lambda x: process.extract(x, s, limit=limit))    \n    left['matches'] = m\n    \n    m2 = left['matches'].apply(lambda x: ', '.join([i[0] for i in x if i[1] >= threshold]))\n    left['matches'] = m2\n    \n    return left",
         "name" : "fuzzy_merge"
       },
       "uischema" : {
@@ -5445,10 +5448,6 @@
           "column" : {
             "type" : "string",
             "enum" : []
-          },
-          "dataframes" : {
-            "type" : "string",
-            "enum" : []
           }
         },
         "selectionAsParameter" : true
@@ -5456,6 +5455,42 @@
       "function_snippet" : {
         "code" : "import geocoder\nfrom countryinfo import CountryInfo\ndef text_to_iso_subregion(location):\n    try: \n        country_code = geocoder.osm(location, method='geocode').json['country_code']\n        return CountryInfo(country_code).subregion()\n    except:\n        return ''\ndef get_iso_subregion(data, col_name):\n    original_col = data[col_name]\n    locations = pd.DataFrame({'location' : original_col.unique()})\n    locations['subregion'] = locations['location'].apply(text_to_iso_subregion)\n    new_col = original_col.map(locations.set_index('location')['subregion'])\n    return new_col",
         "name" : "get_iso_subregion"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "clean_business_name" : {
+      "form" : {
+        "properties" : {
+          "col_name" : {
+            "$ref" : "#/definitions/column"
+          },
+          "new column name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "col_name"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Clean business name",
+        "function" : "clean_business_name",
+        "description" : "Processes company names, providing cleaned versions of the names by stripping away terms indicating organization type, e.g. Apple Inc. -> Apple",
+        "returnType" : "series",
+        "definitions" : {
+          "column" : {
+            "type" : "string",
+            "enum" : []
+          }
+        },
+        "selectionAsParameter" : true
+      },
+      "function_snippet" : {
+        "code" : "def clean_business_name(data, col_name):\n    from cleanco import cleanco\n    return data[col_name].apply(lambda t: cleanco(t).clean_name())",
+        "name" : "clean_business_name"
       },
       "uischema" : {
         "new table name" : {
@@ -5494,36 +5529,6 @@
       "function_snippet" : {
         "code" : "def drop_blank_rows(data, col_name):\n    return data[data[col_name].astype(bool)] ",
         "name" : "drop_blank_rows"
-      },
-      "uischema" : {
-        "new table name" : {
-          "ui:placeholder" : "Leave blank to modify selected table"
-        }
-      }
-    },
-    "get_logit_prediction_table" : {
-      "form" : {
-        "properties" : {
-          "model" : {
-            "type" : "string",
-            "codegenstyle" : "variable"
-          },
-          "new table name" : {
-            "type" : "string"
-          }
-        },
-        "required" : [
-          "model"
-        ],
-        "type" : "object",
-        "title" : "[Snippet] Get logistic regression prediction table",
-        "function" : "get_logit_prediction_table",
-        "description" : "Drop rows where selected column is blank text.",
-        "returnType" : "dataframe"
-      },
-      "function_snippet" : {
-        "code" : "def get_logit_prediction_table(model):\n    return pd.DataFrame(model.pred_table())",
-        "name" : "get_logit_prediction_table"
       },
       "uischema" : {
         "new table name" : {
@@ -5576,13 +5581,70 @@
         }
       },
       "library" : {
-        "name" : "statsmodels",
+        "name" : "statsmodels.api",
         "importStatement" : "import statsmodels.api as sm"
       },
       "keywords" : [
         "regression",
         "prediction"
       ]
+    },
+    "get_logit_prediction_table" : {
+      "form" : {
+        "properties" : {
+          "model" : {
+            "type" : "string",
+            "codegenstyle" : "variable"
+          },
+          "new table name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [
+          "model"
+        ],
+        "type" : "object",
+        "title" : "[Snippet] Get logistic regression prediction table",
+        "function" : "get_logit_prediction_table",
+        "description" : "Drop rows where selected column is blank text.",
+        "returnType" : "dataframe"
+      },
+      "function_snippet" : {
+        "code" : "def get_logit_prediction_table(model):\n    return pd.DataFrame(model.pred_table())",
+        "name" : "get_logit_prediction_table"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
+    },
+    "print_model_summary" : {
+      "form" : {
+        "properties" : {
+          "model" : {
+            "type" : "string",
+            "codegenstyle" : "variable"
+          }
+        },
+        "required" : [
+          "model"
+        ],
+        "type" : "object",
+        "title" : "Print model summary",
+        "function" : "print_model_summary",
+        "description" : "Returns summary results of the model",
+        "returnType" : "none"
+      },
+      "function_snippet" : {
+        "code" : "def print_model_summary(model): return model.summary()",
+        "name" : "print_model_summary"
+      },
+      "uischema" : {
+        "new table name" : {
+          "ui:placeholder" : "Leave blank to modify selected table"
+        }
+      }
     },
     "notfound" : {
       "form" : {
