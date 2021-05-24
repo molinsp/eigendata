@@ -30,6 +30,17 @@ const mapFormResponseToPythonCode = (
       console.log('1.2 Column as series');
       return dataframeSelection + '["' + fieldInput + '"]';
     }
+    /*----------------------------------------------------------------------------------------------------------
+      SERIES COLUMN LIST 
+    ----------------------------------------------------------------------------------------------------------*/
+    // CASE where a series is passed as [df[Series_Name_1], df[Series_Name_2]]
+    else if (codeGenStyle.localeCompare('seriesColumnList') === 0) {
+      let seriesColumnList = fieldInput.map((listElement) => {
+          return dataframeSelection + '["' + listElement + '"]'
+      });
+      console.log('1.2 Column as series list');
+      return '[' + seriesColumnList.join(',') + ']';
+    }
     console.log('WARNING: No codeGenStyle');
   } else if (typeof fieldSchema['$ref'] !== 'undefined') {
   /*----------------------------------------------------------------------------------------------------------
@@ -175,6 +186,7 @@ export const generatePythonCode = (
       returnType = 'dataframe';
     }
   }
+  console.log('CG: Return type', returnType);
 
   /*-------------------------------------------------------------------
    Use the object selectino dropdown as a parameter input
@@ -236,8 +248,7 @@ export const generatePythonCode = (
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
     if (
-      parameterName.localeCompare('new table name') === 0 &&
-      returnType.localeCompare('print') !== 0
+      parameterName.localeCompare('new table name') === 0
     ) {
       console.log('CG: 3.2 New table name detected');
       if (typeof formData[parameterName] !== 'undefined') {

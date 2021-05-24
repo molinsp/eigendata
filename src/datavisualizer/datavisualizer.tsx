@@ -373,7 +373,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
               })}
             </div>
             {isVariableTab(activeTab)
-              ? <p className="disclaimer">Data shape: {separateThousands(props.logic.variablesLoaded.length)} rows.</p>
+              ? <p className="disclaimer">Shape: {separateThousands(props.logic.variablesLoaded.length)} rows.</p>
               : <p className="disclaimer">
                 Data shape: {separateThousands(shape['rows'])} rows and{' '}
                 {shape['columns']} columns. {shape['columns'] > shape['displayedColumns']
@@ -504,7 +504,7 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
                 onPrevClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value - 1)}
                 onNextClick={(): void => goToThePage(paginationPanelState.currentPageSelection.value + 1)}
               />
-              <ReloadButton title="Reload datavizualizer" onClick={resetState}/>
+              <ReloadButton title="Reload" onClick={resetState}/>
             </div>
           }
         </div>
@@ -540,7 +540,7 @@ export class DataVisualizerWidget extends ReactWidget {
 
   constructor(backend: Backend) {
     super();
-    this.addClass('jp-ReactWidget');
+    this.addClass('jp-dataviz');
     this.backend = backend;
   }
 

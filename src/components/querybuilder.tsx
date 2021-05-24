@@ -239,7 +239,7 @@ export default class QueryBuilder extends Component<
       });
     }
 
-    await this.state.logic.writeToNotebookAndExecute(formula);
+    await this.state.logic.writeToNotebookAndExecute(formula, returnType);
   };
 
   /*----------------------------------------------------------------------------------------------------

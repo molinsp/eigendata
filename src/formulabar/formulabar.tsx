@@ -4,7 +4,6 @@ import Select from 'react-select';
 import { JSONSchema7 } from 'json-schema';
 import Joyride from 'react-joyride';
 import { generatePythonCode } from './codeGeneration';
-import ChatWidget from '@papercups-io/chat-widget';
 import 'bootstrap/dist/css/bootstrap.css';
 // Feedback buttons library
 import { BinaryFeedback } from 'react-simple-user-feedback';
@@ -21,6 +20,7 @@ import CustomSelect from '../components/customSelect';
 import productTourSteps from '../productTour';
 import { Backend, Dataframe } from '../core/backend';
 import { RadioButtonGroup } from '../components/radioButtonGroup';
+import { Spinner } from '../components/spinner';
 
 // -------------------------------------------------------------------------------------------------------------
 // FORMULABAR COMPONENT
@@ -73,7 +73,13 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     return result;
   };
 
+  // References for handling autofocus
+  const transformationSelectionRef = React.useRef();
   const dataframeSelectionRef = React.useRef();
+
+  const setFocusOnElement = (element: HTMLElement): void => {
+    element.focus();
+  };
 
   /* Main state of the component:
       - Transformation form
@@ -86,6 +92,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     transformationForm: transformationForm,
     transformationUI: defaultUISchema,
     showForm: false,
+    enableCallerSelection: false, //Enable selection of caller object (DF)
     dataframeSelection: null,
     transformationSelection: null,
     formData: {},
@@ -104,10 +111,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const [productTourState, setProductTourState] = useState({
     run: false
   });
-
-  const setFocusOnElement = (element: HTMLElement): void => {
-    element.focus();
-  };
 
   /*-----------------------------------
   RESET STATE LOGIC
@@ -242,7 +245,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const handleDataframeSelectionChange = async (input): Promise<void> => {
     if (state.transformationSelection) {
       console.log('Formulabar: get transformation to state');
-      await getTransformationFormToState(input, state.transformationSelection);
+      await getTransformationFormToState(input, state.transformationSelection, state.enableCallerSelection);
     } else {
       setState(state => ({ ...state, dataframeSelection: input, error: null }));
     }
@@ -256,38 +259,49 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         userSelection: input.value
       });
     }
-    if (state.dataframeSelection) {
-      console.log('all defined');
-      await getTransformationFormToState(state.dataframeSelection, input);
-    } else if (
-      logic.transformationsConfig[input.value]['form']['transformationType'] ===
-        'dataLoading' ||
-      input.value === 'notfound'
-    ) {
-      console.log('Data loading transformation');
-      setState(state => ({
-        ...state,
-        transformationForm: logic.transformationsConfig[input.value]['form'],
-        transformationUI: logic.transformationsConfig[input.value]['uischema'],
-        transformationSelection: input,
-        showForm: true,
-        formData: {},
-        error: null
-      }));
-    } else {
-      setState(state => ({
-        ...state,
-        transformationSelection: input,
-        formData: {},
-        error: null
-      }));
+
+    // Two cases, requires a dataframe selection and not
+    // DO NOT REQUIRE DF SELECTION
+    if(
+      input.value.localeCompare('query') != 0 // Is not the query
+
+      && (typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
+        || logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false) 
+        
+      && typeof(logic.transformationsConfig[input.value]['form']['selectionAsParameter']) === 'undefined'
+
+      ){
+      // Set the input and load transformation form
+      await getTransformationFormToState(state.dataframeSelection, input, false);
     }
+    // REQUIRES CALLER OBJECT SELECTION
+    else{
+      // Caller object already selected
+      if (state.dataframeSelection) {
+        console.log('all defined');
+        await getTransformationFormToState(state.dataframeSelection, input, true);
+      }
+      // Caller object not selected
+      else{
+        setFocusOnElement(dataframeSelectionRef.current);
+        setState(state => ({
+          ...state,
+          showForm: false,
+          enableCallerSelection: true,
+          transformationSelection: input,
+          formData: {},
+          error: null
+        }));
+      }
+ 
+    };
   };
 
   // Populates the transformation form into the state
   const getTransformationFormToState = async (
     dataframeSelection: Dataframe,
-    transformationSelection: any
+    transformationSelection: any,
+    enableCallerSelection: boolean
   ): Promise<void> => {
     if (transformationSelection.value.localeCompare('query') === 0) {
       console.log('Querybuilder');
@@ -298,6 +312,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         ...state,
         queryConfig: queryConfig,
         showForm: false,
+        enableCallerSelection: enableCallerSelection,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         formData: {},
@@ -306,7 +321,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     } else {
       // STANDARD behavior
       const newFormSchema = await logic.getTransformationFormSchema(
-        dataframeSelection.value,
+        dataframeSelection == null ? null : dataframeSelection.value ,
         transformationSelection.value
       );
       const newUISchema = logic.getTransformationUISchema(
@@ -317,6 +332,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         transformationForm: newFormSchema,
         transformationUI: newUISchema,
         showForm: true,
+        enableCallerSelection: enableCallerSelection,
         dataframeSelection: dataframeSelection,
         transformationSelection: transformationSelection,
         queryConfig: null,
@@ -336,9 +352,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   // Generate python code and write in the notebook
   const callGeneratePythonCode = async (formResponse: any): Promise<void> => {
     console.log('SUBMIT WAS PRESSED');
-    /*-----------------------------------------------
-    Handle not found case
-    -----------------------------------------------*/
+    /*-------------------------------------------------------
+    Handle product feedback case (not found transformation)
+    --------------------------------------------------------*/
     if (state.transformationSelection.value === 'notfound') {
       // Remove transformation selection and hide form
       setState(state => ({
@@ -358,12 +374,21 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       return;
     }
 
+    /*-------------------------------------------------------
+    Get transformation schema
+    --------------------------------------------------------*/
+    let transformationSchema = logic.transformationsConfig[state.transformationSelection.value];
+    if (typeof transformationSchema === 'undefined'){
+      console.warn('Transformation not found');
+    }
+    
+
     /*-----------------------------------------------
     Generate formula (Either snippet of function)
     -----------------------------------------------*/
     let formula, resultVariable, returnType;
     if(
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'code_snippet'
       ] === 'undefined'
     ){
@@ -381,7 +406,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       ));
     }else{
       // For code snippets there is no need to generate a formula
-      formula = logic.transformationsConfig[formResponse.schema.function]['code_snippet']['code'];
+      formula = transformationSchema['code_snippet']['code'];
       resultVariable = 'na';
     }
 
@@ -399,10 +424,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     Import libraries/functions if needed
     -----------------------------------------------*/
     if (
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'library'
       ] === 'undefined' &&
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'function_snippet'
       ] !== 'undefined'
     ) {
@@ -411,7 +436,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         FUNC SNIPPETS
       -----------------*/
       const snippetFunction =
-        logic.transformationsConfig[formResponse.schema.function]['function_snippet'];
+        transformationSchema['function_snippet'];
 
       console.log('CG: Imported functions', logic.importedFunctions);
       if (logic.importedFunctions.includes(snippetFunction['name'])) {
@@ -429,7 +454,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
         }
       }
     } else if(
-      typeof logic.transformationsConfig[formResponse.schema.function][
+      typeof transformationSchema[
         'library'
       ] !== 'undefined'
     ) {
@@ -439,7 +464,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       console.log('CG: Code-gen for module');
 
       const library =
-        logic.transformationsConfig[formResponse.schema.function]['library'];
+        transformationSchema['library'];
 
       // Check if there is a need for a namespace
       let hasNamespace = false;
@@ -478,7 +503,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     -----------------------------------------------*/
 
     try {
-      await logic.writeToNotebookAndExecute(formula);
+      await logic.writeToNotebookAndExecute(formula, returnType);
 
       console.log('CG: Return type', returnType);
 
@@ -508,7 +533,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           error: null
         }));
       }
-      setFocusOnElement(dataframeSelectionRef.current);
+      setFocusOnElement(transformationSelectionRef.current);
     } catch (error) {
       // Log transformation errors
       if (logic.production && logic.shareProductData) {
@@ -614,28 +639,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           }
         }}
       />
+      {props.logic.kernelStatus === 'busy' && <Spinner />}
       <div className="side-by-side-fields">
         <div className="centered" />
         <fieldset className="data-transformation-form">
-          <Select
-            name="Select dataframe"
-            placeholder={
-              logic.dataframesLoaded.length !== 0
-                ? 'Select data'
-                : 'No data'
-            }
-            options={logic.dataframesLoaded}
-            value={state.dataframeSelection}
-            label="Select data"
-            onChange={handleDataframeSelectionChange}
-            className="left-field"
-            id="dataselect"
-            components={{
-              DropdownIndicator: (): JSX.Element => tableIcon,
-              IndicatorSeparator: (): null => null
-            }}
-            styles={formulabarMainSelect}
-          />
           <Select
             name="Select transformation"
             placeholder="Search transformation"
@@ -658,6 +665,27 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             maxMenuHeight={400}
             styles={formulabarMainSelect}
             autoFocus={true}
+            ref={transformationSelectionRef}
+          />
+          <Select
+            name="Select dataframe"
+            placeholder={
+              logic.dataframesLoaded.length !== 0
+                ? 'Select data'
+                : 'No data'
+            }
+            options={logic.dataframesLoaded}
+            value={state.dataframeSelection}
+            label="Select data"
+            onChange={handleDataframeSelectionChange}
+            className="left-field"
+            isDisabled={!state.enableCallerSelection}
+            id="dataselect"
+            components={{
+              DropdownIndicator: (): JSX.Element => tableIcon,
+              IndicatorSeparator: (): null => null
+            }}
+            styles={formulabarMainSelect}
             ref={dataframeSelectionRef}
           />
         </fieldset>
@@ -729,16 +757,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
               </div>
             </form>
           )}
-        <div>
-          <ChatWidget
-            // Pass in your Papercups account token here after signing up
-            accountId="784f140c-6c85-4613-bfd0-9869026cd1cb"
-            title="Welcome to Eigendata"
-            subtitle="We are here to help you become a data superhero"
-            newMessagePlaceholder="Start typing..."
-            primaryColor="#13c2c2"
-          />
-        </div>
       </div>
     </div>
   );

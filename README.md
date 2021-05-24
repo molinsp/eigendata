@@ -1,15 +1,19 @@
 # eigendata jupyterlab extension
 
+## Install
+
+```bash
+jupyter labextension install @molinsp/eigendata
+```
+
 
 ## Requirements
 
 * JupyterLab >= 2.0
-* Python libraries: fastcore, pandas, numpydoc
-  * `pip install pandas fastcore numpydoc`
-* Recommended to use with fastdata package
+* Fastdata python library
   * `pip install fastdata`
 
-### Uninstall
+## Uninstall
 
 ```bash
 jupyter labextension uninstall @molinsp/eigendata
