@@ -36,7 +36,7 @@ import { each } from '@lumino/algorithm';
 import { OutputPanel } from '../datavisualizer/outputPanel';
 import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
-const packageVersion = '0.2.6';
+const packageVersion = '0.2.7';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -102,7 +102,7 @@ export class Backend {
   public resetStateDatavisualizerFlag = false;
 
   // Production flag that determines if usage analytics are captured
-  public production = true;
+  public production = false;
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
