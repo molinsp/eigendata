@@ -82,6 +82,8 @@ export class Backend {
   public completedProductTour: boolean;
 
   public kernelStatus: string;
+
+  public eigendataMode: string;
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -124,13 +126,7 @@ export class Backend {
     // Add a notebook tracker
     this.notebookTracker = notebooks;
 
-    // Initialize as ad-hoc (if a notebook is detected it will change)
-    this.notebookMode = 'ad-hoc';
-
-    // Create ad-hoc session context
-    this.startAdHocKernel(manager);
-
-    this.outputPanel = outputPanel;
+    this.notebookMode = 'notebook';
 
     // Subscribe to signal when notebooks change
     this.notebookTracker.currentChanged.connect(
@@ -234,6 +230,9 @@ export class Backend {
           this.completedProductTour
         );
 
+        this.eigendataMode = settings.get('eigendataMode').composite as string;
+        console.log('Backend constructor eigendataMode: ', this.eigendataMode);
+
         // Save the settings object to be used. Use case is to change settings after product tour
         this.eigendataSettings = settings;
 
@@ -248,6 +247,14 @@ export class Backend {
         console.error(
           `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
         );
+      }
+    ).then(
+      () => {
+        if ( this.eigendataMode.localeCompare('no-code') == 0){
+          //Ad-hoc mode not working well yet this.notebookMode = 'ad-hoc';
+          this.outputPanel = outputPanel;
+          this.startAdHocKernel(manager);
+        }
       }
     );
   }
@@ -773,7 +780,6 @@ export class Backend {
     nbPanel: NotebookPanel
   ): Promise<void> {
     if(nbPanel){
-      this.notebookMode = 'notebook';
       console.log('------> Notebook changed', nbPanel.content.title.label);
       // Update the current notebook
       this.currentNotebook = nbPanel;
