@@ -13,9 +13,6 @@ export const EmptyStateComponent = ({
   return (
     <div className="empty-state__container">
       <p className="empty-state__title">No data loaded</p>
-      <p className="empty-state__link">
-        Use the Magic Formula Bar to load data
-      </p>
       <div>{noDataMagnifier}</div>
       <ReloadButton
         title="Reload datavizualizer"
