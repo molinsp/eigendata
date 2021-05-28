@@ -21,7 +21,6 @@ import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Initialization scripts. See file for more details.
 import { pythonInitializationScript } from './initscript';
 import { Dialog, ISessionContext, showDialog } from '@jupyterlab/apputils';
-import ReactGA from 'react-ga';
 import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
 import _ from 'lodash';
 import { JSONSchema7 } from 'json-schema';
@@ -242,8 +241,6 @@ export class Backend {
         // Tracking setup
         if (this.production && this.shareProductData) {
           amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
-          ReactGA.initialize('UA-111934622-2');
-          ReactGA.pageview('EigendataApp');
           amplitude.getInstance().setVersionName(packageVersion);
         }
       },
