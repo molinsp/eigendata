@@ -16,11 +16,15 @@
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 // KernelConnector class. See file for more details.
 import { KernelConnector } from './kernelconnector';
+
 import { Signal } from '@lumino/signaling';
+
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Initialization scripts. See file for more details.
 import { pythonInitializationScript } from './initscript';
-import { Dialog, ISessionContext, showDialog } from '@jupyterlab/apputils';
+
+import { Dialog, ISessionContext, SessionContext, showDialog } from '@jupyterlab/apputils';
+
 import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
 import _ from 'lodash';
 import { JSONSchema7 } from 'json-schema';
@@ -28,12 +32,16 @@ import { JSONSchema7 } from 'json-schema';
 import CellUtilities from './CellUtilities';
 // JSON configuration holding all information for the UI transformationsList
 import localTransformationsConfig from '../formulabar/transformations.json';
+
 import amplitude from 'amplitude-js';
+
 import { Column } from 'react-table';
+
 import { Config } from 'react-awesome-query-builder';
-import { each } from '@lumino/algorithm';
+
 import { OutputPanel } from '../datavisualizer/outputPanel';
-import { CodeCell } from '@jupyterlab/cells';
+
+//import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
 const packageVersion = '0.2.7';
 let transformationsConfig = localTransformationsConfig;
@@ -120,19 +128,13 @@ export class Backend {
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
-  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager.IManager, outputPanel: OutputPanel) {
+  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager, outputPanel: OutputPanel) {
     console.log('------> Backend Constructor');
 
     // Add a notebook tracker
     this.notebookTracker = notebooks;
 
     this.notebookMode = 'notebook';
-
-    // Subscribe to signal when notebooks change
-    this.notebookTracker.currentChanged.connect(
-      this.updateCurrentNotebook,
-      this
-    );
 
     // Read transformations config
     const readTransformationConfig = (): void => {
@@ -251,11 +253,18 @@ export class Backend {
     ).then(
       () => {
         if ( this.eigendataMode.localeCompare('no-code') == 0){
-          //Ad-hoc mode not working well yet this.notebookMode = 'ad-hoc';
+          //Ad-hoc mode not working well yet 
+          this.notebookMode = 'ad-hoc';
           this.outputPanel = outputPanel;
           this.startAdHocKernel(manager);
         }
       }
+    );
+
+    // Subscribe to signal when notebooks change
+    this.notebookTracker.currentChanged.connect(
+      this.updateCurrentNotebook,
+      this
     );
   }
 
@@ -466,19 +475,22 @@ export class Backend {
         code,
         true
       );
-      
-      if(returnType.localeCompare('none') == 0){
-        //this.outputPanel.execute(code, this.currentNotebook.sessionContext);
-        this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
-      }
+     
       
       return 'success';
     }else if (this.notebookMode === 'ad-hoc'){
-      await Backend.sendKernelRequest(
-      this.adHocSessionContext.session.kernel,
-      code,
-      {}
-      );
+      if(returnType.localeCompare('none') == 0){
+        console.log('Execute in output panel');
+        this.outputPanel.execute(code, this.adHocSessionContext);
+        //this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
+      }else{
+        await Backend.sendKernelRequest(
+          this.adHocSessionContext.session.kernel,
+          code,
+          {}
+        );
+      }
+
     }
 
   }
@@ -727,13 +739,10 @@ export class Backend {
   /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Initialize ad-hoc kernel
   -----------------------------------------------------------------------------------------------------*/
-  private startAdHocKernel(manager: ServiceManager.IManager){
+  private startAdHocKernel(manager: ServiceManager){
+    console.log('Start ad-hoc kernel for no-code mode');
+    manager.sessions.shutdownAll();
     
-    each(manager.sessions.running(), session => {
-      //console.log('DEBUG: Session', session.name);
-    });
-
-    /*
     this.adHocSessionContext = new SessionContext({
       sessionManager: manager.sessions,
       specsManager: manager.kernelspecs,
@@ -748,6 +757,7 @@ export class Backend {
     // To-do: Not sure if at some point I need to drop all these connections
     this.connector = new KernelConnector({ session });
 
+    // INIT SCRIPTS
     // Basically if the connector is ready, should not have to worry about this
     this.connector.ready.then(() => {
       console.log('Connector ready');
@@ -767,7 +777,6 @@ export class Backend {
 
     // Connect to changes running in the code
     this.connector.iopubMessage.connect(this.codeRunningOnNotebook);
-    */
     
   }
 
