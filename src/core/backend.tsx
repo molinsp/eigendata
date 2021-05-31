@@ -67,6 +67,13 @@ export class Backend {
   private outputPanel: OutputPanel;
 
   /*---------------------------------
+    Transformation server
+  ----------------------------------*/
+  private transformationServer: string;
+  private transformationAuth: string;
+
+
+  /*---------------------------------
     Communicate with UI
   ----------------------------------*/
   // Signal that triggers the update of the react component
@@ -139,10 +146,10 @@ export class Backend {
     // Read transformations config
     const readTransformationConfig = (): void => {
       this.transformationsConfig = transformationsConfig['transformations'];
-      console.log('TRANSFORMATIONS VERSION:', transformationsConfig['version']);
       const transformationList = [
         { value: 'query', label: 'Filter dataframe' }
       ];
+      console.log('Read transformations into list', transformationsConfig['transformations']);
       for (const transformation in transformationsConfig['transformations']) {
         if (transformation) {
           transformationList.push({
@@ -157,43 +164,16 @@ export class Backend {
       this.transformationsList = transformationList;
     };
 
-    // Get transformations from server
-    if (this.production) {
-      console.log('--- In Production environment ---');
-      const myHeaders = new Headers();
-      myHeaders.append(
-        'Authorization',
-        'Bearer yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0'
-      );
-      const requestOptions: RequestInit = {
-        method: 'GET',
-        headers: myHeaders,
-        redirect: 'follow'
-      };
-      fetch(
-        'https://eigendata-auth.herokuapp.com/transformations.json',
-        requestOptions
-      )
-        .then(response => {
-          return response.json();
-        })
-        .then(parsedConfig => {
-          transformationsConfig = parsedConfig;
-          readTransformationConfig();
-          this.signal.emit();
-        });
-    } else {
-      console.log('--- In Dev environment ---');
-      readTransformationConfig();
-    }
+    // Read default transformation config (replaced later)
+    readTransformationConfig();
 
     // Load python initialization script
     this.initScripts = pythonInitializationScript;
 
-    /*------------------------------
-      Get user consent for analytics
-    -------------------------------*/
-    settingRegistry.load('@molinsp/eigendata:plugin').then(
+    /*------------------------------------
+      LOAD SETTINGS
+    ------------------------------------*/
+    settingRegistry.load('@molinsp/eigendata:settings').then(
       (settings: ISettingRegistry.ISettings) => {
         if (settings.get('answeredProductDataDialog').composite === false) {
           showDialog({
@@ -220,20 +200,16 @@ export class Backend {
               }
             });
         } else {
-          console.log('Analytics: Reading product dada settings');
-          this.shareProductData = settings.get('shareProductData')
-            .composite as boolean;
+          this.shareProductData = settings.get('shareProductData').composite as boolean;
         }
 
-        this.completedProductTour = settings.get('completedProductTour')
-          .composite as boolean;
-        console.log(
-          'Settings: completedProductTour',
-          this.completedProductTour
-        );
 
+        this.completedProductTour = settings.get('completedProductTour').composite as boolean;
         this.eigendataMode = settings.get('eigendataMode').composite as string;
-        console.log('Backend constructor eigendataMode: ', this.eigendataMode);
+        this.transformationServer = settings.get('transformationServer').composite as string;
+        console.log('Transformation server', this.transformationServer);
+        this.transformationAuth = settings.get('transformationAuth').composite as string;
+        console.log('Transformation auth', this.transformationAuth);
 
         // Save the settings object to be used. Use case is to change settings after product tour
         this.eigendataSettings = settings;
@@ -250,16 +226,69 @@ export class Backend {
           `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
         );
       }
-    ).then(
+    ).then(() => {
+      /*------------------------------------
+        LOAD USER TRANSFORMATIONS
+      ------------------------------------*/
+        settingRegistry.load('@molinsp/eigendata:usertransformations').then(
+          (settings: ISettingRegistry.ISettings) => {
+            const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
+
+            if(!_.isEmpty(userTransformations)){
+              transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
+              console.log('User added configs', transformationsConfig);
+            }else{
+              console.log('No user transformations found');
+            }
+          }
+        );
+      })
+    .then(
       () => {
-        if ( this.eigendataMode.localeCompare('no-code') == 0){
+        if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
+          /*------------------------------------
+            LOAD REMOTE TRANSFORMATIONS
+          ------------------------------------*/
+          const myHeaders = new Headers();
+          myHeaders.append(
+            'Authorization',
+            'Bearer '.concat(this.transformationAuth)
+          );
+          const requestOptions: RequestInit = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow'
+          };
+          fetch(
+            this.transformationServer.concat('/transformations.json'),
+            requestOptions
+          )
+          .then(response => {
+            return response.json();
+          })
+          .then(parsedConfig => {
+            console.log('REMOTE TRANSFORMATIONS VERSION:', parsedConfig['version']);
+            //transformationsConfig = parsedConfig;
+            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], parsedConfig['transformations']);
+          })
+          .then(() => {
+              readTransformationConfig();
+              this.signal.emit();
+            }
+          )
+        }
+      }
+    ).then(()=>{
+      /*------------------------------------
+        START KERNEL IF IN NO-CODE MODE
+      ------------------------------------*/
+      if ( this.eigendataMode.localeCompare('no-code') == 0){
           //Ad-hoc mode not working well yet 
           this.notebookMode = 'ad-hoc';
           this.outputPanel = outputPanel;
           this.startAdHocKernel(manager);
-        }
       }
-    );
+    });
 
     // Subscribe to signal when notebooks change
     this.notebookTracker.currentChanged.connect(

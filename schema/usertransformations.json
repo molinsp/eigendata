@@ -1,0 +1,11 @@
+{
+  "title": "Eigendata user transformations",
+  "description": "Here you can configure custom user transformations",
+  "type": "object",
+  "properties": {
+    "userTransformations": {
+        "type": "object",
+        "description": "Paste here a jsonschema complinat transformation"
+      }
+  }
+}

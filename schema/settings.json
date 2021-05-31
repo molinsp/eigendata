@@ -3,10 +3,16 @@
   "description": "Here you can configure the settings for Eigendata.",
   "type": "object",
   "properties": {
-    "productKey": {
+    "transformationServer": {
       "type": "string",
-      "title": "Product key",
-      "description": "Enter your product key to activate eigendata",
+      "title": "Transformation server",
+      "description": "Server that provides transformations",
+      "default": "https://eigendata-auth.herokuapp.com"
+    },
+    "transformationAuth": {
+      "type": "string",
+      "title": "Authentication for transformation server",
+      "description": "Authentication to get transformations from a remote server.",
       "default": "yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0"
     },
     "eigendataMode": {
