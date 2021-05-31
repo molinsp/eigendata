@@ -475,24 +475,26 @@ export class Backend {
         code,
         true
       );
-     
       
-      return 'success';
+      //this.outputPanel.execute(code, this.currentNotebook.sessionContext); 
+       
     }else if (this.notebookMode === 'ad-hoc'){
+      // If no output type and ad-hoc mode, show in outputPanel
       if(returnType.localeCompare('none') == 0){
         console.log('Execute in output panel');
         this.outputPanel.execute(code, this.adHocSessionContext);
         //this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
       }else{
+        // Execute agains adhoc kernel
         await Backend.sendKernelRequest(
           this.adHocSessionContext.session.kernel,
           code,
           {}
         );
       }
-
     }
 
+    return 'success';
   }
 
   /*----------------------------------------------------------------------------------------------------
@@ -788,7 +790,7 @@ export class Backend {
     sender: any,
     nbPanel: NotebookPanel
   ): Promise<void> {
-    if(nbPanel){
+    if(nbPanel && this.notebookMode.localeCompare('ad-hoc') != 0){
       console.log('------> Notebook changed', nbPanel.content.title.label);
       // Update the current notebook
       this.currentNotebook = nbPanel;
@@ -850,12 +852,6 @@ export class Backend {
       this.signal.emit();
 
     }
-    else{
-      console.log('No notebook');
-      this.notebookMode = 'ad-hoc';
-    }
-
-
   }
 
   // -------------------------------------------------------------------------------------------------------------
