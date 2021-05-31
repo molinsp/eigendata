@@ -224,7 +224,12 @@ const extension: JupyterFrontEndPlugin<void> = {
         // || widget.id == 'jp-running-sessions'
         each(app.shell.widgets('left'), widget => {
             //console.log('id', widget.id);
-            if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager' || widget.id == 'jp-running-sessions'){
+            if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager'){
+              widget.close();
+            }
+
+            // For debugging purposes we will show the running sessions
+            if(widget.id == 'jp-running-sessions' && backend.production == true){
               widget.close();
             }
           });
