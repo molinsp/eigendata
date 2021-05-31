@@ -55,7 +55,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       Read mode
     ----------------------------------*/
     let eigendataMode = 'low-code';
-    settingRegistry.load('@molinsp/eigendata:plugin').then(     
+    settingRegistry.load('@molinsp/eigendata:settings').then(     
       (settings: ISettingRegistry.ISettings) => {
         //console.log('Eigendata loaded in mode:', settings.get('eigendataMode').composite as string);
         eigendataMode = settings.get('eigendataMode').composite as string;
