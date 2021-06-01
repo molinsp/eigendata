@@ -5,11 +5,17 @@ import {
 } from '@jupyterlab/application';
 
 import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
+
 import { FormWidget } from './components/formWidget';
+
 import { CellBarExtension } from './formulabar/noCodeCell';
+
 import { Backend } from './core/backend';
+
 import { DataVisualizerWidget } from './datavisualizer/datavisualizer';
+
 import { searchIcon } from '@jupyterlab/ui-components';
+
 import { tableIcon } from './labIcons';
 
 import { INotebookTracker } from '@jupyterlab/notebook';
@@ -52,7 +58,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     console.log('JupyterLab Eigendata is activated!');
 
     /*---------------------------------
-      Read mode
+      Read mode from the configuration
     ----------------------------------*/
     let eigendataMode = 'low-code';
     settingRegistry.load('@molinsp/eigendata:settings').then(     
@@ -67,9 +73,9 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     ).then(
       () => {
-        /*---------------------------------
-          Low-code mode
-        ----------------------------------*/
+        // -------------------------------------------------------------------------------------------------------------
+        // LOW-CODE MODE
+        // -------------------------------------------------------------------------------------------------------------
         let backend: Backend;
         const { commands } = app;
 
@@ -81,25 +87,33 @@ const extension: JupyterFrontEndPlugin<void> = {
         if(eigendataMode.localeCompare('low-code') == 0){
           backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager, null);
 
+          /*---------------------------------
+            Add formula bar below cells
+          ----------------------------------*/
           app.docRegistry.addWidgetExtension(
           'Notebook',
             new CellBarExtension(app.commands, null, backend)
           );
 
         }
-        /*---------------------------------
-          No-code mode
-        ----------------------------------*/
+        // -------------------------------------------------------------------------------------------------------------
+        // NO-CODE MODE
+        // -------------------------------------------------------------------------------------------------------------
         else{
           let formulawidget: MainAreaWidget<FormWidget>;
           const formulaBarCommand = CommandIDs.create;
 
-          // Create output panel
+          /*---------------------------------
+            Create panel for viz output
+          ----------------------------------*/
           let outputsPanel = new OutputPanel(app.serviceManager, rendermime);
           app.shell.add(outputsPanel, 'right');
           // Create class that manages the backend behavior
           backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager, outputsPanel);
 
+          /*---------------------------------
+            Create formulabar as a widget
+          ----------------------------------*/
           commands.addCommand(formulaBarCommand, {
           caption: 'Create a new React Widget',
           label: 'Magic Formula Bar',
@@ -146,9 +160,9 @@ const extension: JupyterFrontEndPlugin<void> = {
         }
 
 
-        /*---------------------------------
-          Data visualizer
-        ----------------------------------*/
+        // -------------------------------------------------------------------------------------------------------------
+        //Data visualizer
+        // -------------------------------------------------------------------------------------------------------------
         let datavizwidget: MainAreaWidget<DataVisualizerWidget>;
         const dataVizCommand = CommandIDs.dataviz;
 
@@ -197,17 +211,12 @@ const extension: JupyterFrontEndPlugin<void> = {
           args: { origin: 'from the menu' }
         });
 
-        // Open by default
-        /*
-        app.restored.then(() => {
-          app.shell.activateById(datavizwidget.id);
-        });
-        */
-
+        // -------------------------------------------------------------------------------------------------------------
+        // Simplify jupyterlab
+        // -------------------------------------------------------------------------------------------------------------
         /*---------------------------------
-          Simplify jupyterlab
+           Kill on notebook close
         ----------------------------------*/
-        // Kill kernel when closing notebooks
         settingRegistry.load('@jupyterlab/notebook-extension:tracker').then(
           (settings: ISettingRegistry.ISettings) => {
             settings.set('kernelShutdown', true);
@@ -219,9 +228,27 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
         );
 
-        // Hide side-bar items
-        // We hide the running sessions because now they are closed automatically
-        // || widget.id == 'jp-running-sessions'
+        /*---------------------------------
+           Set notion-like shortcuts
+        ----------------------------------*/
+        settingRegistry.load('@jupyterlab/shortcuts-extension:shortcuts').then(
+          (settings: ISettingRegistry.ISettings) => {      
+            let userShortcutsCount = (settings.get('shortcuts').user as Array<any>).length;
+            console.log('User shortcuts count', userShortcutsCount);
+            if (userShortcutsCount == 0){
+              settings.set('shortcuts', [{"command":"application:toggle-right-area","keys":["Accel /"], "selector":"body"}, {"command":"application:toggle-left-area","keys":["Accel \\"], "selector":"body"}]);
+            } 
+          },
+          (err: Error) => {
+            console.error(
+              `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+            );
+          }
+        );
+
+        /*---------------------------------
+           Hide sidebar items
+        ----------------------------------*/
         each(app.shell.widgets('left'), widget => {
             //console.log('id', widget.id);
             if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager'){
@@ -241,7 +268,9 @@ const extension: JupyterFrontEndPlugin<void> = {
             }
           });
 
-        // Get rid of top bar menus
+        /*---------------------------------
+           Remove superfluous menus
+        ----------------------------------*/
         // mainMenu.editMenu.dispose();
         mainMenu.viewMenu.dispose();
         mainMenu.runMenu.dispose();
