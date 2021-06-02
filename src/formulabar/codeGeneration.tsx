@@ -17,7 +17,7 @@ const mapFormResponseToPythonCode = (
     /*----------------------------------------------------------------------------------------------------------
       VARIABLES
     ----------------------------------------------------------------------------------------------------------*/
-    if (codeGenStyle.localeCompare('variable') === 0) {
+    if (codeGenStyle === 'variable') {
       console.log('1.1 Variable codegenstyle');
       return fieldInput;
     }
@@ -26,7 +26,7 @@ const mapFormResponseToPythonCode = (
       SERIES COLUMN
     ----------------------------------------------------------------------------------------------------------*/
     // CASE where a series is passed as df[Series_Name]
-    else if (codeGenStyle.localeCompare('seriesColumn') === 0) {
+    else if (codeGenStyle === 'seriesColumn') {
       console.log('1.2 Column as series');
       return dataframeSelection + '["' + fieldInput + '"]';
     }
@@ -34,7 +34,7 @@ const mapFormResponseToPythonCode = (
       SERIES COLUMN LIST 
     ----------------------------------------------------------------------------------------------------------*/
     // CASE where a series is passed as [df[Series_Name_1], df[Series_Name_2]]
-    else if (codeGenStyle.localeCompare('seriesColumnList') === 0) {
+    else if (codeGenStyle === 'seriesColumnList') {
       let seriesColumnList = fieldInput.map((listElement) => {
           return dataframeSelection + '["' + listElement + '"]'
       });
@@ -52,13 +52,13 @@ const mapFormResponseToPythonCode = (
       console.log('2.1 Column multi-select detected');
       return JSON.stringify(fieldInput);
     } else if (
-      fieldSchema['$ref'].localeCompare('#/definitions/column') === 0
+      fieldSchema['$ref'] === '#/definitions/column'
     ) {
       console.log('2.2 Column single-select detected');
       return '"' + fieldInput + '"';
     }
     console.log('WARNING: No ref found');
-  } else if (fieldSchema['type'].localeCompare('array') === 0) {
+  } else if (fieldSchema['type'] === 'array') {
   /*----------------------------------------------------------------------------------------------------------
     CASE C: Array
   ----------------------------------------------------------------------------------------------------------*/
@@ -67,28 +67,28 @@ const mapFormResponseToPythonCode = (
     if (typeof fieldSchema.items['codegenstyle'] !== 'undefined') {
       console.log('3.1 Array of variables');
       const codeGenStyle = fieldSchema.items['codegenstyle'];
-      if (codeGenStyle.localeCompare('variable') === 0) {
+      if (codeGenStyle === 'variable') {
         return (
           '[' + fieldInput.map((item: any) => item.replace('/\\"/g', '')) + ']'
         );
       }
     }
     // Standard array of strings
-    else if (fieldSchema.items['type'].localeCompare('string') === 0) {
+    else if (fieldSchema.items['type'] === 'string') {
       console.log('3.2 Array of strings');
       return JSON.stringify(fieldInput);
-    } else if (fieldSchema.items['type'].localeCompare('number') === 0) {
+    } else if (fieldSchema.items['type'] === 'number') {
       console.log('3.3 Array of numbers');
       return JSON.stringify(fieldInput);
     }
-  } else if (fieldSchema['type'].localeCompare('string') === 0) {
+  } else if (fieldSchema['type'] === 'string') {
   /*----------------------------------------------------------------------------------------------------------
     CASE E: Standard jsonschema form types STRING/NUMBER
   ----------------------------------------------------------------------------------------------------------*/
     console.log('4. String detected');
     console.log('String detected');
     return '"' + fieldInput + '"';
-  } else if (fieldSchema['type'].localeCompare('number') === 0) {
+  } else if (fieldSchema['type'] === 'number') {
     console.log('5. Number detected');
     return fieldInput;
   }
@@ -156,7 +156,7 @@ export const generatePythonCode = (
     transformationType = formResponse.schema.transformationType;
   }
 
-  if (transformationType.localeCompare('property') === 0) {
+  if (transformationType === 'property') {
     formula = callerObject + '.' + transformationSelection;
   } else if (typeof callerObject === 'undefined') {
     formula = transformationSelection + '(';
@@ -214,7 +214,7 @@ export const generatePythonCode = (
 
       const selectedDependencyEnumIndex = formResponse.schema.properties[dependencyParameter][
         'enum'
-      ].findIndex(element => element.localeCompare(selectedDependency) === 0);
+      ].findIndex(element => element === selectedDependency);
       
       console.log('CG: Selected dependency item ', selectedDependencyEnumIndex);
 
@@ -248,7 +248,7 @@ export const generatePythonCode = (
     // Check if we save to a variable or just print in the notebook
     // IF specified by the user, set the name of the result
     if (
-      parameterName.localeCompare('new table name') === 0
+      parameterName === 'new table name'
     ) {
       console.log('CG: 3.2 New table name detected');
       if (typeof formData[parameterName] !== 'undefined') {
@@ -256,8 +256,8 @@ export const generatePythonCode = (
         resultVariable = formData[parameterName].replace(/ /g, '_');
       }
     } else if (
-      parameterName.localeCompare('new column name') === 0 &&
-      returnType.localeCompare('print') !== 0
+      parameterName === 'new column name' &&
+      returnType !== 'print'
     ) {
       console.log('CG: 3.2 New column name detected');
       if (typeof formData[parameterName] !== 'undefined') {
@@ -266,8 +266,7 @@ export const generatePythonCode = (
           dataframeSelection + '["' + formData[parameterName].replace(/ /g, '_') + '"]';
       }
     } else if (
-      parameterName.localeCompare('new variable name') === 0 &&
-      returnType.localeCompare('print') !== 0
+      parameterName === 'new variable name' && returnType !== 'print'
     ) {
       console.log('CG: 3.2 New variable name detected');
       if (typeof formData[parameterName] !== 'undefined') {
@@ -278,7 +277,7 @@ export const generatePythonCode = (
     // IGNORE the fields marked as ignore
     else if (
       typeof fieldSchema['codegenstyle'] !== 'undefined' &&
-      fieldSchema['codegenstyle'].localeCompare('ignore') === 0
+      fieldSchema['codegenstyle'] === 'ignore'
     ) {
       //ignore
       console.log('CG: Ignore column field');
@@ -289,9 +288,9 @@ export const generatePythonCode = (
     // Build an object of type {parameterName: value, parameterName:value, ..} with an array consisting of two inputs
     else if (
       typeof fieldSchema['type'] !== 'undefined' &&
-      fieldSchema['type'].localeCompare('array') === 0 &&
+      fieldSchema['type'] === 'array' &&
       typeof fieldSchema['items']['type'] !== 'undefined' &&
-      fieldSchema['items']['type'].localeCompare('object') === 0
+      fieldSchema['items']['type'] === 'object'
     ) {
       console.log('CG: 3.3 Complex object');
       let parameterDict = '{';
@@ -349,7 +348,7 @@ export const generatePythonCode = (
   }
 
   // Close parenthesis for functions, leave as is for properties (object.property)
-  if (transformationType.localeCompare('property') !== 0) {
+  if (transformationType !== 'property') {
     formula = formula + ')';
   }
 
@@ -360,7 +359,7 @@ export const generatePythonCode = (
   /*------------------------------------
     4.1 Result is a dataframe
   ------------------------------------*/
-  if (returnType.localeCompare('dataframe') === 0) {
+  if (returnType === 'dataframe') {
     console.log('CG: 3.1 Return type is dataframe');
     // If no target variable, and calling from a given dataframe apply transformation to this dataframe
     if (
@@ -381,7 +380,7 @@ export const generatePythonCode = (
       console.log('CG: 4.1.3 Catch remaining cases');
       resultVariable = 'data';
     }
-  } else if (returnType.localeCompare('series') === 0) {
+  } else if (returnType === 'series') {
     /*------------------------------------
     4.2 Result is a series
   ------------------------------------*/
@@ -397,7 +396,7 @@ export const generatePythonCode = (
         const colSchema = formResponse.schema.properties[parameterName];
         if (typeof colSchema['$ref'] !== 'undefined') {
           console.log('Ref found', colSchema['$ref']);
-          if (colSchema['$ref'].localeCompare('#/definitions/column') === 0) {
+          if (colSchema['$ref'] === '#/definitions/column') {
             console.log('CG: 4.2.1 Result defaults: Using default column');
             resultColumnName = formData[parameterName];
             break;
@@ -411,7 +410,7 @@ export const generatePythonCode = (
       }
       resultVariable = dataframeSelection + '["' + resultColumnName + '"]';
     }
-  } else if (returnType.localeCompare('variable') === 0) {
+  } else if (returnType === 'variable') {
     /*------------------------------------
     4.3 Result is a variable
   ------------------------------------*/
@@ -423,7 +422,7 @@ export const generatePythonCode = (
   }
 
   // Handle the case where we do not save the result to a variable and we just want to print to a notebook
-  if (returnType.localeCompare('none') !== 0) {
+  if (returnType !== 'none') {
     formula = resultVariable + ' = ' + formula;
   }
 
@@ -435,7 +434,7 @@ export const generatePythonCode = (
   // In the case the ruturn type is a series, remove the column name from the variable
   // i.e. df instead of df['col name']
   let resultDataFrame = resultVariable;
-  if (returnType.localeCompare('series') == 0) {
+  if (returnType === 'series') {
     resultDataFrame = dataframeSelection;
   }
 

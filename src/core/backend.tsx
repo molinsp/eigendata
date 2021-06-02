@@ -282,7 +282,7 @@ export class Backend {
       /*------------------------------------
         START KERNEL IF IN NO-CODE MODE
       ------------------------------------*/
-      if ( this.eigendataMode.localeCompare('no-code') == 0){
+      if ( this.eigendataMode === 'no-code'){
           //Ad-hoc mode not working well yet 
           this.notebookMode = 'ad-hoc';
           this.outputPanel = outputPanel;
@@ -509,7 +509,7 @@ export class Backend {
        
     }else if (this.notebookMode === 'ad-hoc'){
       // If no output type and ad-hoc mode, show in outputPanel
-      if(returnType.localeCompare('none') == 0){
+      if(returnType === 'none'){
         console.log('Execute in output panel');
         this.outputPanel.execute(code, this.adHocSessionContext);
         //this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
@@ -819,7 +819,7 @@ export class Backend {
     sender: any,
     nbPanel: NotebookPanel
   ): Promise<void> {
-    if(nbPanel && this.notebookMode.localeCompare('ad-hoc') != 0){
+    if(nbPanel && this.notebookMode === 'notebook'){
       console.log('------> Notebook changed', nbPanel.content.title.label);
       // Update the current notebook
       this.currentNotebook = nbPanel;
