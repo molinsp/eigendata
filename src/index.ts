@@ -63,7 +63,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     let eigendataMode = 'low-code';
     settingRegistry.load('@molinsp/eigendata:settings').then(     
       (settings: ISettingRegistry.ISettings) => {
-        //console.log('Eigendata loaded in mode:', settings.get('eigendataMode').composite as string);
         eigendataMode = settings.get('eigendataMode').composite as string;
         console.log('Eigendata mode', eigendataMode)
       }, (err: Error) => {
@@ -234,7 +233,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         settingRegistry.load('@jupyterlab/shortcuts-extension:shortcuts').then(
           (settings: ISettingRegistry.ISettings) => {      
             let userShortcutsCount = (settings.get('shortcuts').user as Array<any>).length;
-            console.log('User shortcuts count', userShortcutsCount);
+            // console.log('User shortcuts count', userShortcutsCount);
             if (userShortcutsCount == 0){
               settings.set('shortcuts', [{"command":"application:toggle-right-area","keys":["Accel /"], "selector":"body"}, {"command":"application:toggle-left-area","keys":["Accel \\"], "selector":"body"}]);
             } 
