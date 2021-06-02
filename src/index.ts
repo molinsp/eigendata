@@ -72,9 +72,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       }
     ).then(
       () => {
-        // -------------------------------------------------------------------------------------------------------------
-        // LOW-CODE MODE
-        // -------------------------------------------------------------------------------------------------------------
         let backend: Backend;
         const { commands } = app;
 
@@ -83,17 +80,21 @@ const extension: JupyterFrontEndPlugin<void> = {
         eigendataMenu.title.label = 'Eigendata';
         mainMenu.addMenu(eigendataMenu, { rank: 1 });
 
+
+        // -------------------------------------------------------------------------------------------------------------
+        // LOW-CODE MODE
+        // -------------------------------------------------------------------------------------------------------------
         if(eigendataMode.localeCompare('low-code') == 0){
           backend = new Backend(notebook_tracker, settingRegistry, app.serviceManager, null);
 
           /*---------------------------------
             Add formula bar below cells
           ----------------------------------*/
+          const cellToolbar = new CellBarExtension(app.commands, null, backend);
           app.docRegistry.addWidgetExtension(
           'Notebook',
-            new CellBarExtension(app.commands, null, backend)
+          cellToolbar
           );
-
         }
         // -------------------------------------------------------------------------------------------------------------
         // NO-CODE MODE
