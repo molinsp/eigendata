@@ -487,26 +487,13 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute(code: string, returnType: string): Promise<string> {
     if(this.notebookMode === 'notebook'){
-      // Calculate index of last cell
-      const lastCellIndex = this.currentNotebook.content.widgets.length - 1;
-      /*
-      if (lastCellIndex == 0){
-        lastCellIndex += 1;
-      }
-      */
-      console.log('Last cell index', lastCellIndex);
-
-      // Run and insert using cell utilities
-      
+      // Run and insert using cell utilities      
       await CellUtilities.insertRunShow(
         this.currentNotebook,
-        lastCellIndex,
+        this.currentNotebook.content.activeCellIndex,
         code,
         true
-      );
-      
-      //this.outputPanel.execute(code, this.currentNotebook.sessionContext); 
-       
+      );       
     }else if (this.notebookMode === 'ad-hoc'){
       // If no output type and ad-hoc mode, show in outputPanel
       if(returnType === 'none'){
