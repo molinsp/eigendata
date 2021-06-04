@@ -247,23 +247,33 @@ const extension: JupyterFrontEndPlugin<void> = {
         );
 
         /*---------------------------------
+           Hide status bar
+        ----------------------------------*/
+        settingRegistry.load('@jupyterlab/statusbar-extension:plugin').then(
+          (settings: ISettingRegistry.ISettings) => {
+            settings.set('visible', false);
+          },
+          (err: Error) => {
+            console.error(
+              `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+            );
+          }
+        );
+
+        /*---------------------------------
            Hide sidebar items
         ----------------------------------*/
         each(app.shell.widgets('left'), widget => {
             //console.log('id', widget.id);
-            if(widget.id == 'jp-property-inspector' || widget.id == 'tab-manager'){
-              widget.close();
-            }
-
             // For debugging purposes we will show the running sessions
             if(widget.id == 'jp-running-sessions' && backend.production == true){
               widget.close();
             }
           });
 
-         each(app.shell.widgets('bottom'), widget => {
+         each(app.shell.widgets('right'), widget => {
             //console.log('id', widget.id);
-            if(widget.id == 'jp-main-statusbar'){
+            if(widget.id == 'jp-property-inspector'){
               widget.close();
             }
           });
