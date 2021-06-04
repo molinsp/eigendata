@@ -1,6 +1,6 @@
 
 
-![logo](/Users/peremolinsayuso/Documents/eigendata-project/jupyterlab/eigendata/img/logo.png)
+![logo](/img/logo.png)
 
 Eigendata is a **low-code tool for data analysis designed for people that want to get things done**. 
 
