@@ -12,12 +12,19 @@ module.exports = {
   },
   plugins: ['@typescript-eslint'],
   rules: {
-    '@typescript-eslint/interface-name-prefix': [
+    '@typescript-eslint/naming-convention': [
       'error',
-      { prefixWithI: 'always' }
+      {
+        'selector': 'interface',
+        'format': ['PascalCase'],
+        'custom': {
+          'regex': '^I[A-Z]',
+          'match': true
+        }
+      }
     ],
     '@typescript-eslint/no-unused-vars': ['warn', { args: 'none' }],
-    '@typescript-eslint/no-explicit-any': 'warn',
+    '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-namespace': 'off',
     '@typescript-eslint/no-use-before-define': 'off',
     '@typescript-eslint/quotes': [
@@ -27,7 +34,6 @@ module.exports = {
     ],
     curly: ['error', 'all'],
     eqeqeq: 'error',
-    'prefer-arrow-callback': 'error',
-    'func-style': ['error', 'expression', { "allowArrowFunctions": true }],
+    'prefer-arrow-callback': 'error'
   }
 };

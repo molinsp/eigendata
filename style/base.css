@@ -835,6 +835,7 @@ button.pagination-segment:active {
 /* Top left logo */
 #jp-MainLogo {
   margin-left: 3px;
+  width: 26px;
   background-image: url(logo.png)
 }
 
