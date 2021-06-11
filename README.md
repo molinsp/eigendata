@@ -32,11 +32,11 @@ pip install eigendata
 ## Requirements
 
 * JupyterLab >= 3.0
-* Pandas, Nupy, Fastdata (our own library with pandas utilities)
+* Pandas, Nupy, [Fastdata](https://pypi.org/project/fastdata/) (our own library with pandas utilities)
 
 ## Uninstall
 
 ```bash
-pip uninstall test
+pip uninstall eigendata
 ```
 
