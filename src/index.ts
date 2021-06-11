@@ -61,9 +61,12 @@ const extension: JupyterFrontEndPlugin<void> = {
       Read mode from the configuration
     ----------------------------------*/
     let eigendataMode = 'low-code';
+    let firstRun = true;
     settingRegistry.load('@molinsp/eigendata:settings').then(     
       (settings: ISettingRegistry.ISettings) => {
         eigendataMode = settings.get('eigendataMode').composite as string;
+        firstRun = !settings.get('answeredProductDataDialog').composite as boolean;
+        console.log('firstRun', firstRun);
         console.log('Eigendata mode', eigendataMode)
       }, (err: Error) => {
         console.error(
@@ -214,51 +217,54 @@ const extension: JupyterFrontEndPlugin<void> = {
         // -------------------------------------------------------------------------------------------------------------
         // Simplify jupyterlab
         // -------------------------------------------------------------------------------------------------------------
-        /*---------------------------------
-           Kill on notebook close
-        ----------------------------------*/
-        settingRegistry.load('@jupyterlab/notebook-extension:tracker').then(
-          (settings: ISettingRegistry.ISettings) => {
-            settings.set('kernelShutdown', true);
-          },
-          (err: Error) => {
-            console.error(
-              `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
-            );
-          }
-        );
+        if(firstRun == true){
+          console.log('Changing default settings');
+          /*---------------------------------
+             Kill on notebook close
+          ----------------------------------*/
+          settingRegistry.load('@jupyterlab/notebook-extension:tracker').then(
+            (settings: ISettingRegistry.ISettings) => {
+              settings.set('kernelShutdown', true);
+            },
+            (err: Error) => {
+              console.error(
+                `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+              );
+            }
+          );
 
-        /*---------------------------------
-           Set notion-like shortcuts
-        ----------------------------------*/
-        settingRegistry.load('@jupyterlab/shortcuts-extension:shortcuts').then(
-          (settings: ISettingRegistry.ISettings) => {      
-            let userShortcutsCount = (settings.get('shortcuts').user as Array<any>).length;
-            // console.log('User shortcuts count', userShortcutsCount);
-            if (userShortcutsCount == 0){
-              settings.set('shortcuts', [{"command":"application:toggle-right-area","keys":["Accel /"], "selector":"body"}, {"command":"application:toggle-left-area","keys":["Accel \\"], "selector":"body"}]);
-            } 
-          },
-          (err: Error) => {
-            console.error(
-              `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
-            );
-          }
-        );
+          /*---------------------------------
+             Set notion-like shortcuts
+          ----------------------------------*/
+          settingRegistry.load('@jupyterlab/shortcuts-extension:shortcuts').then(
+            (settings: ISettingRegistry.ISettings) => {      
+              let userShortcutsCount = (settings.get('shortcuts').user as Array<any>).length;
+              // console.log('User shortcuts count', userShortcutsCount);
+              if (userShortcutsCount == 0){
+                settings.set('shortcuts', [{"command":"application:toggle-right-area","keys":["Accel /"], "selector":"body"}, {"command":"application:toggle-left-area","keys":["Accel \\"], "selector":"body"}]);
+              } 
+            },
+            (err: Error) => {
+              console.error(
+                `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+              );
+            }
+          );
 
-        /*---------------------------------
-           Hide status bar
-        ----------------------------------*/
-        settingRegistry.load('@jupyterlab/statusbar-extension:plugin').then(
-          (settings: ISettingRegistry.ISettings) => {
-            settings.set('visible', false);
-          },
-          (err: Error) => {
-            console.error(
-              `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
-            );
-          }
-        );
+          /*---------------------------------
+             Hide status bar
+          ----------------------------------*/
+          settingRegistry.load('@jupyterlab/statusbar-extension:plugin').then(
+            (settings: ISettingRegistry.ISettings) => {
+              settings.set('visible', false);
+            },
+            (err: Error) => {
+              console.error(
+                `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
+              );
+            }
+          );
+        }
 
         /*---------------------------------
            Hide sidebar items
