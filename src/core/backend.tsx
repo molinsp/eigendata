@@ -260,7 +260,7 @@ export class Backend {
             redirect: 'follow'
           };
           fetch(
-            this.transformationServer.concat('/transformations.json'),
+            this.transformationServer,
             requestOptions
           )
           .then(response => {
