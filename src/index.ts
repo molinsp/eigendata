@@ -4,7 +4,7 @@ import {
   ILayoutRestorer
 } from '@jupyterlab/application';
 
-import { MainAreaWidget, WidgetTracker } from '@jupyterlab/apputils';
+import { MainAreaWidget, WidgetTracker, ICommandPalette } from '@jupyterlab/apputils';
 
 import { FormWidget } from './components/formWidget';
 
@@ -21,8 +21,6 @@ import { tableIcon } from './labIcons';
 import { INotebookTracker } from '@jupyterlab/notebook';
 
 import { IMainMenu } from '@jupyterlab/mainmenu';
-
-import { Menu } from '@lumino/widgets';
 
 import { each } from '@lumino/algorithm';
 
@@ -46,14 +44,15 @@ namespace CommandIDs {
 const extension: JupyterFrontEndPlugin<void> = {
   id: '@molinsp/eigendata:plugin',
   autoStart: true,
-  requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry,IRenderMimeRegistry],
+  requires: [INotebookTracker, IMainMenu, ILayoutRestorer, ISettingRegistry,IRenderMimeRegistry, ICommandPalette],
   activate: (
     app: JupyterFrontEnd,
     notebook_tracker: INotebookTracker,
     mainMenu: IMainMenu,
     restorer: ILayoutRestorer,
     settingRegistry: ISettingRegistry,
-    rendermime: IRenderMimeRegistry
+    rendermime: IRenderMimeRegistry,
+    palette: ICommandPalette
   ) => {
     console.log('JupyterLab Eigendata is activated!');
 
@@ -62,10 +61,14 @@ const extension: JupyterFrontEndPlugin<void> = {
     ----------------------------------*/
     let eigendataMode = 'low-code';
     let firstRun = true;
+    let simplifyMenus = true;
+    let simplifySidebars = true;
     settingRegistry.load('@molinsp/eigendata:settings').then(     
       (settings: ISettingRegistry.ISettings) => {
         eigendataMode = settings.get('eigendataMode').composite as string;
         firstRun = !settings.get('answeredProductDataDialog').composite as boolean;
+        simplifyMenus = settings.get('simplifyMenus').composite as boolean;
+        simplifySidebars = settings.get('simplifySidebars').composite as boolean;
         console.log('firstRun', firstRun);
         console.log('Eigendata mode', eigendataMode)
       }, (err: Error) => {
@@ -77,12 +80,6 @@ const extension: JupyterFrontEndPlugin<void> = {
       () => {
         let backend: Backend;
         const { commands } = app;
-
-        // Create a menu
-        const eigendataMenu: Menu = new Menu({ commands });
-        eigendataMenu.title.label = 'Eigendata';
-        mainMenu.addMenu(eigendataMenu, { rank: 1 });
-
 
         // -------------------------------------------------------------------------------------------------------------
         // LOW-CODE MODE
@@ -129,6 +126,7 @@ const extension: JupyterFrontEndPlugin<void> = {
               formulawidget = new MainAreaWidget<FormWidget>({ content });
               formulawidget.title.label = 'Magic Formula Bar';
               formulawidget.title.closable = true;
+              // Open on start
               //app.shell.add(formulawidget, 'main');
             }
             if (!formulaBarTracker.has(formulawidget)) {
@@ -155,11 +153,6 @@ const extension: JupyterFrontEndPlugin<void> = {
             command: formulaBarCommand,
             name: () => 'ed'
           });
-
-          // Add the command to the menu
-          eigendataMenu.addItem({ 
-            command: formulaBarCommand, 
-            args: { origin: 'from the menu' } });
         }
 
 
@@ -171,7 +164,7 @@ const extension: JupyterFrontEndPlugin<void> = {
 
         commands.addCommand(dataVizCommand, {
           caption: 'Create a new Data Data Visualizer',
-          label: 'Data Visualizer',
+          label: 'Open Data Visualizer',
           icon: args => (args['isPalette'] ? null : tableIcon),
           execute: () => {
             if (!datavizwidget || datavizwidget.isDisposed) {
@@ -179,11 +172,11 @@ const extension: JupyterFrontEndPlugin<void> = {
               const content = new DataVisualizerWidget(backend);
               // Create datavizwidget
               datavizwidget = new MainAreaWidget<DataVisualizerWidget>({ content });
-              //datavizwidget.title.label = 'Data Visualizer';
+
               datavizwidget.title.icon = tableIcon;
-              //datavizwidget.title.iconClass = "jp-SpreadsheetIcon jp-SideBar-tabIcon";
-              datavizwidget.title.closable = true;
-              //app.shell.add(datavizwidget, 'main');
+
+              //datavizwidget.title.closable = true;
+              app.shell.add(datavizwidget, 'right');
             }
             if (!viztracker.has(datavizwidget)) {
               // Track the state of the datavizwidget for later restoration
@@ -200,22 +193,21 @@ const extension: JupyterFrontEndPlugin<void> = {
           }
         });
 
+        // Add command to palette
+        palette.addItem({ command: dataVizCommand, category: 'Eigendata' });
+
         // Track and restore the data visualizer state
         const viztracker = new WidgetTracker<MainAreaWidget<DataVisualizerWidget>>({
           namespace: 'dv'
         });
+        
         restorer.restore(viztracker, {
           command: dataVizCommand,
           name: () => 'dv'
         });
 
-        eigendataMenu.addItem({
-          command: dataVizCommand,
-          args: { origin: 'from the menu' }
-        });
-
         // -------------------------------------------------------------------------------------------------------------
-        // Simplify jupyterlab
+        // Simplify jupyterlab on first run
         // -------------------------------------------------------------------------------------------------------------
         if(firstRun == true){
           console.log('Changing default settings');
@@ -269,7 +261,8 @@ const extension: JupyterFrontEndPlugin<void> = {
         /*---------------------------------
            Hide sidebar items
         ----------------------------------*/
-        each(app.shell.widgets('left'), widget => {
+        if(simplifySidebars == true){
+          each(app.shell.widgets('left'), widget => {
             //console.log('id', widget.id);
             // For debugging purposes we will show the running sessions
             if(widget.id == 'jp-running-sessions' && backend.production == true){
@@ -277,24 +270,27 @@ const extension: JupyterFrontEndPlugin<void> = {
             }
           });
 
-         each(app.shell.widgets('right'), widget => {
+          each(app.shell.widgets('right'), widget => {
             //console.log('id', widget.id);
             if(widget.id == 'jp-property-inspector'){
               widget.close();
             }
           });
+        }
 
         /*---------------------------------
            Remove superfluous menus
         ----------------------------------*/
-        // mainMenu.editMenu.dispose();
-        mainMenu.viewMenu.dispose();
-        mainMenu.runMenu.dispose();
-        mainMenu.fileMenu.dispose();
-        mainMenu.kernelMenu.dispose();
-        mainMenu.tabsMenu.dispose();
-        mainMenu.settingsMenu.dispose();
-        mainMenu.helpMenu.dispose();
+        if(simplifyMenus == true){
+          mainMenu.editMenu.dispose();
+          mainMenu.viewMenu.dispose();
+          mainMenu.runMenu.dispose();
+          mainMenu.fileMenu.dispose();
+          mainMenu.kernelMenu.dispose();
+          mainMenu.tabsMenu.dispose();
+          mainMenu.settingsMenu.dispose();
+          mainMenu.helpMenu.dispose();
+        }
       }
     );
 

@@ -39,6 +39,18 @@
       "title": "Completed Product Tour",
       "description": "Turn true if you want to see the initial tutorial again",
       "default": false
+    },
+    "simplifyMenus": {
+      "type": "boolean",
+      "title": "Simplify menus",
+      "description": "Remove top-level menus to declutter the interface. All commands can be accessed through the command palette.",
+      "default": true
+    },
+    "simplifySidebars": {
+      "type": "boolean",
+      "title": "Simplify Sidebars",
+      "description": "Remove sidebars to declutter the interface",
+      "default": true
     }
   }
 }
