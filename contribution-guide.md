@@ -14,14 +14,21 @@ The `jlpm` command is JupyterLab's pinned version of
 
 # Install dependencies
 jlpm
+
 # Build Typescript source
 jlpm build
-# Link your development version of the extension with JupyterLab
-jupyter labextension install .
+
+# install the extension in editable mode
+python -m pip install -e .
+
+# install your development version of the extension with JupyterLab
+jupyter labextension develop . --overwrite
+
+# build the TypeScript source after making changes
+jlpm run build
+
 # Rebuild Typescript source after making changes
 jlpm build
-# Rebuild JupyterLab after making any changes
-jupyter lab build
 ```
 
 You can watch the source directory and run JupyterLab in watch mode to watch for changes in the extension's source and automatically rebuild the extension and application.
@@ -29,15 +36,11 @@ You can watch the source directory and run JupyterLab in watch mode to watch for
 ```bash
 # Watch the source directory in another terminal tab
 jlpm watch
-# Run jupyterlab in watch mode in one terminal tab
-jupyter lab --watch
 ```
-
-Now every change will be built locally and bundled into JupyterLab. Be sure to refresh your browser page after saving file changes to reload the extension (note: you'll need to wait for webpack to finish, which can take 10s+ at times).
 
 ### Uninstall
 
 ```bash
-jupyter labextension uninstall @molinsp/eigendata
+pip uninstall eigendata
 ```
 
