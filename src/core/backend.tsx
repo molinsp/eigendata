@@ -863,6 +863,25 @@ export class Backend {
         }
       );
 
+      /*----------------------------------------------
+      Handle the case where the Kernel is shut down (e.g. closing notebook)
+      -----------------------------------------------*/
+      this.connector.kernelShutDown.connect(
+        (sender, kernelReady: Promise<void>) => {
+          this.connector.ready.then(() => {
+            // Flag to reset the frontend
+            this.resetStateFormulabarFlag = true;
+            this.resetStateDatavisualizerFlag = true;
+            // Reset dataframes
+            this.packagesImported = [];
+            this.variablesLoaded = [];
+
+
+            this.signal.emit();
+          });
+        }
+      );
+
       // Need to re-render so that the output function in the button has the latest version of
       // the current notebook. Probably there is a better way of doing this.
       this.signal.emit();
@@ -896,9 +915,12 @@ export class Backend {
         if (
           !(code === this.kernelInspectorRequest) &&
           !(code === this.initScripts) &&
-          !(code === this.codeToIgnore)
+          !(code === this.codeToIgnore) &&
+          // This avoids an infinite loop of errors caused by the data visualizer
+          // refreshing after an error, and encountering another error
+          !(code === undefined)
         ) {
-          console.log('Non-internal code running');
+          console.log('Non-internal code running:', code);
           this.pythonRequestDataframes();
         }
         break;
@@ -934,7 +956,7 @@ export class Backend {
   ): void => {
     //console.log('------> Handle inspector request');
     const messageType = response.header.msg_type;
-    console.log('Message type from the backend', messageType);
+    // console.log('Message type from the backend', messageType);
     if (messageType === 'execute_result') {
       console.log('------> Get dataframe list');
       const payload: any = response.content;

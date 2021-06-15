@@ -6,6 +6,7 @@ import {
 } from "@jupyterlab/apputils";
 
 import {
+    Kernel,
     KernelMessage
 } from "@jupyterlab/services";
 
@@ -23,6 +24,7 @@ export
 
     private _session: ISessionContext;
     private _kernelRestarted = new Signal<this, Promise<void>>(this); 
+    private _kernelShutDown = new Signal<this, Promise<void>>(this); 
 
     constructor( options: KernelConnector.IOptions ) {
         this._session = options.session;
@@ -35,11 +37,30 @@ export
             		break;
             }
         });
+
+        
+        // This is useful if we want to support manually shutind down and restarting Kernels, which we won't support for the moment for simplif
+        this._session.connectionStatusChanged.connect((sender: ISessionContext, connectionStatus: Kernel.ConnectionStatus)=>{
+            console.log('Debug: Connection status ->', connectionStatus);
+            switch (connectionStatus) {
+                case "connected":
+                case "disconnected":
+                    this._kernelShutDown.emit(this._session.ready);
+                default:
+                    break;
+            }
+        });
+        
     }
 
     get kernelRestarted(): ISignal<KernelConnector, Promise<void>>{
         return this._kernelRestarted;
     }
+
+    get kernelShutDown(): ISignal<KernelConnector, Promise<void>>{
+        return this._kernelShutDown;
+    }
+
 
     get kernelLanguage(): Promise<string> {
 
