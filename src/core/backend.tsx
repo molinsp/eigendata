@@ -870,12 +870,11 @@ export class Backend {
         (sender, kernelReady: Promise<void>) => {
           this.connector.ready.then(() => {
             // Flag to reset the frontend
-            this.resetStateFormulabarFlag = true;
+            //this.resetStateFormulabarFlag = true;
             this.resetStateDatavisualizerFlag = true;
             // Reset dataframes
             this.packagesImported = [];
             this.variablesLoaded = [];
-
 
             this.signal.emit();
           });

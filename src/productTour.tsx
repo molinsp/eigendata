@@ -68,21 +68,10 @@ const productTourSteps = [
         <p>The data will be displayed in the data visualizer.</p>
       </div>
     ),
-    target: '.full-height-container',
+    target: '.lm-Widget .p-Widget .jp-dataviz',
     // Remove beacon with circle to enable autostart
     disableBeacon: true,
     placement: 'left' as 'left'
-  },
-  {
-    content: (
-      <div>
-        <p>And the code will be written into the Jupyter Notebook</p>
-        <p>Enjoy your data!</p>
-      </div>
-    ),
-    target: 'li[data-type="document-title"][style="z-index: 0;"]',
-    // Remove beacon with circle to enable autostart
-    disableBeacon: true
   }
 ];
 
