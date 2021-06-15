@@ -1,15 +1,15 @@
 {
-  "name": "@molinsp/eigendata",
-  "version": "0.2.7",
-  "description": "Eigendata is jupyter for people that want to get things done.",
+  "name": "eigendata",
+  "version": "0.3.0",
+  "description": "Eigendata is a low-code tool for data analysis designed for people that want to get things done.",
   "keywords": [
     "jupyter",
     "jupyterlab",
     "jupyterlab-extension"
   ],
-  "homepage": "https://github.com/my_name/myextension",
+  "homepage": "https://molinsp.github.io/eigendata-doc/",
   "bugs": {
-    "url": "https://github.com/my_name/myextension/issues"
+    "url": "https://molinsp.github.io/eigendata-doc/"
   },
   "license": "BSD-3-Clause",
   "author": {
@@ -27,7 +27,7 @@
   "style": "style/index.css",
   "repository": {
     "type": "git",
-    "url": "https://github.com/my_name/myextension.git"
+    "url": "https://github.com/molinsp/eigendata.git"
   },
   "scripts": {
     "build": "jlpm run build:lib && jlpm run build:labextension:dev",
