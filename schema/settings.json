@@ -1,0 +1,56 @@
+{
+  "title": "Eigendata settings",
+  "description": "Here you can configure the settings for Eigendata.",
+  "type": "object",
+  "properties": {
+    "transformationServer": {
+      "type": "string",
+      "title": "Transformation server",
+      "description": "Server that provides transformations",
+      "default": "https://eigendata-auth.herokuapp.com/transformations.json"
+    },
+    "transformationAuth": {
+      "type": "string",
+      "title": "Authentication for transformation server",
+      "description": "Authentication to get transformations from a remote server.",
+      "default": "yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0"
+    },
+    "eigendataMode": {
+      "type": "string",
+      "title": "Eigendata mode",
+      "description": "Way of working of eigendata",
+      "enum" : ["no-code","low-code"],
+      "default": "low-code"
+    },
+    "shareProductData": {
+      "type": "boolean",
+      "title": "Share product data",
+      "description": "This setting determines if product data is shared. We don't keep your identity, and only record which transformations are used to help us better invest time improving the product.",
+      "default": true
+    },
+    "answeredProductDataDialog": {
+      "type": "boolean",
+      "title": "User consent requested",
+      "description": "Property to validate that user consent for product data has been asked",
+      "default": false
+    },
+    "completedProductTour": {
+      "type": "boolean",
+      "title": "Completed Product Tour",
+      "description": "Turn true if you want to see the initial tutorial again",
+      "default": false
+    },
+    "simplifyMenus": {
+      "type": "boolean",
+      "title": "Simplify menus",
+      "description": "Remove top-level menus to declutter the interface. All commands can be accessed through the command palette.",
+      "default": true
+    },
+    "simplifySidebars": {
+      "type": "boolean",
+      "title": "Simplify Sidebars",
+      "description": "Remove sidebars to declutter the interface",
+      "default": true
+    }
+  }
+}

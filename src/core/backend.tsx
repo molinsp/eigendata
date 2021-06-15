@@ -16,12 +16,15 @@
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 // KernelConnector class. See file for more details.
 import { KernelConnector } from './kernelconnector';
+
 import { Signal } from '@lumino/signaling';
+
 import { ISettingRegistry } from '@jupyterlab/settingregistry';
 // Initialization scripts. See file for more details.
 import { pythonInitializationScript } from './initscript';
-import { Dialog, ISessionContext, showDialog } from '@jupyterlab/apputils';
-import ReactGA from 'react-ga';
+
+import { Dialog, ISessionContext, SessionContext, showDialog } from '@jupyterlab/apputils';
+
 import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
 import _ from 'lodash';
 import { JSONSchema7 } from 'json-schema';
@@ -29,14 +32,18 @@ import { JSONSchema7 } from 'json-schema';
 import CellUtilities from './CellUtilities';
 // JSON configuration holding all information for the UI transformationsList
 import localTransformationsConfig from '../formulabar/transformations.json';
+
 import amplitude from 'amplitude-js';
+
 import { Column } from 'react-table';
+
 import { Config } from 'react-awesome-query-builder';
-import { each } from '@lumino/algorithm';
+
 import { OutputPanel } from '../datavisualizer/outputPanel';
-import { CodeCell } from '@jupyterlab/cells';
+
+//import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
-const packageVersion = '0.2.6';
+const packageVersion = '0.3.0';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -58,6 +65,13 @@ export class Backend {
 
   // Output panel for charts
   private outputPanel: OutputPanel;
+
+  /*---------------------------------
+    Transformation server
+  ----------------------------------*/
+  private transformationServer: string;
+  private transformationAuth: string;
+
 
   /*---------------------------------
     Communicate with UI
@@ -83,6 +97,8 @@ export class Backend {
   public completedProductTour: boolean;
 
   public kernelStatus: string;
+
+  public eigendataMode: string;
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -119,33 +135,21 @@ export class Backend {
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
-  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager.IManager, outputPanel: OutputPanel) {
+  constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager, outputPanel: OutputPanel) {
     console.log('------> Backend Constructor');
 
     // Add a notebook tracker
     this.notebookTracker = notebooks;
 
-    // Initialize as ad-hoc (if a notebook is detected it will change)
-    this.notebookMode = 'ad-hoc';
-
-    // Create ad-hoc session context
-    this.startAdHocKernel(manager);
-
-    this.outputPanel = outputPanel;
-
-    // Subscribe to signal when notebooks change
-    this.notebookTracker.currentChanged.connect(
-      this.updateCurrentNotebook,
-      this
-    );
+    this.notebookMode = 'notebook';
 
     // Read transformations config
     const readTransformationConfig = (): void => {
       this.transformationsConfig = transformationsConfig['transformations'];
-      console.log('TRANSFORMATIONS VERSION:', transformationsConfig['version']);
       const transformationList = [
         { value: 'query', label: 'Filter dataframe' }
       ];
+      console.log('Read transformations into list', transformationsConfig['transformations']);
       for (const transformation in transformationsConfig['transformations']) {
         if (transformation) {
           transformationList.push({
@@ -160,43 +164,16 @@ export class Backend {
       this.transformationsList = transformationList;
     };
 
-    // Get transformations from server
-    if (this.production) {
-      console.log('--- In Production environment ---');
-      const myHeaders = new Headers();
-      myHeaders.append(
-        'Authorization',
-        'Bearer yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0'
-      );
-      const requestOptions: RequestInit = {
-        method: 'GET',
-        headers: myHeaders,
-        redirect: 'follow'
-      };
-      fetch(
-        'https://eigendata-auth.herokuapp.com/transformations.json',
-        requestOptions
-      )
-        .then(response => {
-          return response.json();
-        })
-        .then(parsedConfig => {
-          transformationsConfig = parsedConfig;
-          readTransformationConfig();
-          this.signal.emit();
-        });
-    } else {
-      console.log('--- In Dev environment ---');
-      readTransformationConfig();
-    }
+    // Read default transformation config (replaced later)
+    readTransformationConfig();
 
     // Load python initialization script
     this.initScripts = pythonInitializationScript;
 
-    /*------------------------------
-      Get user consent for analytics
-    -------------------------------*/
-    settingRegistry.load('@molinsp/eigendata:plugin').then(
+    /*------------------------------------
+      LOAD SETTINGS
+    ------------------------------------*/
+    settingRegistry.load('@molinsp/eigendata:settings').then(
       (settings: ISettingRegistry.ISettings) => {
         if (settings.get('answeredProductDataDialog').composite === false) {
           showDialog({
@@ -223,17 +200,16 @@ export class Backend {
               }
             });
         } else {
-          console.log('Analytics: Reading product dada settings');
-          this.shareProductData = settings.get('shareProductData')
-            .composite as boolean;
+          this.shareProductData = settings.get('shareProductData').composite as boolean;
         }
 
-        this.completedProductTour = settings.get('completedProductTour')
-          .composite as boolean;
-        console.log(
-          'Settings: completedProductTour',
-          this.completedProductTour
-        );
+
+        this.completedProductTour = settings.get('completedProductTour').composite as boolean;
+        this.eigendataMode = settings.get('eigendataMode').composite as string;
+        this.transformationServer = settings.get('transformationServer').composite as string;
+        console.log('Transformation server', this.transformationServer);
+        this.transformationAuth = settings.get('transformationAuth').composite as string;
+        console.log('Transformation auth', this.transformationAuth);
 
         // Save the settings object to be used. Use case is to change settings after product tour
         this.eigendataSettings = settings;
@@ -242,8 +218,6 @@ export class Backend {
         // Tracking setup
         if (this.production && this.shareProductData) {
           amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
-          ReactGA.initialize('UA-111934622-2');
-          ReactGA.pageview('EigendataApp');
           amplitude.getInstance().setVersionName(packageVersion);
         }
       },
@@ -252,6 +226,74 @@ export class Backend {
           `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
         );
       }
+    ).then(() => {
+      /*------------------------------------
+        LOAD USER TRANSFORMATIONS
+      ------------------------------------*/
+        settingRegistry.load('@molinsp/eigendata:usertransformations').then(
+          (settings: ISettingRegistry.ISettings) => {
+            const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
+
+            if(!_.isEmpty(userTransformations)){
+              transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
+              console.log('User added configs', transformationsConfig);
+            }else{
+              console.log('No user transformations found');
+            }
+          }
+        );
+      })
+    .then(
+      () => {
+        if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
+          /*------------------------------------
+            LOAD REMOTE TRANSFORMATIONS
+          ------------------------------------*/
+          const myHeaders = new Headers();
+          myHeaders.append(
+            'Authorization',
+            'Bearer '.concat(this.transformationAuth)
+          );
+          const requestOptions: RequestInit = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow'
+          };
+          fetch(
+            this.transformationServer,
+            requestOptions
+          )
+          .then(response => {
+            return response.json();
+          })
+          .then(parsedConfig => {
+            console.log('REMOTE TRANSFORMATIONS VERSION:', parsedConfig['version']);
+            //transformationsConfig = parsedConfig;
+            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], parsedConfig['transformations']);
+          })
+          .then(() => {
+              readTransformationConfig();
+              this.signal.emit();
+            }
+          )
+        }
+      }
+    ).then(()=>{
+      /*------------------------------------
+        START KERNEL IF IN NO-CODE MODE
+      ------------------------------------*/
+      if ( this.eigendataMode === 'no-code'){
+          //Ad-hoc mode not working well yet 
+          this.notebookMode = 'ad-hoc';
+          this.outputPanel = outputPanel;
+          this.startAdHocKernel(manager);
+      }
+    });
+
+    // Subscribe to signal when notebooks change
+    this.notebookTracker.currentChanged.connect(
+      this.updateCurrentNotebook,
+      this
     );
   }
 
@@ -445,38 +487,30 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute(code: string, returnType: string): Promise<string> {
     if(this.notebookMode === 'notebook'){
-      // Calculate index of last cell
-      const lastCellIndex = this.currentNotebook.content.widgets.length - 1;
-      /*
-      if (lastCellIndex == 0){
-        lastCellIndex += 1;
-      }
-      */
-      console.log('Last cell index', lastCellIndex);
-
-      // Run and insert using cell utilities
-      
+      // Run and insert using cell utilities      
       await CellUtilities.insertRunShow(
         this.currentNotebook,
-        lastCellIndex,
+        this.currentNotebook.content.activeCellIndex,
         code,
         true
-      );
-      
-      if(returnType.localeCompare('none') == 0){
-        //this.outputPanel.execute(code, this.currentNotebook.sessionContext);
-        this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
-      }
-      
-      return 'success';
+      );       
     }else if (this.notebookMode === 'ad-hoc'){
-      await Backend.sendKernelRequest(
-      this.adHocSessionContext.session.kernel,
-      code,
-      {}
-      );
+      // If no output type and ad-hoc mode, show in outputPanel
+      if(returnType === 'none'){
+        console.log('Execute in output panel');
+        this.outputPanel.execute(code, this.adHocSessionContext);
+        //this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
+      }else{
+        // Execute agains adhoc kernel
+        await Backend.sendKernelRequest(
+          this.adHocSessionContext.session.kernel,
+          code,
+          {}
+        );
+      }
     }
 
+    return 'success';
   }
 
   /*----------------------------------------------------------------------------------------------------
@@ -723,13 +757,10 @@ export class Backend {
   /*----------------------------------------------------------------------------------------------------
   [FUNCTION] Initialize ad-hoc kernel
   -----------------------------------------------------------------------------------------------------*/
-  private startAdHocKernel(manager: ServiceManager.IManager){
+  private startAdHocKernel(manager: ServiceManager){
+    console.log('Start ad-hoc kernel for no-code mode');
+    manager.sessions.shutdownAll();
     
-    each(manager.sessions.running(), session => {
-      //console.log('DEBUG: Session', session.name);
-    });
-
-    /*
     this.adHocSessionContext = new SessionContext({
       sessionManager: manager.sessions,
       specsManager: manager.kernelspecs,
@@ -744,6 +775,7 @@ export class Backend {
     // To-do: Not sure if at some point I need to drop all these connections
     this.connector = new KernelConnector({ session });
 
+    // INIT SCRIPTS
     // Basically if the connector is ready, should not have to worry about this
     this.connector.ready.then(() => {
       console.log('Connector ready');
@@ -763,7 +795,6 @@ export class Backend {
 
     // Connect to changes running in the code
     this.connector.iopubMessage.connect(this.codeRunningOnNotebook);
-    */
     
   }
 
@@ -775,8 +806,7 @@ export class Backend {
     sender: any,
     nbPanel: NotebookPanel
   ): Promise<void> {
-    if(nbPanel){
-      this.notebookMode = 'notebook';
+    if(nbPanel && this.notebookMode === 'notebook'){
       console.log('------> Notebook changed', nbPanel.content.title.label);
       // Update the current notebook
       this.currentNotebook = nbPanel;
@@ -833,17 +863,30 @@ export class Backend {
         }
       );
 
+      /*----------------------------------------------
+      Handle the case where the Kernel is shut down (e.g. closing notebook)
+      -----------------------------------------------*/
+      this.connector.kernelShutDown.connect(
+        (sender, kernelReady: Promise<void>) => {
+          this.connector.ready.then(() => {
+            // Flag to reset the frontend
+            this.resetStateFormulabarFlag = true;
+            this.resetStateDatavisualizerFlag = true;
+            // Reset dataframes
+            this.packagesImported = [];
+            this.variablesLoaded = [];
+
+
+            this.signal.emit();
+          });
+        }
+      );
+
       // Need to re-render so that the output function in the button has the latest version of
       // the current notebook. Probably there is a better way of doing this.
       this.signal.emit();
 
     }
-    else{
-      console.log('No notebook');
-      this.notebookMode = 'ad-hoc';
-    }
-
-
   }
 
   // -------------------------------------------------------------------------------------------------------------
@@ -872,9 +915,12 @@ export class Backend {
         if (
           !(code === this.kernelInspectorRequest) &&
           !(code === this.initScripts) &&
-          !(code === this.codeToIgnore)
+          !(code === this.codeToIgnore) &&
+          // This avoids an infinite loop of errors caused by the data visualizer
+          // refreshing after an error, and encountering another error
+          !(code === undefined)
         ) {
-          console.log('Non-internal code running');
+          console.log('Non-internal code running:', code);
           this.pythonRequestDataframes();
         }
         break;
@@ -910,7 +956,7 @@ export class Backend {
   ): void => {
     //console.log('------> Handle inspector request');
     const messageType = response.header.msg_type;
-    console.log('Message type from the backend', messageType);
+    // console.log('Message type from the backend', messageType);
     if (messageType === 'execute_result') {
       console.log('------> Get dataframe list');
       const payload: any = response.content;

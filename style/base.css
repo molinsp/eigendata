@@ -13,6 +13,7 @@
 }
 
 .jp-dataviz{
+  margin-top: -8px;
   min-width: 650px !important;
 }
 
@@ -826,15 +827,16 @@ button.pagination-segment:active {
 /* |------------------------------- RESTYLING OF APP -----------------------------------------------------------> */
 
 /* Lines on the top of the widget window removed for more stylized look*/
-.lm-Widget .p-Widget .jp-Toolbar{
-  border: 0px;
-  box-shadow: 0px;
-  z-index: -100;
+:not(.jp-NotebookPanel) > .jp-Toolbar {
+  border-bottom: none;
+  box-shadow: none;
 }
 
 /* Top left logo */
 #jp-MainLogo {
-    background-image: url(logo.png)
+  margin-left: 3px;
+  width: 26px;
+  background-image: url(logo.png)
 }
 
 #jp-MainLogo > svg {

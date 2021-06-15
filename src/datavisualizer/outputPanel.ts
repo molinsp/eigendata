@@ -44,7 +44,7 @@ export class OutputPanel extends StackedPanel {
       rendermime: rendermime
     });
 
-    //this.addWidget(this._outputarea);
+    this.addWidget(this._outputarea);
   }
 
   dispose(): void {
