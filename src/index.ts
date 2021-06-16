@@ -55,7 +55,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     palette: ICommandPalette
   ) => {
     console.log('JupyterLab Eigendata is activated!');
-
+    const { commands } = app;
     /*---------------------------------
       Read mode from the configuration
     ----------------------------------*/
@@ -79,7 +79,6 @@ const extension: JupyterFrontEndPlugin<void> = {
     ).then(
       () => {
         let backend: Backend;
-        const { commands } = app;
 
         // -------------------------------------------------------------------------------------------------------------
         // LOW-CODE MODE
@@ -291,8 +290,15 @@ const extension: JupyterFrontEndPlugin<void> = {
           mainMenu.settingsMenu.dispose();
           mainMenu.helpMenu.dispose();
         }
+
       }
-    );
+    ).then(()=> {
+      /*---------------------------------
+        Open by default
+      ----------------------------------*/
+      commands.execute('ed:opendataviz');
+
+    });
 
   }
 };
