@@ -207,20 +207,24 @@ export const generatePythonCode = (
   if(typeof formResponse.schema.dependencies !== 'undefined'){
     for (const dependencyParameter in formResponse.schema.dependencies){
       console.log('CG: Merging dependency for ', dependencyParameter);
-      // Get mode selected by the user
+      // Get dependency selected by the user
       const selectedDependency = formData[dependencyParameter];
 
       console.log('CG: Dependency input value ', selectedDependency);
 
+      // Find the index of that dependency, i.e. is it the 0th, 1st, 2nd element
       const selectedDependencyEnumIndex = formResponse.schema.properties[dependencyParameter][
         'enum'
       ].findIndex(element => element === selectedDependency);
       
       console.log('CG: Selected dependency item ', selectedDependencyEnumIndex);
 
+      // Copy the schema from the dependency object
       const schemaFromDependency = formResponse.schema.dependencies[dependencyParameter]['oneOf'][selectedDependencyEnumIndex].properties;
 
-      // Delete the dummy property of the dependency given it already exists in the original object
+      // Delete the property that is used to stitch schemas
+      // In the dependency object there is a property that indicates which dependency should be rendered. 
+      // This needs to be removed when merging with the main schema according to selected dependency
       delete schemaFromDependency[dependencyParameter];
       console.log('CG: Dependency object to append', schemaFromDependency);
 
