@@ -126,7 +126,7 @@ const extension: JupyterFrontEndPlugin<void> = {
               formulawidget.title.label = 'Magic Formula Bar';
               formulawidget.title.closable = true;
               // Open on start
-              //app.shell.add(formulawidget, 'main');
+              app.shell.add(formulawidget, 'main');
             }
             if (!formulaBarTracker.has(formulawidget)) {
               // Track the state of the formulawidget for later restoration
@@ -143,6 +143,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             }
           });
 
+          palette.addItem({ command: formulaBarCommand, category: 'Eigendata' });
 
           // Track and restore the formulawidget state
           const formulaBarTracker = new WidgetTracker<MainAreaWidget<FormWidget>>({
@@ -297,6 +298,11 @@ const extension: JupyterFrontEndPlugin<void> = {
         Open by default
       ----------------------------------*/
       commands.execute('ed:opendataviz');
+
+      if(eigendataMode === 'no-code'){
+        console.log('Open formulabar by default');
+        commands.execute('ed:open');
+      }
 
     });
 
