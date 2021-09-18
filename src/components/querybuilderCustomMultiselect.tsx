@@ -18,7 +18,13 @@ export const QuerybuilderCustomMultiselect = (props): JSX.Element => {
   return (
     <Select
       onChange={(selection: ISelection[]): void => {
-        props.setValue(selection.map(item => item.value));
+        if(selection){
+          props.setValue(selection.map(item => item.value));
+        }
+        // Handle the case wehre there is only one selection and it is cleared by the user
+        else{
+          props.setValue(null);
+        }
       }}
       isMulti
       options={options}
