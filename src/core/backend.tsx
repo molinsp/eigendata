@@ -136,7 +136,7 @@ export class Backend {
   // CONSTRUCTOR
   // -------------------------------------------------------------------------------------------------------------
   constructor(notebooks: INotebookTracker, settingRegistry: ISettingRegistry, manager: ServiceManager, outputPanel: OutputPanel) {
-    console.log('------> Backend Constructor');
+    console.log('Eigendata version:', packageVersion);
 
     // Add a notebook tracker
     this.notebookTracker = notebooks;
