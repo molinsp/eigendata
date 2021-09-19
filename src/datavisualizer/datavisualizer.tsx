@@ -242,9 +242,17 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     }
   };
 
+  // Delte a dataframe
   const deleteTab = async (table: string, menusToClose: string): Promise<void> => {
+    console.log('Delete tab');
     await props.logic.pythonRemoveData(table);
     closeDropdownMenus(menusToClose);
+    
+    // If more than one tabs go back to the previous tab
+    if(props.logic.dataframesLoaded.length >= 1){
+      setActiveTab(activeTab-1);
+    }
+
   };
 
   const deleteVariable = async (variable: string): Promise<void> => {
