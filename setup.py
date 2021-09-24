@@ -45,7 +45,8 @@ setup_args = dict(
     install_requires=[
         "jupyter_server>=1.6,<2",
         "numpy>=1.0.0",
-        "pandas>=1.0.0"
+        "pandas>=1.0.0",
+        "fastdata>=0.0.20"
     ],
     zip_safe=False,
     include_package_data=True,
