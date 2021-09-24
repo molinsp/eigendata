@@ -133,6 +133,19 @@
 
 /* |----------------------- REWRITE QUERY BUILDER STYLE RULES -----------------------------------------------------> */
 
+#query-form .group--conjunctions label{
+  margin-right: 10px;
+}
+
+#query-form .group--conjunctions input{
+  margin-right: 2px;
+}
+
+#query-form .group{
+  background-color: #ffffff;
+  border: 2px solid #cccccc;
+}
+
 #query-form .group-or-rule-container {
   padding-right: 0;
 }
@@ -147,15 +160,21 @@
 }
 
 .query-builder-container button {
-  color: #fff;
-  background-color: #337ab7;
-  border-color: #337ab7;
+  color: #333333;
+  background-color: #ffffff;
+  border-color: #a6a6a6;
   display: inline-block;
   cursor: pointer;
   padding: 2px 9px;
   font-size: 14px;
   line-height: 1.42857143;
   border-radius: 4px;
+}
+
+/* Style for add rule/add group buttons to make tab navigation easier */
+.query-builder-container button:focus {
+  border-color: #2684FF;
+  border-width: 3px;
 }
 
 /* Make action buttons always visible */
@@ -172,10 +191,15 @@
   margin-right: 0;
 }
 
+#query-form .rule {
+  background-color: #f7f7f7;
+  margin-right: 5px;
+}
+
 .rule--header > button,
 .group--actions.group--actions--tr > button:nth-child(3) {
-  background: #dc2222;
-  border-color: #dc2222;
+  background: #f7f7f7;
+  opacity: 1 !important;
 }
 
 /* Styles for rule fields */
