@@ -249,7 +249,8 @@ const DataVisualizerComponent = (props: { logic: Backend }): JSX.Element => {
     closeDropdownMenus(menusToClose);
     
     // If more than one tabs go back to the previous tab
-    if(props.logic.dataframesLoaded.length >= 1){
+    if(props.logic.dataframesLoaded.length >= 1 && activeTab != 0){
+      console.log('Go to previous tab');
       setActiveTab(activeTab-1);
     }
 
