@@ -253,7 +253,7 @@
 
 /* Remove unnecessary margin from radio button */
 .rule--widget--BOOLEAN .widget--widget input[type="radio"] {
-  margin-left: 30px;
+  margin-left: 10px;
   height: 20px;
   width: 20px;
 }
