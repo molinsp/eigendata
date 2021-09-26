@@ -54,7 +54,7 @@ export class Backend {
   private notebookTracker: INotebookTracker;
 
   // Object that holds the currently selected notebook
-  private currentNotebook: NotebookPanel;
+  public currentNotebook: NotebookPanel;
 
   // Notebook mode
   private notebookMode: string;
@@ -486,11 +486,12 @@ export class Backend {
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute(code: string, returnType: string): Promise<string> {
+    const lastCellIndex = this.currentNotebook.content.widgets.length - 1;
     if(this.notebookMode === 'notebook'){
       // Run and insert using cell utilities      
       await CellUtilities.insertRunShow(
         this.currentNotebook,
-        this.currentNotebook.content.activeCellIndex,
+        lastCellIndex, //this.currentNotebook.content.activeCellIndex,
         code,
         true
       );       
