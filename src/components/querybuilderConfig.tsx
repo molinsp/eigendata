@@ -197,7 +197,7 @@ const operators: Operators = {
   ...InitialConfig.operators,
   // examples of  overriding
   python_contains: {
-    label: 'contains',
+    label: 'Contains',
     labelForFormat: 'Like',
     reversedOp: 'not_like',
     sqlFormatOp: (
