@@ -253,9 +253,15 @@
 
 /* Remove unnecessary margin from radio button */
 .rule--widget--BOOLEAN .widget--widget input[type="radio"] {
-  margin: 0 10px !important;
+  margin-left: 30px;
   height: 20px;
   width: 20px;
+}
+
+.rule--widget--BOOLEAN .widget--widget label{
+  height: 20px;
+  margin-top: 10px;
+  margin-left: 5px
 }
 /* <------------------------------------------------- */
 /* <---------------------------------------------------------------------------------------------------------------| */
