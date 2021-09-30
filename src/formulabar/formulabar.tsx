@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Form from '@rjsf/core';
 import Select from 'react-select';
 import { JSONSchema7 } from 'json-schema';
@@ -112,6 +112,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     run: false
   });
 
+  // Show and hide form
+  const [visibility, setVisibility] = useState(true);
+
   /*-----------------------------------
   RESET STATE LOGIC
   -----------------------------------*/
@@ -140,6 +143,23 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       logic.completedProductTour = true;
     }
   }
+
+  /*-----------------------------------
+    HANDLE SHORTCUTS
+  -----------------------------------*/
+
+  const handleKeyDown = (event: KeyboardEvent): void => {
+    if (event.ctrlKey && event.key === "e") { 
+      setVisibility(prevVisibility => !prevVisibility);
+      //console.log('Change visibility', visibility);
+    }
+  };
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   /*-----------------------------------
     (A) SEARCH
@@ -618,146 +638,153 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   return (
     <div className="app">
-      <Joyride
-        steps={productTourSteps}
-        continuous={true}
-        run={productTourState.run}
-        hideBackButton={true}
-        disableScrollParentFix={true}
-        showSkipButton={true}
-        locale={{
-          back: 'Back',
-          close: 'Close',
-          last: 'Finish',
-          next: 'Next',
-          skip: 'Skip'
-        }}
-        styles={{
-          options: {
-            zIndex: 1000,
-            primaryColor: '#3698DC'
-          }
-        }}
-      />
-      {props.logic.kernelStatus === 'busy' && <Spinner />}
-      <div className="side-by-side-fields">
-        <div className="centered" />
-        <fieldset className="data-transformation-form">
-          <Select
-            name="Select transformation"
-            placeholder="Search transformation"
-            options={
-              logic.dataframesLoaded.length !== 0
-                ? logic.transformationsList
-                : loadingTransformations()
-            }
-            value={state.transformationSelection}
-            label="Select transformation"
-            onChange={handleTransformationSelectionChange}
-            onInputChange={handleInputChange}
-            className="right-field"
-            components={{
-              DropdownIndicator: (): JSX.Element => magnifier,
-              IndicatorSeparator: (): null => null
-            }}
-            id="transformationselect"
-            filterOption={getKeywordsForFilter}
-            maxMenuHeight={400}
-            styles={formulabarMainSelect}
-            autoFocus={true}
-            ref={transformationSelectionRef}
-          />
-          <Select
-            name="Select dataframe"
-            placeholder={
-              logic.dataframesLoaded.length !== 0
-                ? 'Select data'
-                : 'No data'
-            }
-            options={logic.dataframesLoaded}
-            value={state.dataframeSelection}
-            label="Select data"
-            onChange={handleDataframeSelectionChange}
-            className="left-field"
-            isDisabled={!state.enableCallerSelection}
-            id="dataselect"
-            components={{
-              DropdownIndicator: (): JSX.Element => tableIcon,
-              IndicatorSeparator: (): null => null
-            }}
-            styles={formulabarMainSelect}
-            ref={dataframeSelectionRef}
-          />
-        </fieldset>
-        {binderUrl &&
-        <div className="binderButtonSeparator">
-          <a href="https://calendly.com/molinsp/eigendata-demo"
-             className="binderButton"
-          >
-            BOOK A DEMO
-          </a>
-      </div>}
-        <div className="centered formulaFormDivider" />
-        {state.showForm && (
-          <Form
-            formData={state.formData}
-            schema={state.transformationForm}
-            onSubmit={callGeneratePythonCode}
-            onChange={handleFormChange}
-            widgets={widgets}
-            uiSchema={state.transformationUI}
-            extraErrors={extraErrors}
-            omitExtraData={true}
-            // React renders new Element for each key.
-            // We need to re-render Form to update shown errors
-            key={state.formKey}
-          />
-        )}
-        {state.queryConfig && (
-          <QueryBuilder
-            queryConfig={state.queryConfig}
-            dataframeSelection={state.dataframeSelection.value}
-            backend={logic}
-          />
-        )}
-        {/* If transformation was submit show the feedback buttons */}
-        {feedbackState.submittedTransformation &&
-          !(state.showForm || state.queryConfig) && (
-            <form id="feedback" onSubmit={onSubmitDescription}>
-              <div id="feedback__buttons">
-                <BinaryFeedback
-                  onPositiveClick={onPositiveClick}
-                  onNegativeClick={onNegativeClick}
-                  positiveContent={FeedbackContent(
-                    thumbUp,
-                    'Worked',
-                    '#93C47d'
-                  )}
-                  negativeContent={FeedbackContent(
-                    thumbDown,
-                    "Didn't work",
-                    '#E06666'
-                  )}
-                  singleSelect
-                />
+    {visibility && (
+      <div className="content">
+        <Joyride
+          steps={productTourSteps}
+          continuous={true}
+          run={productTourState.run}
+          hideBackButton={true}
+          disableScrollParentFix={true}
+          showSkipButton={true}
+          locale={{
+            back: "Back",
+            close: "Close",
+            last: "Finish",
+            next: "Next",
+            skip: "Skip",
+          }}
+          styles={{
+            options: {
+              zIndex: 1000,
+              primaryColor: "#3698DC",
+            },
+          }}
+        />
+        {props.logic.kernelStatus === "busy" && <Spinner />}
+
+          <div className="side-by-side-fields">
+            <div className="centered" />
+            <fieldset className="data-transformation-form">
+              <Select
+                name="Select transformation"
+                placeholder="Search transformation"
+                options={
+                  logic.dataframesLoaded.length !== 0
+                    ? logic.transformationsList
+                    : loadingTransformations()
+                }
+                value={state.transformationSelection}
+                label="Select transformation"
+                onChange={handleTransformationSelectionChange}
+                onInputChange={handleInputChange}
+                className="right-field"
+                components={{
+                  DropdownIndicator: (): JSX.Element => magnifier,
+                  IndicatorSeparator: (): null => null,
+                }}
+                id="transformationselect"
+                filterOption={getKeywordsForFilter}
+                maxMenuHeight={400}
+                styles={formulabarMainSelect}
+                autoFocus={true}
+                ref={transformationSelectionRef}
+              />
+              <Select
+                name="Select dataframe"
+                placeholder={
+                  logic.dataframesLoaded.length !== 0 ? "Select data" : "No data"
+                }
+                options={logic.dataframesLoaded}
+                value={state.dataframeSelection}
+                label="Select data"
+                onChange={handleDataframeSelectionChange}
+                className="left-field"
+                isDisabled={!state.enableCallerSelection}
+                id="dataselect"
+                components={{
+                  DropdownIndicator: (): JSX.Element => tableIcon,
+                  IndicatorSeparator: (): null => null,
+                }}
+                styles={formulabarMainSelect}
+                ref={dataframeSelectionRef}
+              />
+            </fieldset>
+            {binderUrl && (
+              <div className="binderButtonSeparator">
+                <a
+                  href="https://calendly.com/molinsp/eigendata-demo"
+                  className="binderButton"
+                >
+                  BOOK A DEMO
+                </a>
               </div>
-              <div id="feedback__negative-description">
-                <input
-                  placeholder="Share the issue so we can fix it!"
-                  type="text"
-                  className="short form-control margin-right"
-                  onChange={onTextChange}
-                  value={feedbackState.negativeDescription}
-                />
-                <input
-                  type="submit"
-                  className="short btn btn-info"
-                  disabled={feedbackState.negativeDescription === ''}
-                />
-              </div>
-            </form>
-          )}
+            )}
+            <div className="centered formulaFormDivider" />
+            {state.showForm && (
+              <Form
+                formData={state.formData}
+                schema={state.transformationForm}
+                onSubmit={callGeneratePythonCode}
+                onChange={handleFormChange}
+                widgets={widgets}
+                uiSchema={state.transformationUI}
+                extraErrors={extraErrors}
+                omitExtraData={true}
+                // React renders new Element for each key.
+                // We need to re-render Form to update shown errors
+                key={state.formKey}
+              />
+            )}
+            {state.queryConfig && (
+              <QueryBuilder
+                queryConfig={state.queryConfig}
+                dataframeSelection={state.dataframeSelection.value}
+                backend={logic}
+              />
+            )}
+            {/* If transformation was submit show the feedback buttons */}
+            {feedbackState.submittedTransformation &&
+              !(state.showForm || state.queryConfig) && (
+                <form id="feedback" onSubmit={onSubmitDescription}>
+                  <div id="feedback__buttons">
+                    <BinaryFeedback
+                      onPositiveClick={onPositiveClick}
+                      onNegativeClick={onNegativeClick}
+                      positiveContent={FeedbackContent(
+                        thumbUp,
+                        "Worked",
+                        "#93C47d"
+                      )}
+                      negativeContent={FeedbackContent(
+                        thumbDown,
+                        "Didn't work",
+                        "#E06666"
+                      )}
+                      singleSelect
+                    />
+                  </div>
+                  <div id="feedback__negative-description">
+                    <input
+                      placeholder="Share the issue so we can fix it!"
+                      type="text"
+                      className="short form-control margin-right"
+                      onChange={onTextChange}
+                      value={feedbackState.negativeDescription}
+                    />
+                    <input
+                      type="submit"
+                      className="short btn btn-info"
+                      disabled={feedbackState.negativeDescription === ""}
+                    />
+                  </div>
+                </form>
+              )}
+          </div>
+      
       </div>
+    )}
     </div>
   );
+
 };
