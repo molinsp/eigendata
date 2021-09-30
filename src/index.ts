@@ -35,7 +35,6 @@ import { OutputPanel } from './datavisualizer/outputPanel';
  */
 namespace CommandIDs {
   export const create = 'ed:open';
-  export const nocodecell = 'ed:nocodecell';
   export const dataviz = 'ed:opendataviz';
 }
 
@@ -90,28 +89,11 @@ const extension: JupyterFrontEndPlugin<void> = {
           /*---------------------------------
             Add formula bar below cells
           ----------------------------------*/
-          commands.addCommand(CommandIDs.nocodecell, {
-          caption: 'Add nocode cell',
-          label: 'No-code Cell',
-          execute: () => {
-              console.log('Executed command');
-              const cellToolbar = new CellBarExtension(app.commands, null, backend);
-              app.docRegistry.addWidgetExtension(
-                'Notebook',
-                cellToolbar
-              );
-            }
-          });
-
-          /*app.commands.addKeyBinding({
-              command: CommandIDs.nocodecell,
-              args: {},
-              keys: ['Accel K'],
-              selector: 'body'
-            });
-            */
-          commands.execute(CommandIDs.nocodecell);
-
+          const cellToolbar = new CellBarExtension(app.commands, null, backend);
+          app.docRegistry.addWidgetExtension(
+          'Notebook',
+          cellToolbar
+          );
         }
         // -------------------------------------------------------------------------------------------------------------
         // NO-CODE MODE

@@ -9,7 +9,7 @@ import { PanelLayout } from '@lumino/widgets';
 
 import { Backend } from '../core/backend';
 import { FormWidget } from '../components/formWidget';
-import CellUtilities from '../core/CellUtilities'
+
 
 // Renders the form Widget under a cell
 
@@ -54,18 +54,16 @@ export class CellToolbarTracker implements IDisposable {
     activeCell: Cell | undefined,
 	): void {
 
-    const firstCell = CellUtilities.getCell(this._backend.currentNotebook.content, 0);
-    this._addToolbar(firstCell);
-    //console.log('Has focus?',activeCell.editor.hasFocus());
-	  //this._addToolbar(activeCell?.model);
+	  this._addToolbar(activeCell?.model);
   }
 
   private _addToolbar(model: ICellModel): void {
     const cell = this._getCell(model);
-    // console.log('DEBUG: Cell', cell);
-    if (cell && cell.model.type === 'code') {
-      // 0 is above the cell, 3 is below
-    	(cell.layout as PanelLayout).insertWidget(0, this.toolbarWidget);
+    //console.log('Cell value', cell.model.value.text.length);
+    //console.log('Cell type', cell.model.type);
+    if (cell && cell.model.type === 'code' && cell.model.value.text.length == 0) {
+      // 0 is above the cell
+    	(cell.layout as PanelLayout).insertWidget(3, this.toolbarWidget);
    	}
   }
 
