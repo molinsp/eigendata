@@ -781,7 +781,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
                 </form>
               )}
           </div>
-      
       </div>
     )}
     </div>
