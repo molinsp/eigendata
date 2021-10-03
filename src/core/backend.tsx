@@ -26,7 +26,9 @@ import { pythonInitializationScript } from './initscript';
 import { Dialog, ISessionContext, SessionContext, showDialog } from '@jupyterlab/apputils';
 
 import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
+
 import _ from 'lodash';
+
 import { JSONSchema7 } from 'json-schema';
 // Utilities from another project. See file for more details.
 import CellUtilities from './CellUtilities';
@@ -48,7 +50,7 @@ let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
   /*---------------------------------
-    Keep track of notebooks
+    Properties to keep track of notebooks
   ----------------------------------*/
   // Tracker that enables us to listen to notebook change events
   private notebookTracker: INotebookTracker;
@@ -227,9 +229,9 @@ export class Backend {
         );
       }
     ).then(() => {
-      /*------------------------------------
-        LOAD USER TRANSFORMATIONS
-      ------------------------------------*/
+    /*------------------------------------
+      LOAD USER TRANSFORMATIONS
+    ------------------------------------*/
         settingRegistry.load('@molinsp/eigendata:usertransformations').then(
           (settings: ISettingRegistry.ISettings) => {
             const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
@@ -243,12 +245,11 @@ export class Backend {
           }
         );
       })
-    .then(
-      () => {
+    .then(() => {
+    /*------------------------------------
+          LOAD REMOTE TRANSFORMATIONS
+    ------------------------------------*/
         if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
-          /*------------------------------------
-            LOAD REMOTE TRANSFORMATIONS
-          ------------------------------------*/
           const myHeaders = new Headers();
           myHeaders.append(
             'Authorization',
@@ -279,9 +280,9 @@ export class Backend {
         }
       }
     ).then(()=>{
-      /*------------------------------------
-        START KERNEL IF IN NO-CODE MODE
-      ------------------------------------*/
+    /*------------------------------------
+      START KERNEL IF IN NO-CODE MODE
+    ------------------------------------*/
       if ( this.eigendataMode === 'no-code'){
           //Ad-hoc mode not working well yet 
           this.notebookMode = 'ad-hoc';

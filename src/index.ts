@@ -8,7 +8,7 @@ import { MainAreaWidget, WidgetTracker, ICommandPalette } from '@jupyterlab/appu
 
 import { FormWidget } from './components/formWidget';
 
-import { CellBarExtension } from './formulabar/noCodeCell';
+import { CellBarExtension } from './formulabar/formulabarCell';
 
 import { Backend } from './core/backend';
 
