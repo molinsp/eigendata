@@ -3,13 +3,6 @@
 .jp-ReactWidget {
   color: var(--jp-ui-font-color1);
   background: var(--jp-layout-color1);
-  align-items: center;
-  padding-top: 20px;
-  padding-bottom: 10px;
-  padding-right: 20px;
-  padding-left: 20px;
-  overflow: auto;
-  min-height: 400px;
 }
 
 .jp-dataviz{
@@ -81,6 +74,16 @@
 /* <---------------------------------------------------------------------------------------------------------------| */
 
 /* |----------------------- FORMULABAR: SIDE-BY-SIDE FIELDS RULES -------------------------------------------------> */
+
+.content {
+  min-height: 400px;
+  align-items: center;
+  padding-top: 20px;
+  padding-bottom: 10px;
+  padding-right: 20px;
+  padding-left: 20px;
+  overflow: auto;
+}
 
 /* Side-by-side container */
 .side-by-side-fields > fieldset {

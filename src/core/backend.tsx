@@ -26,7 +26,9 @@ import { pythonInitializationScript } from './initscript';
 import { Dialog, ISessionContext, SessionContext, showDialog } from '@jupyterlab/apputils';
 
 import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
+
 import _ from 'lodash';
+
 import { JSONSchema7 } from 'json-schema';
 // Utilities from another project. See file for more details.
 import CellUtilities from './CellUtilities';
@@ -48,13 +50,13 @@ let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
   /*---------------------------------
-    Keep track of notebooks
+    Properties to keep track of notebooks
   ----------------------------------*/
   // Tracker that enables us to listen to notebook change events
   private notebookTracker: INotebookTracker;
 
   // Object that holds the currently selected notebook
-  public currentNotebook: NotebookPanel;
+  private currentNotebook: NotebookPanel;
 
   // Notebook mode
   private notebookMode: string;
@@ -118,9 +120,11 @@ export class Backend {
   public resetStateDatavisualizerFlag = false;
 
   // Production flag that determines if usage analytics are captured
-  public production = false;
+  public production = true;
 
   public eigendataSettings: ISettingRegistry.ISettings;
+
+  public openFormulabarCellByDefault: boolean;
 
   private _dataframeSelection: any;
 
@@ -207,9 +211,9 @@ export class Backend {
         this.completedProductTour = settings.get('completedProductTour').composite as boolean;
         this.eigendataMode = settings.get('eigendataMode').composite as string;
         this.transformationServer = settings.get('transformationServer').composite as string;
-        console.log('Transformation server', this.transformationServer);
         this.transformationAuth = settings.get('transformationAuth').composite as string;
-        console.log('Transformation auth', this.transformationAuth);
+        this.openFormulabarCellByDefault = settings.get('openFormulabarCellByDefault').composite as boolean;
+        console.log('Open formulabar cell by default', this.openFormulabarCellByDefault);
 
         // Save the settings object to be used. Use case is to change settings after product tour
         this.eigendataSettings = settings;
@@ -227,9 +231,9 @@ export class Backend {
         );
       }
     ).then(() => {
-      /*------------------------------------
-        LOAD USER TRANSFORMATIONS
-      ------------------------------------*/
+    /*------------------------------------
+      LOAD USER TRANSFORMATIONS
+    ------------------------------------*/
         settingRegistry.load('@molinsp/eigendata:usertransformations').then(
           (settings: ISettingRegistry.ISettings) => {
             const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
@@ -243,12 +247,11 @@ export class Backend {
           }
         );
       })
-    .then(
-      () => {
+    .then(() => {
+    /*------------------------------------
+          LOAD REMOTE TRANSFORMATIONS
+    ------------------------------------*/
         if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
-          /*------------------------------------
-            LOAD REMOTE TRANSFORMATIONS
-          ------------------------------------*/
           const myHeaders = new Headers();
           myHeaders.append(
             'Authorization',
@@ -279,9 +282,9 @@ export class Backend {
         }
       }
     ).then(()=>{
-      /*------------------------------------
-        START KERNEL IF IN NO-CODE MODE
-      ------------------------------------*/
+    /*------------------------------------
+      START KERNEL IF IN NO-CODE MODE
+    ------------------------------------*/
       if ( this.eigendataMode === 'no-code'){
           //Ad-hoc mode not working well yet 
           this.notebookMode = 'ad-hoc';
@@ -486,12 +489,11 @@ export class Backend {
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
   public async writeToNotebookAndExecute(code: string, returnType: string): Promise<string> {
-    const lastCellIndex = this.currentNotebook.content.widgets.length - 1;
     if(this.notebookMode === 'notebook'){
       // Run and insert using cell utilities      
       await CellUtilities.insertRunShow(
         this.currentNotebook,
-        lastCellIndex, //this.currentNotebook.content.activeCellIndex,
+        this.currentNotebook.content.activeCellIndex,
         code,
         true
       );       
