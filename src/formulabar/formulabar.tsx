@@ -112,8 +112,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     run: false
   });
 
-  // Show and hide form
-  const [visibility, setVisibility] = useState(true);
+  // Show and hide form with shortcuts
+  const [visibility, setVisibility] = useState(logic.openFormulabarCellByDefault);
 
   /*-----------------------------------
   RESET STATE LOGIC

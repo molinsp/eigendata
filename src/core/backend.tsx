@@ -124,6 +124,8 @@ export class Backend {
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
+  public openFormulabarCellByDefault: boolean;
+
   private _dataframeSelection: any;
 
   get dataframeSelection() {
@@ -209,9 +211,9 @@ export class Backend {
         this.completedProductTour = settings.get('completedProductTour').composite as boolean;
         this.eigendataMode = settings.get('eigendataMode').composite as string;
         this.transformationServer = settings.get('transformationServer').composite as string;
-        console.log('Transformation server', this.transformationServer);
         this.transformationAuth = settings.get('transformationAuth').composite as string;
-        console.log('Transformation auth', this.transformationAuth);
+        this.openFormulabarCellByDefault = settings.get('openFormulabarCellByDefault').composite as boolean;
+        console.log('Open formulabar cell by default', this.openFormulabarCellByDefault);
 
         // Save the settings object to be used. Use case is to change settings after product tour
         this.eigendataSettings = settings;

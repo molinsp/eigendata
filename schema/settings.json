@@ -7,7 +7,7 @@
       "type": "string",
       "title": "Transformation server",
       "description": "Server that provides transformations",
-      "default": "https://eigendata-auth.herokuapp.com/transformations.json"
+      "default": "http://eigendataserver-env.eba-sk9sn2mt.eu-central-1.elasticbeanstalk.com/transformations.json"
     },
     "transformationAuth": {
       "type": "string",
@@ -21,6 +21,12 @@
       "description": "Way of working of eigendata",
       "enum" : ["no-code","low-code"],
       "default": "low-code"
+    },
+    "openFormulabarCellByDefault": {
+      "type": "boolean",
+      "title": "Open low-code cell by default",
+      "description": "When you select a cell, show the eigendata formulabar by default",
+      "default": true
     },
     "shareProductData": {
       "type": "boolean",
