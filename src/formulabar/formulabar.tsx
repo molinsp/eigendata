@@ -273,6 +273,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Save the input of the transformation selection in the UI to the state
   const handleTransformationSelectionChange = async (input): Promise<void> => {
+    const selectedTransformationForm = logic.transformationsConfig[input.value]['form']; 
+
     // Event tracking
     if (logic.production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: select transformation', {
@@ -280,14 +282,24 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       });
     }
 
+    // Check if any column is passed in the format df['column'], in which case it requires a df selction
+    // for context
+    const has_property_with_codegenstyle_seriesColumn = _.some(selectedTransformationForm['properties'], { 'codegenstyle': 'seriesColumn'});
+    console.log('has_property_with_codegenstyle_seriesColumn: ', has_property_with_codegenstyle_seriesColumn);
+
     // Two cases, requires a dataframe selection and not
     // DO NOT REQUIRE DF SELECTION
     if(
       input.value.localeCompare('query') != 0 // Is not the query
 
       && (typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
-        || logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false) 
-        
+        || 
+          (logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false
+            && has_property_with_codegenstyle_seriesColumn == false
+          )
+        )      
+
+      // Cases where top-level df selection is used not as a caller object but as a parameter
       && typeof(logic.transformationsConfig[input.value]['form']['selectionAsParameter']) === 'undefined'
 
       ){
