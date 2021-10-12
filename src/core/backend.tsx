@@ -709,6 +709,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonImportLibraries(importStatement: string): Promise<void> {
     if(this.notebookMode === 'notebook'){
+      this.codeToIgnore = importStatement;
       // Execute the import in the kernel
       await Backend.sendKernelRequest(
         this.currentNotebook.sessionContext.session.kernel,
