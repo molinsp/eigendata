@@ -45,7 +45,7 @@ import { OutputPanel } from '../datavisualizer/outputPanel';
 
 //import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
-const packageVersion = '0.3.2';
+const packageVersion = '0.3.3';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -198,6 +198,8 @@ export class Backend {
                 console.log('Analytics: Accepted permission');
                 await settings.set('shareProductData', true);
                 this.shareProductData = true;
+                amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
+                amplitude.getInstance().setVersionName(packageVersion);
               } else {
                 await settings.set('shareProductData', false);
                 this.shareProductData = false;
@@ -709,6 +711,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonImportLibraries(importStatement: string): Promise<void> {
     if(this.notebookMode === 'notebook'){
+      this.codeToIgnore = importStatement;
       // Execute the import in the kernel
       await Backend.sendKernelRequest(
         this.currentNotebook.sessionContext.session.kernel,

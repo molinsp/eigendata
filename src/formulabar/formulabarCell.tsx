@@ -61,7 +61,9 @@ export class CellToolbarTracker implements IDisposable {
     const cell = this._getCell(model);
     //console.log('Cell value', cell.model.value.text.length);
     //console.log('Cell type', cell.model.type);
-    if (cell) {
+    
+    // !!!!!! cell.model.value.text.length allows us to keep showing errors to users
+    if (cell && cell.model.type === 'code' && cell.model.value.text.length == 0) {
       // 0 is above the cell
     	(cell.layout as PanelLayout).insertWidget(3, this.toolbarWidget);
    	}

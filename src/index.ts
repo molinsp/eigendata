@@ -59,6 +59,7 @@ const extension: JupyterFrontEndPlugin<void> = {
     launcher: ILauncher | null
   ) => {
     console.log('JupyterLab Eigendata is activated!');
+    console.log('Env', process.env.NODE_ENV);
     const { commands } = app;
     /*---------------------------------
       Read mode from the configuration

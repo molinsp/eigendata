@@ -87,7 +87,12 @@ const mapFormResponseToPythonCode = (
   ----------------------------------------------------------------------------------------------------------*/
     console.log('4. String detected');
     console.log('String detected');
-    return '"' + fieldInput + '"';
+    if (fieldInput === "None"){
+      return fieldInput;  
+    }
+    else{
+      return '"' + fieldInput + '"';
+    }
   } else if (fieldSchema['type'] === 'number') {
     console.log('5. Number detected');
     return fieldInput;
