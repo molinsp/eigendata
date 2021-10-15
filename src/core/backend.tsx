@@ -120,7 +120,7 @@ export class Backend {
   public resetStateDatavisualizerFlag = false;
 
   // Production flag that determines if usage analytics are captured
-  public production = false;
+  public production = true;
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
@@ -198,6 +198,8 @@ export class Backend {
                 console.log('Analytics: Accepted permission');
                 await settings.set('shareProductData', true);
                 this.shareProductData = true;
+                amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
+                amplitude.getInstance().setVersionName(packageVersion);
               } else {
                 await settings.set('shareProductData', false);
                 this.shareProductData = false;
