@@ -273,8 +273,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   // Save the input of the transformation selection in the UI to the state
   const handleTransformationSelectionChange = async (input): Promise<void> => {
-    const selectedTransformationForm = logic.transformationsConfig[input.value]['form']; 
-
     // Event tracking
     if (logic.production && logic.shareProductData) {
       amplitude.getInstance().logEvent('Formulabar: select transformation', {
@@ -282,33 +280,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       });
     }
 
-    // Check if any column is passed in the format df['column'], in which case it requires a df selction
-    // for context
-    const has_property_with_codegenstyle_seriesColumn = _.some(selectedTransformationForm['properties'], { 'codegenstyle': 'seriesColumn'});
-    console.log('has_property_with_codegenstyle_seriesColumn: ', has_property_with_codegenstyle_seriesColumn);
-
-    // Two cases, requires a dataframe selection and not
-    // DO NOT REQUIRE DF SELECTION
-    if(
-      input.value.localeCompare('query') != 0 // Is not the query
-
-      && (typeof(logic.transformationsConfig[input.value]['form']['callerObject']) === 'undefined'
-        || 
-          (logic.transformationsConfig[input.value]['form']['callerObject'].includes('DataFrame') == false
-            && has_property_with_codegenstyle_seriesColumn == false
-          )
-        )      
-
-      // Cases where top-level df selection is used not as a caller object but as a parameter
-      && typeof(logic.transformationsConfig[input.value]['form']['selectionAsParameter']) === 'undefined'
-
-      ){
-      // Set the input and load transformation form
-      await getTransformationFormToState(state.dataframeSelection, input, false);
-    }
-    // REQUIRES CALLER OBJECT SELECTION
-    else{
-      // Caller object already selected
+    if(input.value === 'query'){
       if (state.dataframeSelection) {
         console.log('all defined');
         await getTransformationFormToState(state.dataframeSelection, input, true);
@@ -325,8 +297,48 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           error: null
         }));
       }
- 
-    };
+    }
+    else{
+
+      const selectedTransformationForm = logic.transformationsConfig[input.value]['form']; 
+      console.log('Debug', selectedTransformationForm);
+      // Check if any column is passed in the format df['column'], in which case it requires a df selction
+      // for context
+      const has_property_with_codegenstyle_seriesColumn = _.some(selectedTransformationForm['properties'], { 'codegenstyle': 'seriesColumn'});
+      console.log('has_property_with_codegenstyle_seriesColumn: ', has_property_with_codegenstyle_seriesColumn);
+
+      // Require DF selection
+      if(
+        ('callerObject' in selectedTransformationForm && selectedTransformationForm['callerObject'].includes('DataFrame'))
+        || 
+        (selectedTransformationForm['callerObject'] !== 'DataFrame'
+            && has_property_with_codegenstyle_seriesColumn == true)
+        ||
+        ('selectionAsParameter' in selectedTransformationForm)
+        ){
+          if (state.dataframeSelection) {
+            console.log('all defined');
+            await getTransformationFormToState(state.dataframeSelection, input, true);
+          }
+          // Caller object not selected
+          else{
+            console.log('Debug: Needs to select df before showing form');
+            setFocusOnElement(dataframeSelectionRef.current);
+            setState(state => ({
+              ...state,
+              showForm: false,
+              enableCallerSelection: true,
+              transformationSelection: input,
+              formData: {},
+              error: null
+            }));
+          }
+      }
+      else{
+        console.log('Debug: Does NOT need DF selection');
+        await getTransformationFormToState(state.dataframeSelection, input, false);
+      }
+    }
   };
 
   // Populates the transformation form into the state
