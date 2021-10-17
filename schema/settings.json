@@ -7,7 +7,7 @@
       "type": "string",
       "title": "Transformation server",
       "description": "Server that provides transformations",
-      "default": "http://eigendataserver-env.eba-sk9sn2mt.eu-central-1.elasticbeanstalk.com/transformations.json"
+      "default": "https://eigendata-auth.herokuapp.com/transformations.json"
     },
     "transformationAuth": {
       "type": "string",
