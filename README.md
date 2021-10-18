@@ -6,7 +6,7 @@ Eigendata is a **low-code tool for data analysis** aimed at empowering users tha
 
 Eigendata renders a form interface below cells in a jupyter notebook (can be hidden/shown with  `Ctrl E`), providing fast acess to common data transformatiosn without needing to remember syntax or the exact name of the method. It enables users to become more productive by googling less, reducing syntax errors and keeping track of the data at all times.
 
-![logo](formulabar.png)
+You can try it without installing [here](https://cloud.eigendata.co/).
 
 ![logo](/img/eigendata_overview.png)
 
