@@ -5,7 +5,7 @@
   "properties": {
     "userTransformations": {
         "type": "object",
-        "description": "Paste here a jsonschema complinat transformation"
+        "description": "Paste here a jsonschema transformation"
       }
   }
 }
