@@ -1,6 +1,6 @@
 {
   "name": "@molinsp/eigendata",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Eigendata is a low-code tool for data analysis designed for people that want to get things done.",
   "keywords": [
     "jupyter",
