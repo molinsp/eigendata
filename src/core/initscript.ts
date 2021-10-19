@@ -32,7 +32,7 @@ def call_backend_functions(functions):
         func_name = func['name']
         results[func_name] = globals()[func_name](**func['parameters']) 
         
-    return json.dumps(results, cls=NpEncoder)
+    return json.dumps(results, cls=NpEncoder, default=str)
 
 def ed_keep_dataframes(v):
     try:
@@ -113,7 +113,7 @@ def ed_get_functions():
 
 # ---------------- GET DF COLUMNS AS JSON ----------------
 def ed_get_json_column_values(df):
-    return json.dumps(df.columns.tolist(), ensure_ascii=False)
+    return json.dumps(df.columns.tolist(), ensure_ascii=False, default=str)
 
 # ---------------- QUERYBUILDER BACKEND ----------------
 from pandas.api.types import is_categorical_dtype, is_integer_dtype, is_float_dtype, is_bool_dtype, is_object_dtype
@@ -176,7 +176,7 @@ def ed_generate_querybuilder_config(df):
                     'type' : 'datetime'
                 }
             
-    return json.dumps(queryprops, ensure_ascii=False)
+    return json.dumps(queryprops, ensure_ascii=False, default=str)
 # ---------------- DATA VISUALIZER ----------------
 from pandas.api.types import is_datetime64_any_dtype,is_numeric_dtype,is_bool_dtype
 def ed_build_colDefs_for_mi_cols(df):
@@ -368,5 +368,5 @@ def ed_prep_data_for_visualization(dfmi,index=False, sortby=None, ascending=Fals
     }
     
     # 3. Return as JSON
-    return json.dumps(result, ensure_ascii=False, allow_nan=False)
+    return json.dumps(result, ensure_ascii=False, allow_nan=False, default=str)
 `;
