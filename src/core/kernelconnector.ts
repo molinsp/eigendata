@@ -110,7 +110,29 @@ export
         return future.done as Promise<KernelMessage.IExecuteReplyMsg>;
     }
 
+    // Fetch function that leverages just a code string instead of a content message
+    fetchCode(code: string,  ioCallback: ( msg: KernelMessage.IIOPubMessage ) => any): Promise<KernelMessage.IExecuteReplyMsg> {
+      const content: KernelMessage.IExecuteRequestMsg['content'] = {
+        code: code,
+        stop_on_error: false,
+        store_history: false
+      };
+
+      return this.fetch(content, ioCallback)
+    }
+
     execute( content: KernelMessage.IExecuteRequestMsg['content']) {
+        return this._session.session.kernel.requestExecute(content);
+    }
+
+    // Fetch function that leverages just a code string instead of a content message
+    executeCode( code: string) {
+        const content: KernelMessage.IExecuteRequestMsg['content'] = {
+            code: code,
+            stop_on_error: false,
+            store_history: false
+          };
+
         return this._session.session.kernel.requestExecute(content);
     }
 

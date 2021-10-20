@@ -358,7 +358,7 @@ export class Backend {
       silent: runSilent,
       stop_on_error: stopOnError,
       store_history: storeHistory,
-      user_expressions: userExpressions
+      user_expressions: userExpressions,
     }).done;
 
     const content: any = message.content;
@@ -785,18 +785,8 @@ export class Backend {
     // Basically if the connector is ready, should not have to worry about this
     this.connector.ready.then(() => {
       console.log('Connector ready');
-      const content: KernelMessage.IExecuteRequestMsg['content'] = {
-        code: this.initScripts,
-        stop_on_error: false,
-        store_history: false
-      };
-
-      this.connector
-        .fetch(content, () => {})
-        .then(() => {
-          console.log('Fetched content');
-          this.pythonRequestDataframes();
-        });
+      this.connector.executeCode(this.initScripts);
+      this.pythonRequestDataframes();
     });
 
     // Connect to changes running in the code
@@ -825,16 +815,9 @@ export class Backend {
 
       // Basically if the connector is ready, should not have to worry about this
       this.connector.ready.then(() => {
-        const content: KernelMessage.IExecuteRequestMsg['content'] = {
-          code: this.initScripts,
-          stop_on_error: false,
-          store_history: false
-        };
-        this.connector
-          .fetch(content, () => {})
-          .then(() => {
-            this.pythonRequestDataframes();
-          });
+        console.log('Connector ready');
+        this.connector.executeCode(this.initScripts);
+        this.pythonRequestDataframes();
       });
 
       // Connect to changes running in the code
@@ -853,18 +836,8 @@ export class Backend {
             this.packagesImported = [];
             this.variablesLoaded = [];
 
-            // Restart init scripts
-            const content: KernelMessage.IExecuteRequestMsg['content'] = {
-              code: this.initScripts,
-              stop_on_error: false,
-              store_history: false
-            };
-            this.connector
-              .fetch(content, () => {})
-              .then(() => {
-                // Emit signal to re-render the component
-                this.signal.emit();
-              });
+            this.connector.executeCode(this.initScripts);
+            this.signal.emit();
           });
         }
       );
@@ -911,6 +884,7 @@ export class Backend {
     msg: KernelMessage.IExecuteInputMsg
   ): void => {
     const msgType: string = msg.header.msg_type;
+    //console.log('Debug: Msg', msg);
     const code = msg.content.code;
     switch (msgType) {
       case 'error':
@@ -963,7 +937,6 @@ export class Backend {
     const messageType = response.header.msg_type;
     // console.log('Message type from the backend', messageType);
     if (messageType === 'execute_result') {
-      console.log('------> Get dataframe list');
       const payload: any = response.content;
       let content: string = payload.data['text/plain'] as string;
 
@@ -991,7 +964,6 @@ export class Backend {
         this.packageNamespaces = kernelData['ed_get_module_namespaces'];
         this.importedFunctions = kernelData['ed_get_functions'];
       } else {
-        console.log('Refreshing dataframes');
         const dataframeList: Array<Dataframe> = [];
         // Note: Just trying to make an array so that I can iterate here
         (dataframes as Array<string>).forEach(item => {
@@ -999,6 +971,7 @@ export class Backend {
             value: item,
             label: item
           };
+          console.log('Dataframes: ', dataframeList)
           dataframeList.push(dataframeItem);
         });
 
