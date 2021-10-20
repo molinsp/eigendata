@@ -685,6 +685,7 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonRemoveData(data: string): Promise<void> {
     const codeToRun = 'del ' + data;
+    this.codeToIgnore = codeToRun;
     console.log('Request expression', codeToRun);
 
     let sessionContext: ISessionContext;
@@ -695,13 +696,13 @@ export class Backend {
     }
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
-    const result = await Backend.sendKernelRequest(
+    await Backend.sendKernelRequest(
       sessionContext.session.kernel,
       codeToRun,
       {}
     );
 
-    console.log('Result', result);
+    this.pythonRequestDataframes()
   }
 
   /*----------------------------------------------------------------------------------------------------
@@ -982,8 +983,10 @@ export class Backend {
 
       this.variablesLoaded = variables;
 
-      if (dataframes.length === 0) {
+      // Only handle cases where there are 0 dataframes because of a deletion
+      if (dataframes.length === 0 && this.dataframesLoaded.length != 0) {
         // If there is no data loaded, reset frontend component
+        
         this.dataframesLoaded = [];
         this.resetStateFormulabarFlag = true;
         this.resetStateDatavisualizerFlag = true;
