@@ -136,6 +136,54 @@ export
         return this._session.session.kernel.requestExecute(content);
     }
 
+    /*----------------------------------------------------------------------------------------------------
+    [FUNCTION] Sends request to Kernel
+    -> Returns: User expressions
+    SOURCE: https://github.com/kubeflow-kale/kale/blob/167aa8859b58918622bb9b742a08cf5807dee4d8/labextension/src/utils/NotebookUtils.tsx#L326
+    -----------------------------------------------------------------------------------------------------*/
+    async executeCodeAndGetResult(
+        runCode: string,
+        userExpressions: any,
+        runSilent = false,
+        storeHistory = false,
+        allowStdIn = false,
+        stopOnError = false
+    ): Promise<any> {
+    // Wait for kernel to be ready before sending request
+    // Kernel.ready is deprecated from 2.0: https://jupyterlab.readthedocs.io/en/stable/developer/extension_migration.html
+
+    const message: KernelMessage.IShellMessage = await this._session.session.kernel.requestExecute({
+        allow_stdin: allowStdIn,
+        code: runCode,
+        silent: runSilent,
+        stop_on_error: stopOnError,
+        store_history: storeHistory,
+        user_expressions: userExpressions,
+    }).done;
+
+    const content: any = message.content;
+
+    if (content.status !== 'ok') {
+    // If response is not 'ok', throw contents as error, log code
+    const msg = `Code caused an error:\n${runCode}`;
+        console.error(msg);
+        if (content.traceback) {
+        content.traceback.forEach((line: string) =>
+          console.log(
+            line.replace(
+              /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
+              ''
+            )
+          )
+        );
+        }
+        throw content;
+    }
+    // Return user_expressions of the content
+    return content.user_expressions;
+    
+    }
+
 }
 
 export

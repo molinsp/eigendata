@@ -25,7 +25,7 @@ import { pythonInitializationScript } from './initscript';
 
 import { Dialog, ISessionContext, SessionContext, showDialog } from '@jupyterlab/apputils';
 
-import { Kernel, KernelMessage, ServiceManager } from '@jupyterlab/services';
+import { KernelMessage, ServiceManager } from '@jupyterlab/services';
 
 import _ from 'lodash';
 
@@ -325,66 +325,6 @@ export class Backend {
 
   // -------------------------------------------------------------------------------------------------------------
   //
-  // (D) INTERNAL UTILITIES
-  //
-  // -------------------------------------------------------------------------------------------------------------
-
-  /*----------------------------------------------------------------------------------------------------
-  [FUNCTION] Sends request to Kernel
-  -> Returns: User expressions
-  Todo: Unique way of creating Kernel requests. Probably move to the kernel connector class
-  SOURCE: https://github.com/kubeflow-kale/kale/blob/167aa8859b58918622bb9b742a08cf5807dee4d8/labextension/src/utils/NotebookUtils.tsx#L326
-  -----------------------------------------------------------------------------------------------------*/
-  public static async sendKernelRequest(
-    kernel: Kernel.IKernelConnection,
-    runCode: string,
-    userExpressions: any,
-    runSilent = false,
-    storeHistory = false,
-    allowStdIn = false,
-    stopOnError = false
-  ): Promise<any> {
-    if (!kernel) {
-      throw new Error('Kernel is null or undefined.');
-    }
-
-    // Wait for kernel to be ready before sending request
-    // Kernel.ready is deprecated from 2.0: https://jupyterlab.readthedocs.io/en/stable/developer/extension_migration.html
-    //await kernel.ready;
-
-    const message: KernelMessage.IShellMessage = await kernel.requestExecute({
-      allow_stdin: allowStdIn,
-      code: runCode,
-      silent: runSilent,
-      stop_on_error: stopOnError,
-      store_history: storeHistory,
-      user_expressions: userExpressions,
-    }).done;
-
-    const content: any = message.content;
-
-    if (content.status !== 'ok') {
-      // If response is not 'ok', throw contents as error, log code
-      const msg = `Code caused an error:\n${runCode}`;
-      console.error(msg);
-      if (content.traceback) {
-        content.traceback.forEach((line: string) =>
-          console.log(
-            line.replace(
-              /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g,
-              ''
-            )
-          )
-        );
-      }
-      throw content;
-    }
-    // Return user_expressions of the content
-    return content.user_expressions;
-  }
-
-  // -------------------------------------------------------------------------------------------------------------
-  //
   // (C) API FOR REACT GUI
   //
   // -------------------------------------------------------------------------------------------------------------
@@ -507,11 +447,7 @@ export class Backend {
         //this.outputPanel.addOutput(code, this.currentNotebook.sessionContext, this.currentNotebook.content.widgets[lastCellIndex] as CodeCell);
       }else{
         // Execute agains adhoc kernel
-        await Backend.sendKernelRequest(
-          this.adHocSessionContext.session.kernel,
-          code,
-          {}
-        );
+        this.connector.executeCode(code)
       }
     }
 
@@ -530,18 +466,10 @@ export class Backend {
       'ed_form = ed_get_json_column_values(' + rightParameter + ')';
     // Flag as code to ignore avoid triggering the pythonRequestDataframes function
     this.codeToIgnore = codeToRun;
-    //console.log('Request expression', codeToRun);
-
-    let sessionContext: ISessionContext;
-    if(this.notebookMode === 'notebook'){
-      sessionContext = this.currentNotebook.sessionContext;
-    }else if (this.notebookMode === 'ad-hoc'){
-      sessionContext = this.adHocSessionContext;
-    }
+    //console.log('Request expression', codeToRun);s
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
-    const result = await Backend.sendKernelRequest(
-      sessionContext.session.kernel,
+    const result = await this.connector.executeCodeAndGetResult(
       codeToRun,
       { form: 'ed_form' }
     );
@@ -576,16 +504,8 @@ export class Backend {
     this.codeToIgnore = codeToRun;
     console.log('Request expression', codeToRun);
 
-    let sessionContext: ISessionContext;
-    if(this.notebookMode === 'notebook'){
-      sessionContext = this.currentNotebook.sessionContext;
-    }else if (this.notebookMode === 'ad-hoc'){
-      sessionContext = this.adHocSessionContext;
-    }
-
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
-    const result = await Backend.sendKernelRequest(
-      sessionContext.session.kernel,
+    const result = await this.connector.executeCodeAndGetResult(
       codeToRun,
       { queryconfig: 'ed_queryconfig' }
     );
@@ -640,16 +560,8 @@ export class Backend {
     console.log('DataViz: Request expression', codeToRun);
     let resultObject = {};
 
-    let sessionContext: ISessionContext;
-    if(this.notebookMode === 'notebook'){
-      sessionContext = this.currentNotebook.sessionContext;
-    }else if (this.notebookMode === 'ad-hoc'){
-      sessionContext = this.adHocSessionContext;
-    }
-
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
-    const result = await Backend.sendKernelRequest(
-        sessionContext.session.kernel,
+    const result = await this.connector.executeCodeAndGetResult(
         codeToRun,
         { data: 'ed_visualizer_data' }
       );
@@ -688,16 +600,8 @@ export class Backend {
     const codeToRun = 'del ' + data;
     console.log('Request expression', codeToRun);
 
-    let sessionContext: ISessionContext;
-    if(this.notebookMode === 'notebook'){
-      sessionContext = this.currentNotebook.sessionContext;
-    }else if (this.notebookMode === 'ad-hoc'){
-      sessionContext = this.adHocSessionContext;
-    }
-
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
-    const result = await Backend.sendKernelRequest(
-      sessionContext.session.kernel,
+    const result = await this.connector.executeCodeAndGetResult(
       codeToRun,
       {}
     );
@@ -714,11 +618,7 @@ export class Backend {
     if(this.notebookMode === 'notebook'){
       this.codeToIgnore = importStatement;
       // Execute the import in the kernel
-      await Backend.sendKernelRequest(
-        this.currentNotebook.sessionContext.session.kernel,
-        importStatement,
-        {}
-      );
+      this.connector.executeCode(importStatement);
 
       // Get content of first cell, which by convention is for the imports
       const importsCell = CellUtilities.getCell(this.currentNotebook.content, 0);
@@ -746,12 +646,7 @@ export class Backend {
       //this.currentNotebook.content.model.cells.get(0).value.text = importsCellNewContent;
       //await CellUtilities.injectCodeAtIndex(this.currentNotebook.content, 0, importsCellNewContent);
     }else if (this.notebookMode === 'ad-hoc'){
-      await Backend.sendKernelRequest(
-      this.adHocSessionContext.session.kernel,
-      importStatement,
-      {}
-      );
-
+      this.connector.executeCode(importStatement);
     }
   }
 
@@ -919,12 +814,7 @@ export class Backend {
   -> Returns: None
   -----------------------------------------------------------------------------------------------------*/
   private pythonRequestDataframes(): void {
-    const content: KernelMessage.IExecuteRequestMsg['content'] = {
-      code: this.kernelInspectorRequest,
-      stop_on_error: false,
-      store_history: false
-    };
-    this.connector.fetch(content, this.handleGetDataframesResponse);
+    this.connector.fetchCode(this.kernelInspectorRequest, this.handleGetDataframesResponse);
   }
 
   /*----------------------------------------------------------------------------------------------------
