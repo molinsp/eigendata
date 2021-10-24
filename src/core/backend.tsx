@@ -236,18 +236,18 @@ export class Backend {
     /*------------------------------------
       LOAD USER TRANSFORMATIONS
     ------------------------------------*/
-        settingRegistry.load('@molinsp/eigendata:usertransformations').then(
-          (settings: ISettingRegistry.ISettings) => {
-            const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
+      settingRegistry.load('@molinsp/eigendata:usertransformations').then(
+        (settings: ISettingRegistry.ISettings) => {
+          const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
 
-            if(!_.isEmpty(userTransformations)){
-              transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
-              console.log('User added configs', transformationsConfig);
-            }else{
-              console.log('No user transformations found');
-            }
+          if(!_.isEmpty(userTransformations)){
+            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
+            console.log('User added configs', transformationsConfig);
+          }else{
+            console.log('No user transformations found');
           }
-        );
+        }
+      );
       })
     .then(() => {
     /*------------------------------------
@@ -545,6 +545,7 @@ export class Backend {
       codeToRun,
       { form: 'ed_form' }
     );
+
     // Retriev the data behind the javascript object where the result is saved
     let content = result.form.data['text/plain'];
 
