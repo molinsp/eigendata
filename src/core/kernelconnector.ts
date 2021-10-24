@@ -139,7 +139,6 @@ export
     /*----------------------------------------------------------------------------------------------------
     [FUNCTION] Sends request to Kernel
     -> Returns: User expressions
-    SOURCE: https://github.com/kubeflow-kale/kale/blob/167aa8859b58918622bb9b742a08cf5807dee4d8/labextension/src/utils/NotebookUtils.tsx#L326
     -----------------------------------------------------------------------------------------------------*/
     async executeCodeAndGetResult(
         runCode: string,
