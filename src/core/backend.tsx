@@ -120,7 +120,7 @@ export class Backend {
   public resetStateDatavisualizerFlag = false;
 
   // Production flag that determines if usage analytics are captured
-  public production = false;
+  public production = true;
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
