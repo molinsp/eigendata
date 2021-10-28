@@ -603,10 +603,7 @@ export class Backend {
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
 
-    const result = await this.connector.executeCodeAndGetResult(
-      codeToRun,
-      {}
-    );
+    this.connector.executeCode(codeToRun);
 
     this.pythonRequestDataframes()
   }
