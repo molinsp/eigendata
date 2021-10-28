@@ -2,9 +2,15 @@
 
 ![logo](/img/logo.png)
 
-Eigendata is a **low-code tool for data analysis** aimed at empowering users that know a bit of code but are not highly productive yet. 
+## Introduction
 
-Eigendata renders a form interface below cells in a jupyter notebook (can be hidden/shown with  `Ctrl E`), providing fast acess to common data transformatiosn without needing to remember syntax or the exact name of the method. It enables users to become more productive by googling less, reducing syntax errors and keeping track of the data at all times.
+Product managers, business analysts, operations managers, and other non-technical personas often need to analyze data and build workflows in a repeatable way. Many of them have learned a bit of code to automate business processes or analyze data. But for them, the cognitive overhead of remembering code syntax is too high.
+
+Eigendata empowers these users with a low-code tool that makes manipulating data as easy as other GUI tools without the limitations that these tools often impose. With eigendata, all your transformation steps are built on battle-proofed standard open-source packages. You can share code with developers once it needs to be productionized, leverage custom code for instances where the tool does not provide a solution and manipulate anything programmatically.
+
+## Eigendata notebook extension
+
+Eigendata renders a form interface below cells in a Jupyter Notebook (can be hidden/shown with  `Ctrl E`), providing fast access to common data transformations without needing to remember the syntax or the exact name of the method. It enables users to become more productive by googling less, reducing syntax errors, and keeping track of the data at all times.
 
 You can try it without installing [here](https://cloud.eigendata.co/).
 
@@ -18,69 +24,49 @@ Besides these improvements, **Eigendata provides options to simplify the Jupyter
 
 All of these configurations can also be disabled through the advanced settings `⌘ ,`
 
-## Eigendata extension framework for low-code UIs 
+## Eigendata framework for declarative API GUIs
 
-Eigendata is not just a set of hard-coded UI elements on top of a library. It aims to build a generalizable framework to create GUIs for code libraries. The core framework is based on [react-jsonschema-form](https://react-jsonschema-form.readthedocs.io/en/latest/), with several extensions. You can lear more about the transformation UI spec and how to create your own transformations in our [transformation documentation](/Transformation_documentation.ipynb).
+Eigendata is not just a set of hard-coded UI elements on top of a library. It aims to build a generalizable framework to create GUIs for code libraries. The core framework is based on [react-jsonschema-form](https://react-jsonschema-form.readthedocs.io/en/latest/), with several extensions. You can learn more about the transformation UI spec and how to create your own transformations in our [transformation documentation](/Transformation_documentation.ipynb).
 
-To user your own custom transformations, you can either add the json code to user transformations in the settings of the eigendata extension. If you want to share transformations across a team (e.g. common features), you can also provide a transformation sever url that serves a file with the transformations. This can be setup with the `transformationServer` and `transformationAuth` in eigendata settings.
+To use your own custom transformations, you can either add the JSON code to user transformations in the settings of the eigendata extension. If you want to share transformations across a team (e.g. common features), you can also provide a transformation sever URL that serves a file with the transformations. This can be set up with the `transformationServer` and `transformationAuth` in eigendata settings.
 
-Example transformatio UI from a JSON definition:
+Example transformation UI from a JSON definition:
 
 ```json 
-"read_csv" : {
-      "form" : {
-        "properties" : {
-          "filepath_or_buffer" : {
-            "type" : "string",
-            "title" : "file path",
-            "description" : "Location of the file relative to the notebook. E.g. /Documents/Data/testdata.csv."
-          },
-          "sep" : {
-            "type" : "string",
-            "default" : ",",
-            "title" : "separator",
-            "description" : "Character used to separate columns (e.g. commas, semicolons, etc.)."
-          },
-          "decimal" : {
-            "type" : "string",
-            "default" : ".",
-            "description" : "Character used to indicate decimals."
-          },
-          "header" : {
-            "type" : "number",
-            "description" : "Row to use for the column labels (first row is 0)."
-          },
-          "new table name" : {
-            "type" : "string"
+"pandas.DataFrame.drop" : {
+  "form" : {
+        "required" : [
+          "columns"
+        ],
+        "definitions" : {
+          "columns" : {
+            "type" : "array",
+            "uniqueItems" : true,
+            "items" : {
+              "type" : "string",
+              "enum" : []
+            }
           }
         },
-        "required" : [
-          "filepath_or_buffer"
-        ],
-        "title" : "Read CSV file",
+        "properties" : {
+          "columns" : {
+            "$ref" : "#/definitions/columns",
+            "description" : "Select the columns that you want to remove."
+          }
+        },
+        "title" : "Drop columns",
+        "description" : "Drop columns from the dataframe.",
         "type" : "object",
-        "callerObject" : "pd",
-        "function" : "read_csv",
-        "transformationType" : "dataLoading",
-        "description" : "Load the csv in a table."
-      },
-      "uischema" : {
-        "new table name" : {
-          "ui:placeholder" : "Leave blank to modify selected table"
-        }
-      },
-      "library" : {
-        "name" : "pandas",
-        "importStatement" : "import pandas as pd",
-        "namespace" : "pd"
-      },
-      "keywords" : [
-        "csv",
-        "load",
-        "read"
-      ]
-    }
+        "callerObject" : "DataFrame",
+    		"returnType" : "DataFrame",
+        "function" : "drop"
+      }
+}
 ```
+
+And the UI rendered based on this definition:
+
+![logo](/img/transformations_drop.png)
 
 ## Install
 

@@ -120,7 +120,7 @@ export class Backend {
   public resetStateDatavisualizerFlag = false;
 
   // Production flag that determines if usage analytics are captured
-  public production = false;
+  public production = true;
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
@@ -598,15 +598,17 @@ export class Backend {
   -----------------------------------------------------------------------------------------------------*/
   public async pythonRemoveData(data: string): Promise<void> {
     const codeToRun = 'del ' + data;
+    this.codeToIgnore = codeToRun;
     console.log('Request expression', codeToRun);
 
     // Execute code and save the result. The last parameter is a mapping from the python variable to the javascript object
+
     const result = await this.connector.executeCodeAndGetResult(
       codeToRun,
       {}
     );
 
-    console.log('Result', result);
+    this.pythonRequestDataframes()
   }
 
   /*----------------------------------------------------------------------------------------------------
@@ -846,8 +848,10 @@ export class Backend {
 
       this.variablesLoaded = variables;
 
-      if (dataframes.length === 0) {
+      // Only handle cases where there are 0 dataframes because of a deletion
+      if (dataframes.length === 0 && this.dataframesLoaded.length != 0) {
         // If there is no data loaded, reset frontend component
+        
         this.dataframesLoaded = [];
         this.resetStateFormulabarFlag = true;
         this.resetStateDatavisualizerFlag = true;
