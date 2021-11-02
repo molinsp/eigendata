@@ -1,6 +1,6 @@
 
 
-![logo](/img/logo.png)
+![logo](https://raw.githubusercontent.com/molinsp/eigendata/main/img/logo.png?token=AA6V2SGI6NZJCQJNTPZ7G6LBQEBBE)
 
 ## Introduction
 
@@ -14,7 +14,7 @@ Eigendata renders a form interface below cells in a Jupyter Notebook (can be hid
 
 You can try it without installing [here](https://cloud.eigendata.co/).
 
-![logo](/img/eigendata_overview.png)
+![logo](https://raw.githubusercontent.com/molinsp/eigendata/main/img/eigendata_overview.png?token=AA6V2SBFYWJI3IO2AN4TUTTBQEA7C)
 
 Besides these improvements, **Eigendata provides options to simplify the JupyterLab interface** for new users:
 
@@ -66,7 +66,7 @@ Example transformation UI from a JSON definition:
 
 And the UI rendered based on this definition:
 
-![logo](/img/transformations_drop.png)
+![logo](https://raw.githubusercontent.com/molinsp/eigendata/main/img/transformations_drop.png?token=AA6V2SAZ3DU5LNTKZ5LH3Q3BQEBCW)
 
 ## Install
 
