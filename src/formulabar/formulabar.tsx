@@ -131,8 +131,10 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       queryConfig: null
     });
     logic.resetStateFormulabarFlag = false;
+  }
 
-    // This starts the product tour. It's here because it needs to load after the rest of the elements
+  // Flag to start the product tour when backend has already setup and the transformation list loaded
+  if (logic.startProductTour === true) {
     if (logic.completedProductTour === false) {
       setState(state => ({ ...state, formData: {filepath_or_buffer: 'players_20.csv'}}));
 
@@ -143,7 +145,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       logic.completedProductTour = true;
     }
   }
-
   /*-----------------------------------
     HANDLE SHORTCUTS
   -----------------------------------*/

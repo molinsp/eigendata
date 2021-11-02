@@ -97,6 +97,7 @@ export class Backend {
   public variablesLoaded = [];
 
   public completedProductTour: boolean;
+  public startProductTour: boolean;
 
   public kernelStatus: string;
 
@@ -209,7 +210,6 @@ export class Backend {
           this.shareProductData = settings.get('shareProductData').composite as boolean;
         }
 
-
         this.completedProductTour = settings.get('completedProductTour').composite as boolean;
         this.eigendataMode = settings.get('eigendataMode').composite as string;
         this.transformationServer = settings.get('transformationServer').composite as string;
@@ -220,12 +220,6 @@ export class Backend {
         // Save the settings object to be used. Use case is to change settings after product tour
         this.eigendataSettings = settings;
 
-        console.log('Analytics: Product tracking data', this.shareProductData);
-        // Tracking setup
-        if (this.production && this.shareProductData) {
-          amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
-          amplitude.getInstance().setVersionName(packageVersion);
-        }
       },
       (err: Error) => {
         console.error(
@@ -284,9 +278,10 @@ export class Backend {
         }
       }
     ).then(()=>{
-    /*------------------------------------
-      START KERNEL IF IN NO-CODE MODE
-    ------------------------------------*/
+      // Start product tour
+      this.startProductTour = true;
+      
+      // Start Kernel if in no-code mode
       if ( this.eigendataMode === 'no-code'){
           //Ad-hoc mode not working well yet 
           this.notebookMode = 'ad-hoc';
