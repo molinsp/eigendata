@@ -1,5 +1,4 @@
 {
-  "version" : "0.0.44",
   "transformations" : {
     "read_csv" : {
       "form" : {

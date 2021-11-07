@@ -149,12 +149,11 @@ export class Backend {
     this.notebookMode = 'notebook';
 
     // Read transformations config
-    const readTransformationConfig = (): void => {
+    const createTransformationSelectionDropdownFromConfig = (): void => {
       this.transformationsConfig = transformationsConfig['transformations'];
       const transformationList = [
         { value: 'query', label: 'Filter dataframe' }
       ];
-      console.log('Read transformations into list', transformationsConfig['transformations']);
       for (const transformation in transformationsConfig['transformations']) {
         if (transformation) {
           transformationList.push({
@@ -168,9 +167,6 @@ export class Backend {
       }
       this.transformationsList = transformationList;
     };
-
-    // Read default transformation config (replaced later)
-    readTransformationConfig();
 
     // Load python initialization script
     this.initScripts = pythonInitializationScript;
@@ -265,13 +261,12 @@ export class Backend {
           .then(response => {
             return response.json();
           })
-          .then(parsedConfig => {
-            console.log('REMOTE TRANSFORMATIONS VERSION:', parsedConfig['version']);
-            //transformationsConfig = parsedConfig;
-            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], parsedConfig['transformations']);
+          .then(remoteTransformationFile => {
+            console.log('REMOTE TRANSFORMATIONS VERSION:', remoteTransformationFile['version']);
+            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], remoteTransformationFile['transformations']);
           })
           .then(() => {
-              readTransformationConfig();
+              createTransformationSelectionDropdownFromConfig();
               this.signal.emit();
             }
           )

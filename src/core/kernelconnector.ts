@@ -41,7 +41,7 @@ export
         
         // This is useful if we want to support manually shutind down and restarting Kernels, which we won't support for the moment for simplif
         this._session.connectionStatusChanged.connect((sender: ISessionContext, connectionStatus: Kernel.ConnectionStatus)=>{
-            console.log('Debug: Connection status ->', connectionStatus);
+            //console.log('Debug: Connection status ->', connectionStatus);
             switch (connectionStatus) {
                 case "connected":
                 case "disconnected":

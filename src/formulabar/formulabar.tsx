@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Form from '@rjsf/core';
 import Select from 'react-select';
 import { JSONSchema7 } from 'json-schema';
-import Joyride from 'react-joyride';
+import Joyride, { STATUS } from 'react-joyride';
 import { generatePythonCode } from './codeGeneration';
 import 'bootstrap/dist/css/bootstrap.css';
 // Feedback buttons library
@@ -57,7 +57,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   ] as JSONSchema7;
   const defaultTransformationSelection = {
     value: 'read_csv',
-    label: 'Read CSV'
+    label: 'Read CSV file'
   };
 
   // Display only transformations that load data when there is no data
@@ -133,18 +133,43 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     logic.resetStateFormulabarFlag = false;
   }
 
-  // Flag to start the product tour when backend has already setup and the transformation list loaded
-  if (logic.startProductTour === true) {
-    if (logic.completedProductTour === false) {
-      setState(state => ({ ...state, formData: {filepath_or_buffer: 'players_20.csv'}}));
+  /*-----------------------------------
+    START AND END PRODUCT TOUR
+  -----------------------------------*/
 
-      setProductTourState({ run: true });
-      // Change the settings for it not to run next time (next refresh)
-      logic.eigendataSettings.set('completedProductTour', true);
-      // Set to true for it not to run again in the current session
-      logic.completedProductTour = true;
-    }
+  // Flag to start the product tour when backend has already setup and the transformation list loaded
+  if (logic.startProductTour === true && logic.completedProductTour === false) {
+    console.log('Debug : start product tour ', logic.startProductTour);
+    console.log('Debug : completed product tour ', logic.completedProductTour);
+    logic.startProductTour = false;
+    logic.completedProductTour = true;
+
+
+    setState({
+      ...state,
+      transformationForm: transformationForm,
+      transformationUI: defaultUISchema,
+      showForm: true,
+      dataframeSelection: null,
+      transformationSelection: defaultTransformationSelection,
+      queryConfig: null,
+      formData: {filepath_or_buffer: 'players_20.csv'}
+    });
+
+    setProductTourState({ run: true });
+    // Change the settings for it not to run next time (next refresh)
+    logic.eigendataSettings.set('completedProductTour', true);
+    // Set to true for it not to run again in the current session
   }
+
+  const handleJoyrideCallback = data => {
+    const { status } = data;
+    if ([STATUS.FINISHED, STATUS.SKIPPED].includes(status)) {
+      // Need to set our running state to false, so we can restart if we click start again.
+      setProductTourState({ run: false });
+    }
+  };
+
   /*-----------------------------------
     HANDLE SHORTCUTS
   -----------------------------------*/
@@ -163,7 +188,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   }, []);
 
   /*-----------------------------------
-    (A) SEARCH
+    SEARCH
   -----------------------------------*/
   // Log what the users are searching
   let prevInput = '';
@@ -222,7 +247,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   /*--------------------------------------
-    (B) FORM HANDLING
+    FORM HANDLING
   ---------------------------------------*/
 
   // Add the behavior described above
@@ -391,7 +416,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   /*--------------------------------------
-    (C) GENERATE CODE & UPDATE INTERNALS
+    GENERATE CODE & UPDATE INTERNALS
   ---------------------------------------*/
 
   // Generate python code and write in the notebook
@@ -599,7 +624,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   };
 
   /*--------------------------------------
-    (D) FEEDBACK LOGIC
+    FEEDBACK LOGIC
   ---------------------------------------*/
 
   const extraErrors = state.error
@@ -669,6 +694,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
           steps={productTourSteps}
           continuous={true}
           run={productTourState.run}
+          callback={handleJoyrideCallback}
           hideBackButton={true}
           disableScrollParentFix={true}
           showSkipButton={true}
