@@ -204,6 +204,11 @@ export class Backend {
             });
         } else {
           this.shareProductData = settings.get('shareProductData').composite as boolean;
+          console.log('Analytics: Product tracking data', this.shareProductData);
+          if (this.production && this.shareProductData) {
+            amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
+            amplitude.getInstance().setVersionName(packageVersion);
+          }
         }
 
         this.completedProductTour = settings.get('completedProductTour').composite as boolean;
