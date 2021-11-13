@@ -45,7 +45,7 @@ import { OutputPanel } from '../datavisualizer/outputPanel';
 
 //import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
-const packageVersion = '0.3.5';
+const packageVersion = '0.3.6';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -121,7 +121,7 @@ export class Backend {
   public resetStateDatavisualizerFlag = false;
 
   // Production flag that determines if usage analytics are captured
-  public production = true;
+  public production = false;
 
   public eigendataSettings: ISettingRegistry.ISettings;
 
@@ -149,12 +149,11 @@ export class Backend {
     this.notebookMode = 'notebook';
 
     // Read transformations config
-    const readTransformationConfig = (): void => {
+    const createTransformationSelectionDropdownFromConfig = (): void => {
       this.transformationsConfig = transformationsConfig['transformations'];
       const transformationList = [
         { value: 'query', label: 'Filter dataframe' }
       ];
-      console.log('Read transformations into list', transformationsConfig['transformations']);
       for (const transformation in transformationsConfig['transformations']) {
         if (transformation) {
           transformationList.push({
@@ -168,9 +167,6 @@ export class Backend {
       }
       this.transformationsList = transformationList;
     };
-
-    // Read default transformation config (replaced later)
-    readTransformationConfig();
 
     // Load python initialization script
     this.initScripts = pythonInitializationScript;
@@ -265,13 +261,12 @@ export class Backend {
           .then(response => {
             return response.json();
           })
-          .then(parsedConfig => {
-            console.log('REMOTE TRANSFORMATIONS VERSION:', parsedConfig['version']);
-            //transformationsConfig = parsedConfig;
-            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], parsedConfig['transformations']);
+          .then(remoteTransformationFile => {
+            console.log('REMOTE TRANSFORMATIONS VERSION:', remoteTransformationFile['version']);
+            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], remoteTransformationFile['transformations']);
           })
           .then(() => {
-              readTransformationConfig();
+              createTransformationSelectionDropdownFromConfig();
               this.signal.emit();
             }
           )
