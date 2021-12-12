@@ -1,12 +1,12 @@
 
 
-![logo](https://raw.githubusercontent.com/molinsp/eigendata/main/img/logo.png?token=AA6V2SGI6NZJCQJNTPZ7G6LBQEBBE)
+![logo](https://eigendata.co/assets/images/image05.png?v=ff441110)
 
 ## Introduction
 
-Product managers, business analysts, operations managers, and other non-technical personas often need to analyze data and build workflows in a repeatable way. Many of them have learned a bit of code to automate business processes or analyze data. But for them, the cognitive overhead of remembering code syntax is too high.
+Product managers, business analysts, operations managers, and other non-technical personas often need to analyze data and build workflows in a repeatable way. This is often done in spreadsheets in a way that is not scalable or robust. To overcome challenges found in spreadsheets, many have learned basic coding to automate business processes or analyze data. But for them, the cognitive overhead of remembering code syntax is too high.
 
-Eigendata empowers these users with a low-code tool that makes manipulating data as easy as other GUI tools without the limitations that these tools often impose. With eigendata, all your transformation steps are built on battle-proofed standard open-source packages. You can share code with developers once it needs to be productionized, leverage custom code for instances where the tool does not provide a solution and manipulate anything programmatically.
+Eigendata empowers these users with a low-code tool that makes manipulating data as easy as other GUI tools without the limitations that these tools often impose. With eigendata, all your transformation steps are built on battle-proofed open-source standard packages. You can share code with developers once it needs to be productionized, leverage custom code for instances where the tool does not provide a solution and manipulate anything programmatically.
 
 ## Eigendata notebook extension
 
@@ -16,11 +16,9 @@ You can try it without installing [here](https://cloud.eigendata.co/).
 
 ![logo](https://raw.githubusercontent.com/molinsp/eigendata-doc/master/docs/media/eigendata_overview.png)
 
-Besides these improvements, **Eigendata provides options to simplify the JupyterLab interface** for new users:
-
-1. All the menus that can be found through `⌘ ⇧ C` are removed from the UI for simplicity
-2. Intuitive coda/notion like shortcuts for the sidebars `⌘ /` `⌘ \`
-3. When you close a tab, the kernel is shut down
+Besides these improvements, **Eigendata provides options to simplify the JupyterLab experience** for new users:
+- Intuitive coda/notion like shortcuts for the sidebars `⌘ /` `⌘ \`
+- When you close a tab, the kernel is shut down
 
 All of these configurations can also be disabled through the advanced settings `⌘ ,`
 
