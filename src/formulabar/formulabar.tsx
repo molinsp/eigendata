@@ -782,6 +782,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
                 uiSchema={state.transformationUI}
                 extraErrors={extraErrors}
                 omitExtraData={true}
+                idPrefix={"rjsf"}
                 // React renders new Element for each key.
                 // We need to re-render Form to update shown errors
                 key={state.formKey}
