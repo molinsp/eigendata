@@ -50,13 +50,13 @@
       "type": "boolean",
       "title": "Simplify menus",
       "description": "Remove top-level menus to declutter the interface. All commands can be accessed through the command palette.",
-      "default": true
+      "default": false
     },
     "simplifySidebars": {
       "type": "boolean",
       "title": "Simplify Sidebars",
       "description": "Remove sidebars to declutter the interface",
-      "default": true
+      "default": false
     }
   }
 }
