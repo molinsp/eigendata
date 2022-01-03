@@ -688,6 +688,7 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
   return (
     <div className="app">
+    {props.logic.kernelStatus === "busy" && <Spinner />}
     {visibility && (
       <div className="content">
         <Joyride
@@ -712,127 +713,134 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
             },
           }}
         />
-        {props.logic.kernelStatus === "busy" && <Spinner />}
-
-          <div className="side-by-side-fields">
-            <div className="centered" />
-            <fieldset className="data-transformation-form">
-              <Select
-                name="Select transformation"
-                placeholder="Search transformation"
-                options={
-                  logic.dataframesLoaded.length !== 0
-                    ? logic.transformationsList
-                    : loadingTransformations()
-                }
-                value={state.transformationSelection}
-                label="Select transformation"
-                onChange={handleTransformationSelectionChange}
-                onInputChange={handleInputChange}
-                className="right-field"
-                components={{
-                  DropdownIndicator: (): JSX.Element => magnifier,
-                  IndicatorSeparator: (): null => null,
-                }}
-                id="transformationselect"
-                filterOption={getKeywordsForFilter}
-                maxMenuHeight={400}
-                styles={formulabarMainSelect}
-                autoFocus={true}
-                ref={transformationSelectionRef}
-              />
-              <Select
-                name="Select dataframe"
-                placeholder={
-                  logic.dataframesLoaded.length !== 0 ? "Select data" : "No data"
-                }
-                options={logic.dataframesLoaded}
-                value={state.dataframeSelection}
-                label="Select data"
-                onChange={handleDataframeSelectionChange}
-                className="left-field"
-                isDisabled={!state.enableCallerSelection}
-                id="dataselect"
-                components={{
-                  DropdownIndicator: (): JSX.Element => tableIcon,
-                  IndicatorSeparator: (): null => null,
-                }}
-                styles={formulabarMainSelect}
-                ref={dataframeSelectionRef}
-              />
-            </fieldset>
-            {binderUrl && (
-              <div className="binderButtonSeparator">
-                <a
-                  href="https://calendly.com/molinsp/eigendata-demo"
-                  className="binderButton"
-                >
-                  BOOK A DEMO
-                </a>
-              </div>
-            )}
-            <div className="centered formulaFormDivider" />
-            {state.showForm && (
-              <Form
-                formData={state.formData}
-                schema={state.transformationForm}
-                onSubmit={callGeneratePythonCode}
-                onChange={handleFormChange}
-                widgets={widgets}
-                uiSchema={state.transformationUI}
-                extraErrors={extraErrors}
-                omitExtraData={true}
-                // React renders new Element for each key.
-                // We need to re-render Form to update shown errors
-                key={state.formKey}
-              />
-            )}
-            {state.queryConfig && (
-              <QueryBuilder
-                queryConfig={state.queryConfig}
-                dataframeSelection={state.dataframeSelection.value}
-                backend={logic}
-              />
-            )}
-            {/* If transformation was submit show the feedback buttons */}
-            {feedbackState.submittedTransformation &&
-              !(state.showForm || state.queryConfig) && (
-                <form id="feedback" onSubmit={onSubmitDescription}>
-                  <div id="feedback__buttons">
-                    <BinaryFeedback
-                      onPositiveClick={onPositiveClick}
-                      onNegativeClick={onNegativeClick}
-                      positiveContent={FeedbackContent(
-                        thumbUp,
-                        "Worked",
-                        "#93C47d"
-                      )}
-                      negativeContent={FeedbackContent(
-                        thumbDown,
-                        "Didn't work",
-                        "#E06666"
-                      )}
-                      singleSelect
-                    />
-                  </div>
-                  <div id="feedback__negative-description">
-                    <input
-                      placeholder="Share the issue so we can fix it!"
-                      type="text"
-                      className="short form-control margin-right"
-                      onChange={onTextChange}
-                      value={feedbackState.negativeDescription}
-                    />
-                    <input
-                      type="submit"
-                      className="short btn btn-info"
-                      disabled={feedbackState.negativeDescription === ""}
-                    />
-                  </div>
-                </form>
-              )}
+        <div className="side-by-side-fields">
+          <div className="centered" />
+          <fieldset className="data-transformation-form">
+            <Select
+              name="Select transformation"
+              placeholder="Search transformation"
+              options={
+                logic.dataframesLoaded.length !== 0
+                  ? logic.transformationsList
+                  : loadingTransformations()
+              }
+              value={state.transformationSelection}
+              label="Select transformation"
+              onChange={handleTransformationSelectionChange}
+              onInputChange={handleInputChange}
+              className="right-field"
+              components={{
+                DropdownIndicator: (): JSX.Element => magnifier,
+                IndicatorSeparator: (): null => null,
+              }}
+              id="transformationselect"
+              filterOption={getKeywordsForFilter}
+              maxMenuHeight={400}
+              styles={formulabarMainSelect}
+              autoFocus={true}
+              ref={transformationSelectionRef}
+            />
+            <Select
+              name="Select dataframe"
+              placeholder={
+                logic.dataframesLoaded.length !== 0 ? "Select data" : "No data"
+              }
+              options={logic.dataframesLoaded}
+              value={state.dataframeSelection}
+              label="Select data"
+              onChange={handleDataframeSelectionChange}
+              className="left-field"
+              isDisabled={!state.enableCallerSelection}
+              id="dataselect"
+              components={{
+                DropdownIndicator: (): JSX.Element => tableIcon,
+                IndicatorSeparator: (): null => null,
+              }}
+              styles={formulabarMainSelect}
+              ref={dataframeSelectionRef}
+            />
+          </fieldset>
+          {binderUrl && (
+            <div className="binderButtonSeparator">
+              <a
+                href="https://calendly.com/molinsp/eigendata-demo"
+                className="binderButton"
+              >
+                BOOK A DEMO
+              </a>
+            </div>
+          )}
+          <div className="centered formulaFormDivider" />
+          <div className="showHideIndicator">
+            <p><code>Ctrl E</code> to hide eigendata formula bar </p>
           </div>
+          {state.showForm && (
+            <Form
+              formData={state.formData}
+              schema={state.transformationForm}
+              onSubmit={callGeneratePythonCode}
+              onChange={handleFormChange}
+              widgets={widgets}
+              uiSchema={state.transformationUI}
+              extraErrors={extraErrors}
+              omitExtraData={true}
+              idPrefix={"rjsf"}
+              // React renders new Element for each key.
+              // We need to re-render Form to update shown errors
+              key={state.formKey}
+            />
+          )}
+          {state.queryConfig && (
+            <QueryBuilder
+              queryConfig={state.queryConfig}
+              dataframeSelection={state.dataframeSelection.value}
+              backend={logic}
+            />
+          )}
+          {/* If transformation was submit show the feedback buttons */}
+          {feedbackState.submittedTransformation &&
+            !(state.showForm || state.queryConfig) && (
+              <form id="feedback" onSubmit={onSubmitDescription}>
+                <div id="feedback__buttons">
+                  <BinaryFeedback
+                    onPositiveClick={onPositiveClick}
+                    onNegativeClick={onNegativeClick}
+                    positiveContent={FeedbackContent(
+                      thumbUp,
+                      "Worked",
+                      "#93C47d"
+                    )}
+                    negativeContent={FeedbackContent(
+                      thumbDown,
+                      "Didn't work",
+                      "#E06666"
+                    )}
+                    singleSelect
+                  />
+                </div>
+                <div id="feedback__negative-description">
+                  <input
+                    placeholder="Share the issue so we can fix it!"
+                    type="text"
+                    className="short form-control margin-right"
+                    onChange={onTextChange}
+                    value={feedbackState.negativeDescription}
+                  />
+                  <input
+                    type="submit"
+                    className="short btn btn-info"
+                    disabled={feedbackState.negativeDescription === ""}
+                  />
+                </div>
+              </form>
+            )}
+        </div>
       </div>
+    )}
+    {!visibility && (
+    <div className="showHideIndicator showHideIndicatorMargins">
+      <p><code>Ctrl E</code> to show eigendata formula bar</p>
+    </div>
     )}
     </div>
   );

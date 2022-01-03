@@ -1,0 +1,49 @@
+{% set name = "eigendata" %}
+{% set version = "0.3.6" %}
+
+package:
+  name: "{{ name|lower }}"
+  version: "{{ version }}"
+
+source:
+  url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
+  sha256: 65c5637bd05fb5212514a0fac7ce356c1b04bd820d5716dcd80ccb3e0715a393
+
+build:
+  noarch: python
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+requirements:
+  host:
+    - fastdata >=0.0.20
+    - jupyter_server >=1.6,<2
+    - numpy >=1.0.0
+    - pandas >=1.0.0
+    - pip
+    - python
+    - jupyter-packaging >=0.11.1
+  run:
+    - fastdata >=0.0.20
+    - jupyter_server >=1.6,<2
+    - numpy >=1.0.0
+    - pandas >=1.0.0
+    - python
+    - jupyter-packaging >=0.11.1
+
+test:
+  imports:
+    - eigendata
+
+about:
+  home: "https://molinsp.github.io/eigendata-doc/"
+  license: BSD
+  license_family: BSD
+  license_file: 
+  summary: "Eigendata is a low-code tool for data analysis designed for people that want to get things done."
+  doc_url: 
+  dev_url: 
+
+extra:
+  recipe-maintainers:
+    - your-github-id-here
