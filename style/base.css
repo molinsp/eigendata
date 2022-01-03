@@ -66,6 +66,17 @@
   margin-bottom: 10px;
 }
 
+/* Indicator under the cell that explains how to display eigendata interface */
+.showHideIndicator{
+  font-size: 12px;
+}
+
+
+.showHideIndicatorMargins{
+  margin-top: 5px;
+  margin-left: 5px;
+}
+
 #root__title{
   border-bottom-width: 0px;
   margin-bottom: 5px;

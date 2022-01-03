@@ -772,6 +772,9 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
               </div>
             )}
             <div className="centered formulaFormDivider" />
+            <div className="showHideIndicator">
+              <p><code>Ctrl E</code> to hide eigendata formula bar </p>
+            </div>
             {state.showForm && (
               <Form
                 formData={state.formData}
@@ -834,6 +837,11 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
               )}
           </div>
       </div>
+    )}
+    {!visibility && (
+    <div className="showHideIndicator showHideIndicatorMargins">
+      <p><code>Ctrl E</code> to show eigendata formula bar</p>
+    </div>
     )}
     </div>
   );
