@@ -770,6 +770,11 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
               </a>
             </div>
           )}
+          {logic.failedToLoadTransformations && (
+            <div className="alert alert-warning transformationsFetchErrorIndicator">
+              Error loading remote transformations, check the settings.
+            </div>
+          )} 
           <div className="centered formulaFormDivider" />
           <div className="showHideIndicator">
             <p><code>Ctrl E</code> to hide eigendata formula bar </p>
