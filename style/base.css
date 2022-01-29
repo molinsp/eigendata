@@ -71,6 +71,13 @@
   font-size: 12px;
 }
 
+.transformationsFetchErrorIndicator{
+  /* Overwrite bootstrap padding */
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+  padding-left: 10px !important;
+}
+
 
 .showHideIndicatorMargins{
   margin-top: 5px;

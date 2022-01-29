@@ -78,6 +78,9 @@ export class Backend {
   /*---------------------------------
     Communicate with UI
   ----------------------------------*/
+  // Failed to load transformations
+  public failedToLoadTransformations = false;
+
   // Signal that triggers the update of the react component
   public signal = new Signal<this, void>(this);
 
@@ -88,20 +91,36 @@ export class Backend {
   public packageNamespaces = [];
   public importedFunctions = [];
 
+  // Dataframe selection
+  private _dataframeSelection: any;
+  get dataframeSelection() {
+    return this._dataframeSelection;
+  }
+
+  set dataframeSelection(value: any) {
+    this._dataframeSelection = value;
+  }
+
   // Data transformation functions
   public transformationsList = [];
+
+  // Variable explorer
+  public variablesLoaded = [];
+
+  // Flag to reset the state of the frontend
+  public resetStateFormulabarFlag = false;
+  public resetStateDatavisualizerFlag = false;
+
+  // Kernel status (show for loading bar)
+  public kernelStatus: string;
 
   // Flag to decide if we are going to share product data
   public shareProductData;
 
-  public variablesLoaded = [];
-
+  // Product Tour state
   public completedProductTour: boolean;
+
   public startProductTour: boolean;
-
-  public kernelStatus: string;
-
-  public eigendataMode: string;
   /*---------------------------------
     Communicate with Python Kernel
   ----------------------------------*/
@@ -113,29 +132,19 @@ export class Backend {
   /*---------------------------------
     Configurations
   ----------------------------------*/
+  
+  public eigendataSettings: ISettingRegistry.ISettings;
+
   // Custom data transformationsList defined in JSON file
   public transformationsConfig;
 
-  // Flag to reset the state of the frontend
-  public resetStateFormulabarFlag = false;
-  public resetStateDatavisualizerFlag = false;
+  // Low-code or no-code
+  public eigendataMode: string;
 
   // Production flag that determines if usage analytics are captured
   public production = false;
 
-  public eigendataSettings: ISettingRegistry.ISettings;
-
   public openFormulabarCellByDefault: boolean;
-
-  private _dataframeSelection: any;
-
-  get dataframeSelection() {
-    return this._dataframeSelection;
-  }
-
-  set dataframeSelection(value: any) {
-    this._dataframeSelection = value;
-  }
 
   // -------------------------------------------------------------------------------------------------------------
   // CONSTRUCTOR
@@ -231,53 +240,59 @@ export class Backend {
     /*------------------------------------
       LOAD USER TRANSFORMATIONS
     ------------------------------------*/
-      settingRegistry.load('@molinsp/eigendata:usertransformations').then(
-        (settings: ISettingRegistry.ISettings) => {
-          const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
+    settingRegistry.load('@molinsp/eigendata:usertransformations').then(
+      (settings: ISettingRegistry.ISettings) => {
+        const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
 
-          if(!_.isEmpty(userTransformations)){
-            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
-            console.log('User added configs', transformationsConfig);
-          }else{
-            console.log('No user transformations found');
-          }
+        if(!_.isEmpty(userTransformations)){
+          transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
+          console.log('User added configs', transformationsConfig);
+        }else{
+          console.log('No user transformations found');
         }
-      );
-      })
+      }
+    );
+    })
     .then(() => {
     /*------------------------------------
           LOAD REMOTE TRANSFORMATIONS
     ------------------------------------*/
-        if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
-          const myHeaders = new Headers();
-          myHeaders.append(
-            'Authorization',
-            'Bearer '.concat(this.transformationAuth)
-          );
-          const requestOptions: RequestInit = {
-            method: 'GET',
-            headers: myHeaders,
-            redirect: 'follow'
-          };
-          fetch(
-            this.transformationServer,
-            requestOptions
-          )
-          .then(response => {
-            return response.json();
-          })
-          .then(remoteTransformationFile => {
-            console.log('REMOTE TRANSFORMATIONS VERSION:', remoteTransformationFile['version']);
-            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], remoteTransformationFile['transformations']);
-          })
-          .then(() => {
-              createTransformationSelectionDropdownFromConfig();
-              this.signal.emit();
-            }
-          )
-        }
+      if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
+        const myHeaders = new Headers();
+        myHeaders.append(
+          'Authorization',
+          'Bearer '.concat(this.transformationAuth)
+        );
+        const requestOptions: RequestInit = {
+          method: 'GET',
+          headers: myHeaders,
+          redirect: 'follow'
+        };
+        fetch(
+          this.transformationServer,
+          requestOptions
+        )
+        .then(response => {
+          return response.json();
+        })
+        .then(remoteTransformationFile => {
+          console.log('REMOTE TRANSFORMATIONS VERSION:', remoteTransformationFile['version']);
+          transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], remoteTransformationFile['transformations']);
+        })
+        .then(() => {
+          createTransformationSelectionDropdownFromConfig();
+          this.signal.emit();
+        })
+        .catch(error => {
+          console.log(error)
+          console.log('Failed to load transformations');
+          this.failedToLoadTransformations = true;
+          createTransformationSelectionDropdownFromConfig();
+          this.signal.emit();
+        })
+        
       }
-    ).then(()=>{
+    }).then(()=>{
       // Start product tour
       this.startProductTour = true;
       
