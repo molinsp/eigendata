@@ -142,7 +142,7 @@ export class Backend {
   public eigendataMode: string;
 
   // Production flag that determines if usage analytics are captured
-  public production = false;
+  public production = true;
 
   public openFormulabarCellByDefault: boolean;
 
