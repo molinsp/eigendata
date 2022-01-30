@@ -1,6 +1,6 @@
 
 
-![logo](https://eigendata.co/assets/images/image05.png?v=ff441110)
+![logo](https://doc.eigendata.co/media/logo.png)
 
 ## Introduction
 
@@ -75,7 +75,7 @@ And the UI rendered based on this definition:
 ## Requirements
 
 * JupyterLab >= 3.0
-* Pandas, Nupy, [Fastdata](https://pypi.org/project/fastdata/) (our own library with pandas utilities)
+* Pandas, Numpy, [Fastdata](https://pypi.org/project/fastdata/) (our own library with pandas utilities)
 
 ## Uninstall
 
