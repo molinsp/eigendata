@@ -45,7 +45,7 @@ import { OutputPanel } from '../datavisualizer/outputPanel';
 
 //import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
-const packageVersion = '0.3.7';
+const packageVersion = '0.3.8';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -142,7 +142,7 @@ export class Backend {
   public eigendataMode: string;
 
   // Production flag that determines if usage analytics are captured
-  public production = true;
+  public production = false;
 
   public openFormulabarCellByDefault: boolean;
 
