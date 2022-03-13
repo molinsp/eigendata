@@ -1,5 +1,5 @@
 {% set name = "eigendata" %}
-{% set version = "0.3.6" %}
+{% set version = "0.3.7" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: 65c5637bd05fb5212514a0fac7ce356c1b04bd820d5716dcd80ccb3e0715a393
+  sha256: 77f13cc4824f991bef97867d4f4163115adcc496131b01e6cec767ac764d1e2b
 
 build:
   noarch: python
@@ -46,4 +46,4 @@ about:
 
 extra:
   recipe-maintainers:
-    - your-github-id-here
+    - molinsp

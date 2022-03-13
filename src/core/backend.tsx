@@ -45,7 +45,7 @@ import { OutputPanel } from '../datavisualizer/outputPanel';
 
 //import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
-const packageVersion = '0.3.7';
+const packageVersion = '0.3.8';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
@@ -213,6 +213,11 @@ export class Backend {
             });
         } else {
           this.shareProductData = settings.get('shareProductData').composite as boolean;
+          console.log('Analytics: Product tracking data', this.shareProductData);
+          if (this.production && this.shareProductData) {
+            amplitude.getInstance().init('c461bfacd2f2ac406483d90c01a708a7');
+            amplitude.getInstance().setVersionName(packageVersion);
+          }
         }
 
         this.completedProductTour = settings.get('completedProductTour').composite as boolean;
@@ -231,27 +236,49 @@ export class Backend {
           `jupyterlab-execute-time: Could not load settings, so did not active the plugin: ${err}`
         );
       }
-    ).then(() => {
+    )
+    .then(() => {
     /*------------------------------------
       LOAD USER TRANSFORMATIONS
     ------------------------------------*/
-    settingRegistry.load('@molinsp/eigendata:usertransformations').then(
-      (settings: ISettingRegistry.ISettings) => {
-        const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
+      settingRegistry.load('@molinsp/eigendata:usertransformations').then(
+        (settings: ISettingRegistry.ISettings) => {
+          const userTransformations = settings.get('userTransformations').composite as JSONSchema7;
 
-        if(!_.isEmpty(userTransformations)){
-          transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
-          console.log('User added configs', transformationsConfig);
-        }else{
-          console.log('No user transformations found');
+          if(!_.isEmpty(userTransformations)){
+            transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], userTransformations);
+            console.log('User added configs', transformationsConfig);
+          }else{
+            console.log('No user transformations found');
+          }
         }
-      }
-    );
+      );
     })
     .then(() => {
     /*------------------------------------
           LOAD REMOTE TRANSFORMATIONS
     ------------------------------------*/
+      // Feedback option for not found transformations
+      const notFoundFeedback = {
+        "notfound" : {
+          "form" : {
+            "properties" : {
+              "description" : {
+                "type" : "string",
+                "description" : "Tell us which functionality you are missing."
+              }
+            },
+            "title" : "Can't find what you want?",
+            "type" : "object"
+          },
+          "uischema" : {
+            "description" : {
+              "ui:widget" : "textarea"
+            }
+          }
+        }
+      } as JSONSchema7;
+
       if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
         const myHeaders = new Headers();
         myHeaders.append(
@@ -273,8 +300,7 @@ export class Backend {
         .then(remoteTransformationFile => {
           console.log('REMOTE TRANSFORMATIONS VERSION:', remoteTransformationFile['version']);
           transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], remoteTransformationFile['transformations']);
-        })
-        .then(() => {
+          transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], notFoundFeedback);
           createTransformationSelectionDropdownFromConfig();
           this.signal.emit();
         })
@@ -282,12 +308,13 @@ export class Backend {
           console.log(error)
           console.log('Failed to load transformations');
           this.failedToLoadTransformations = true;
+          transformationsConfig['transformations'] = Object.assign({}, transformationsConfig['transformations'], notFoundFeedback);
           createTransformationSelectionDropdownFromConfig();
           this.signal.emit();
-        })
-        
+        })   
       }
-    }).then(()=>{
+    })
+    .then(()=>{
       // Start product tour
       this.startProductTour = true;
       
