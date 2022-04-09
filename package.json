@@ -1,6 +1,6 @@
 {
   "name": "@molinsp/eigendata",
-  "version": "0.3.7",
+  "version": "0.3.8",
   "description": "Eigendata is a low-code tool for data analysis designed for people that want to get things done.",
   "keywords": [
     "jupyter",
@@ -14,7 +14,7 @@
   "license": "BSD-3-Clause",
   "author": {
     "name": "Pere Molins",
-    "email": "molinsp@gmail.com"
+    "email": "pere@eigendata.co"
   },
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
