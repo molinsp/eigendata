@@ -10,10 +10,9 @@
       "default": "https://eigendata-auth.herokuapp.com/transformations.json"
     },
     "transformationAuth": {
-      "type": "string",
+      "type": "object",
       "title": "Authentication for transformation server",
-      "description": "Authentication to get transformations from a remote server.",
-      "default": "yO2g8OCpvl45o4F93O4nxNsrPjCvYHcMTBiPvzU7pR0"
+      "description": "Header object to be passed to the fetch call"
     },
     "eigendataMode": {
       "type": "string",

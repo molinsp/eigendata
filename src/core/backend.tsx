@@ -72,7 +72,7 @@ export class Backend {
     Transformation server
   ----------------------------------*/
   private transformationServer: string;
-  private transformationAuth: string;
+  private transformationAuth: any;
 
 
   /*---------------------------------
@@ -223,7 +223,7 @@ export class Backend {
         this.completedProductTour = settings.get('completedProductTour').composite as boolean;
         this.eigendataMode = settings.get('eigendataMode').composite as string;
         this.transformationServer = settings.get('transformationServer').composite as string;
-        this.transformationAuth = settings.get('transformationAuth').composite as string;
+        this.transformationAuth = settings.get('transformationAuth').composite as any;
         this.openFormulabarCellByDefault = settings.get('openFormulabarCellByDefault').composite as boolean;
         console.log('Open formulabar cell by default', this.openFormulabarCellByDefault);
 
@@ -279,15 +279,11 @@ export class Backend {
         }
       } as JSONSchema7;
 
-      if(this.transformationAuth.length != 0 && this.transformationServer.length != 0){
-        const myHeaders = new Headers();
-        myHeaders.append(
-          'Authorization',
-          'Bearer '.concat(this.transformationAuth)
-        );
+      const requestHeaders = new Headers(this.transformationAuth);
+      if(this.transformationServer.length != 0){
         const requestOptions: RequestInit = {
           method: 'GET',
-          headers: myHeaders,
+          headers:  requestHeaders,
           redirect: 'follow'
         };
         fetch(
