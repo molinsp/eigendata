@@ -7,7 +7,7 @@
       "type": "string",
       "title": "Transformation server",
       "description": "Server that provides transformations",
-      "default": "https://eigendata-auth.herokuapp.com/transformations.json"
+      "default": "https://script.google.com/macros/s/AKfycbwUlLi_FYOe9XjT37hxb7WWM0hMZdbQHlj-_wSgUXTLdznAgt2Dwbwz6AiuYPdKuYlv/exec"
     },
     "transformationAuth": {
       "type": "object",
