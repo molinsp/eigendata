@@ -10,7 +10,13 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Move to eigendata-formula_bar-v2 directory
+# Move to eigendata directory
+
+# Install conda environmnet
+conda env create -f dev-environment.yaml 
+
+# Activate eigendata-dev environment
+conta activate eigendata-dev
 
 # Install dependencies
 jlpm
