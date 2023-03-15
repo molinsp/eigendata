@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Form from '@rjsf/core';
 import Select from 'react-select';
-import { JSONSchema7 } from 'json-schema';
 import Joyride, { STATUS } from 'react-joyride';
 import { generatePythonCode } from './codeGeneration';
 import 'bootstrap/dist/css/bootstrap.css';
@@ -49,16 +48,6 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
   const binderUrl = url.includes('cloud.eigendata.co') || url.includes('molinsp-eigendata-trial');
 
   // Defaults for form and UI schema
-  const transformationForm: JSONSchema7 = logic.transformationsConfig[
-    'read_csv'
-  ]['form'] as JSONSchema7;
-  const defaultUISchema: JSONSchema7 = logic.transformationsConfig['read_csv'][
-    'uischema'
-  ] as JSONSchema7;
-  const defaultTransformationSelection = {
-    value: 'read_csv',
-    label: 'Read CSV file'
-  };
 
   // Display only transformations that load data when there is no data
   const loadingTransformations = (): Dataframe[] => {
@@ -89,8 +78,8 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
       - Transformation selection
   */
   const [state, setState] = useState({
-    transformationForm: transformationForm,
-    transformationUI: defaultUISchema,
+    transformationForm: null,
+    transformationUI: null,
     showForm: false,
     enableCallerSelection: false, //Enable selection of caller object (DF)
     dataframeSelection: null,
@@ -122,11 +111,11 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
     console.log('RESETING FORMULABAR STATE');
     setState({
       ...state,
-      transformationForm: transformationForm,
-      transformationUI: defaultUISchema,
+      transformationForm: {},
+      transformationUI: {},
       showForm: true,
       dataframeSelection: null,
-      transformationSelection: defaultTransformationSelection,
+      transformationSelection: null,
       formData: {},
       queryConfig: null
     });
@@ -147,11 +136,11 @@ export const FormComponent = (props: { logic: Backend }): JSX.Element => {
 
     setState({
       ...state,
-      transformationForm: transformationForm,
-      transformationUI: defaultUISchema,
+      transformationForm: {},
+      transformationUI: {},
       showForm: true,
       dataframeSelection: null,
-      transformationSelection: defaultTransformationSelection,
+      transformationSelection: null,
       queryConfig: null,
       formData: {filepath_or_buffer: 'players_20.csv'}
     });
