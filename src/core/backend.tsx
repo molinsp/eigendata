@@ -45,7 +45,7 @@ import { OutputPanel } from '../datavisualizer/outputPanel';
 
 //import { CodeCell } from '@jupyterlab/cells';
 // Before deploying to production, we change this flag
-const packageVersion = '0.3.8';
+const packageVersion = '0.3.9';
 let transformationsConfig = localTransformationsConfig;
 
 export class Backend {
