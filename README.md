@@ -1,6 +1,5 @@
 
-
-![logo](https://doc.eigendata.co/media/logo.png)
+<img src="https://raw.githubusercontent.com/molinsp/eigendata-doc/master/docs/media/logo.png" alt="logo" style="zoom:50%;" />
 
 ## Introduction
 
